@@ -119,8 +119,8 @@ toBit ry rx = case (ry,rx) of
   _     -> 0
 
 data Canvas = Canvas
-  { cw     :: !Int
-  , ch     :: !Int
+  { cW     :: !Int
+  , cH     :: !Int
   , buffer :: !(Array2D Int)
   , cbuf   :: !(Array2D (Maybe Color))
   }
@@ -130,7 +130,7 @@ newCanvas w h = Canvas w h (newA2D w h 0) (newA2D w h Nothing)
 
 setDotC :: Canvas -> Int -> Int -> Maybe Color -> Canvas
 setDotC c xDot yDot mcol
-  | xDot < 0 || yDot < 0 || xDot >= cw c * 2 || yDot >= ch c * 4 = c
+  | xDot < 0 || yDot < 0 || xDot >= cW c * 2 || yDot >= cH c * 4 = c
   | otherwise =
       let cx = xDot `div` 2
           cy = yDot `div` 4
@@ -143,29 +143,11 @@ setDotC c xDot yDot mcol
            Nothing -> c'
            Just col -> c' { cbuf = setA2D (cbuf c) cx cy (Just col) }
 
-setDot :: Canvas -> Int -> Int -> Canvas
-setDot c x y = setDotC c x y Nothing
-
 fillDotsC :: (Int,Int) -> (Int,Int) -> (Int -> Int -> Bool) -> Maybe Color -> Canvas -> Canvas
 fillDotsC (x0,y0) (x1,y1) p mcol c0 =
-  let xs = [max 0 x0 .. min (cw c0*2-1) x1]
-      ys = [max 0 y0 .. min (ch c0*4-1) y1]
+  let xs = [max 0 x0 .. min (cW c0*2-1) x1]
+      ys = [max 0 y0 .. min (cH c0*4-1) y1]
   in  foldl' (\c y -> foldl' (\c' x -> if p x y then setDotC c' x y mcol else c') c xs) c0 ys
-
-lineDotsC :: (Int,Int) -> (Int,Int) -> Maybe Color -> Canvas -> Canvas
-lineDotsC (x0,y0) (x1,y1) mcol c0 =
-  let dx = abs (x1 - x0)
-      sx = if x0 < x1 then 1 else -1
-      dy = negate (abs (y1 - y0))
-      sy = if y0 < y1 then 1 else -1
-      go !x !y !err c
-        | x == x1 && y == y1 = setDotC c x y mcol
-        | otherwise =
-            let e2 = 2*err
-                (x', err') = if e2 >= dy then (x + sx, err + dy) else (x, err)
-                (y', err'')= if e2 <= dx then (y + sy, err' + dx) else (y, err')
-            in go x' y' err'' (setDotC c x y mcol)
-  in go x0 y0 (dx + dy) c0
 
 renderCanvas :: Canvas -> String
 renderCanvas (Canvas w h a colA) =
@@ -208,8 +190,8 @@ drawFrame _cfg titleStr contentWithAxes legendBlockStr =
 
 axisify :: Plot -> Canvas -> (Double,Double) -> (Double,Double) -> String
 axisify cfg c (xmin,xmax) (ymin,ymax) =
-  let plotW = cw c
-      plotH = ch c
+  let plotW = cW c
+      plotH = cH c
       left  = leftMargin cfg
       pad   = replicate left ' '
 
@@ -278,7 +260,7 @@ sample p col =
   in dropWhileEnd (== '\n') s
 
 clamp :: Ord a => a -> a -> a -> a
-clamp lo hi x = max lo (min hi x)
+clamp low high x = max low (min high x)
 
 eps :: Double
 eps = 1e-12
@@ -293,7 +275,7 @@ boundsXY pts =
   in (xmin - padx, xmax + padx, ymin - pady, ymax + pady)
 
 mod' :: Double -> Double -> Double
-mod' a m = a - fromIntegral (floor (a / m)) * m
+mod' a m = a - fromIntegral (floor (a / m) :: Int) * m
 
 series :: String -> [(Double,Double)] -> (String, [(Double,Double)])
 series = (,)
@@ -339,7 +321,7 @@ resampleToWidth w xs
   | w <= 0    = []
   | null xs   = replicate w 0
   | n == w    = xs
-  | n >  w    = avgGroup (ceiling (fromIntegral n / fromIntegral w))
+  | n >  w    = avgGroup (ceiling (fromIntegral n / (fromIntegral w :: Double)))
   | otherwise = replicateOut
   where
     n = length xs
