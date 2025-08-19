@@ -8,7 +8,6 @@ module Granite
   , bars
   , scatter
   , pie
-	, mod'
   ) where
 
 import Data.Char (chr)
@@ -36,9 +35,6 @@ defPlot = Plot
   , titleMargin  = 1
   , legendPos    = LegendRight
   }
-
---------------------------------------------------------------------------------
--- ANSI color
 
 data Color
   = Default | Black | Red | Green | Yellow | Blue | Magenta | Cyan | White
@@ -112,8 +108,14 @@ newA2D w h v = A2D w h (replicate (w*h) v)
 
 toBit :: Int -> Int -> Int
 toBit ry rx = case (ry,rx) of
-  (0,0)->1; (1,0)->2; (2,0)->4; (3,0)->64
-  (0,1)->8; (1,1)->16; (2,1)->32; (3,1)->128
+  (0,0) -> 1
+	(1,0) -> 2
+	(2,0) -> 4
+	(3,0) -> 64
+  (0,1) -> 8
+	(1,1) -> 16
+	(2,1) -> 32
+	(3,1) -> 128
   _     -> 0
 
 data Canvas = Canvas
@@ -130,8 +132,10 @@ setDotC :: Canvas -> Int -> Int -> Maybe Color -> Canvas
 setDotC c xDot yDot mcol
   | xDot < 0 || yDot < 0 || xDot >= cw c * 2 || yDot >= ch c * 4 = c
   | otherwise =
-      let cx = xDot `div` 2; cy = yDot `div` 4
-          rx = xDot - 2*cx;   ry = yDot - 4*cy
+      let cx = xDot `div` 2
+          cy = yDot `div` 4
+          rx = xDot - 2*cx
+          ry = yDot - 4*cy
           b  = toBit ry rx
           m  = getA2D (buffer c) cx cy
           c' = c { buffer = setA2D (buffer c) cx cy (m .|. b) }
@@ -150,8 +154,10 @@ fillDotsC (x0,y0) (x1,y1) p mcol c0 =
 
 lineDotsC :: (Int,Int) -> (Int,Int) -> Maybe Color -> Canvas -> Canvas
 lineDotsC (x0,y0) (x1,y1) mcol c0 =
-  let dx = abs (x1 - x0); sx = if x0 < x1 then 1 else -1
-      dy = negate (abs (y1 - y0)); sy = if y0 < y1 then 1 else -1
+  let dx = abs (x1 - x0)
+      sx = if x0 < x1 then 1 else -1
+      dy = negate (abs (y1 - y0))
+      sy = if y0 < y1 then 1 else -1
       go !x !y !err c
         | x == x1 && y == y1 = setDotC c x y mcol
         | otherwise =
@@ -274,7 +280,8 @@ sample p col =
 clamp :: Ord a => a -> a -> a -> a
 clamp lo hi x = max lo (min hi x)
 
-eps :: Double; eps = 1e-12
+eps :: Double
+eps = 1e-12
 
 boundsXY :: [(Double,Double)] -> (Double,Double,Double,Double)
 boundsXY pts =
