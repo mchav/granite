@@ -26,3 +26,32 @@ main = do
   -- pie
   putStrLn =<< pie "Share" [("Alpha",0.35),("Beta",0.25),("Gamma",0.20),("Delta",0.20)]
                          defPlot{widthChars=46,heightChars=18,legendPos=LegendRight}
+
+  -- line graph
+  putStrLn =<< lineGraph "Monthly Sales Trends" [ ("Product A", [(1, 100), (2, 120), (3, 115), (4, 140), (5, 155), (6, 148)])
+                                                , ("Product B", [(1, 80), (2, 85), (3, 95), (4, 92), (5, 110), (6, 125)])
+                                                , ("Product C", [(1, 60), (2, 62), (3, 70), (4, 85), (5, 82), (6, 90)])
+                                                ] defPlot
+  
+  -- box plot
+  putStrLn =<< boxPlot "Test Score Distribution by Class" [ ("Class A", [78, 82, 85, 88, 90, 92, 85, 87, 89, 91, 76, 94, 88])
+                                                          , ("Class B", [70, 75, 72, 80, 85, 78, 82, 77, 79, 81, 74, 83])
+                                                          , ("Class C", [88, 92, 95, 90, 93, 89, 91, 94, 96, 87, 90, 92])
+                                                          , ("Class D", [65, 70, 72, 68, 75, 80, 73, 71, 69, 74, 77, 76])
+                                                          ] defPlot
+  
+  -- stacked bar chart
+  putStrLn =<< stackedBars "Quarterly Revenue Breakdown" [ ("Q1", [("Hardware", 120), ("Software", 200), ("Services", 80)])
+                                                         , ("Q2", [("Hardware", 135), ("Software", 220), ("Services", 95)])
+                                                         , ("Q3", [("Hardware", 110), ("Software", 240), ("Services", 110)])
+                                                         , ("Q4", [("Hardware", 145), ("Software", 260), ("Services", 125)])
+                                                         ] defPlot
+  
+  -- heatmap
+  let matrix = [ [1.0,  0.8,  0.3, -0.2,  0.1]
+               , [0.8,  1.0,  0.5, -0.1,  0.2]
+               , [0.3,  0.5,  1.0,  0.6,  0.4]
+               , [-0.2, -0.1, 0.6,  1.0,  0.7]
+               , [0.1,  0.2,  0.4,  0.7,  1.0]
+               ]
+  putStrLn =<< heatmap "Correlation Matrix" matrix defPlot
