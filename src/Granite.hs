@@ -1,4 +1,6 @@
+-- TODO: Remove bang patterns now that strict is enabled.
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE Strict #-}
 
 module Granite
   (
@@ -97,18 +99,18 @@ ink Sparse x  y = (x .&. 1 == 0) && (y `mod` 3 == 0)
 palette :: [Pat]
 palette = [Solid, Checker, DiagA, DiagB, Sparse]
 
-data Array2D a = A2D !Int !Int ![a]
+data Array2D a = A2D !Int !Int !(Arr a)
 
 getA2D :: Array2D a -> Int -> Int -> a
-getA2D (A2D w _ xs) x y = xs !! (y*w + x)
+getA2D (A2D w _ xs) x y = indexA xs (y*w + x)
 
 setA2D :: Array2D a -> Int -> Int -> a -> Array2D a
 setA2D (A2D w h xs) x y v =
   let i = y*w + x
-  in A2D w h (take i xs ++ v : drop (i+1) xs)
+  in A2D w h (setA xs i v)
 
 newA2D :: Int -> Int -> a -> Array2D a
-newA2D w h v = A2D w h (replicate (w*h) v)
+newA2D w h v = A2D w h (fromList (replicate (w*h) v))
 
 toBit :: Int -> Int -> Int
 toBit ry rx = case (ry,rx) of
@@ -216,7 +218,7 @@ axisify cfg c (xmin,xmax) (ymin,ymax) =
   in unlines (attachY ++ [xBar, xLine])
 
 axisifyGrid :: Plot -> [[(Char, Maybe Color)]] -> (Double,Double) -> (Double,Double) -> String
-axisifyGrid cfg grid (xmin,xmax) (ymin,ymax) =
+axisifyGrid cfg grid (!xmin,!xmax) (!ymin,!ymax) =
   let plotH = length grid
       plotW = if null grid then 0 else length (head grid)
       left  = leftMargin cfg
@@ -293,9 +295,9 @@ scatter title sers cfg =
       sy y = clamp 0 (hC*4-1)  $ round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC*4-1))
       pats = cycle palette
       cols = cycle paletteColors
-      withSty = zipWith3 (\(n,ps) p c -> (n,ps,p,c)) sers pats cols
-      drawOne (_name, pts, pat, col) c0 =
-        foldl' (\c (x,y) -> let xd = sx x; yd = sy y
+      withSty = zipWith3 (\(!n,!ps) p c -> (n,ps,p,c)) sers pats cols
+      drawOne (!_name, !pts, !pat, !col) c0 =
+        foldl' (\c (!x,!y) -> let xd = sx x; yd = sy y
                             in if ink pat xd yd then setDotC c xd yd (Just col) else c)
                c0 pts
       cDone = foldl' (flip drawOne) plotC withSty
@@ -383,7 +385,7 @@ bars title kvs cfg =
 
       cats :: [(String, Double, Color)]
       cats = [ (name, abs v / vmax, col)
-             | ((name, v), col) <- zip kvs (cycle paletteColors) ]
+             | (!(!name, !v), !col) <- zip kvs (cycle paletteColors) ]
 
       nCats = length cats
 
@@ -421,13 +423,13 @@ pie title parts0 cfg =
       cx    = wDots `div` 2
       cy    = hDots `div` 2
       toAng p = p * 2*pi
-      wedges = scanl (\a (_,p) -> a + toAng p) 0 parts
+      wedges = scanl (\a (_,!p) -> a + toAng p) 0 parts
       angles = zip wedges (tail wedges)
       names  = map fst parts
       cols   = cycle pieColors
       withP  = zipWith3 (\n ang col -> (n,ang,col)) names angles cols
 
-      drawOne (_name,(a0,a1),col) c0 =
+      drawOne (!_name,(!a0,!a1),!col) c0 =
         let inside x y =
               let dx  = fromIntegral (x - cx)
                   dy  = fromIntegral (cy - y)
@@ -447,7 +449,7 @@ pie title parts0 cfg =
 normalize :: [(String, Double)] -> [(String, Double)]
 normalize xs =
   let s = sum (map (abs . snd) xs) + 1e-12
-  in [ (n, max 0 (v / s)) | (n,v) <- xs ]
+  in [ (n, max 0 (v / s)) | (!n,!v) <- xs ]
 
 angleWithin :: Double -> Double -> Double -> Bool
 angleWithin ang a0 a1
@@ -455,7 +457,7 @@ angleWithin ang a0 a1
   | otherwise = ang >= a0 || ang <= a1
 
 lineDotsC :: (Int,Int) -> (Int,Int) -> Maybe Color -> Canvas -> Canvas
-lineDotsC (x0,y0) (x1,y1) mcol c0 =
+lineDotsC (!x0,!y0) (!x1,!y1) mcol c0 =
   let dx = abs (x1 - x0)
       sx = if x0 < x1 then 1 else -1
       dy = negate (abs (y1 - y0))
@@ -464,8 +466,8 @@ lineDotsC (x0,y0) (x1,y1) mcol c0 =
         | x == x1 && y == y1 = setDotC c x y mcol
         | otherwise =
             let e2 = 2*err
-                (x', err') = if e2 >= dy then (x + sx, err + dy) else (x, err)
-                (y', err'')= if e2 <= dx then (y + sy, err' + dx) else (y, err')
+                (!x', !err') = if e2 >= dy then (x + sx, err + dy) else (x, err)
+                (!y', !err'')= if e2 <= dx then (y + sy, err' + dx) else (y, err')
             in go x' y' err'' (setDotC c x y mcol)
   in go x0 y0 (dx + dy) c0
 
@@ -490,7 +492,7 @@ lineGraph title sers cfg =
       cDone = foldl' (flip drawSeries) plotC withSty
       ax = axisify cfg cDone (xmin,xmax) (ymin,ymax)
       legend = legendBlock (legendPos cfg) (leftMargin cfg + widthChars cfg)
-                 [(n, Solid, col) | ((n,_), col) <- withSty]
+                 [(n, Solid, col) | (!(!n,_), !col) <- withSty]
       titled = if null title then "" else title
   in drawFrame cfg titled ax legend
 
@@ -511,7 +513,7 @@ boxPlot title datasets cfg =
   let wC = widthChars cfg
       hC = heightChars cfg
 
-      stats = [(name, quartiles vals) | (name, vals) <- datasets]
+      stats = [(name, quartiles vals) | (!name, !vals) <- datasets]
 
       allVals = concatMap snd datasets
       ymin = if null allVals then 0 else minimum allVals - abs (minimum allVals) * 0.1
@@ -681,3 +683,88 @@ stackedBars title categories cfg =
                  [(name, Solid, col) | (name, col) <- seriesColors]
       titled = if null title then "" else title
   in drawFrame cfg titled ax legend
+
+-- AVL Tree we'll use as an array.
+-- This improves upon the previous implementation that relies
+-- on linked list for indexing and update (both O(n)) while keeping
+-- the dependencies very light (wouldn't want to install all of containers
+-- just to get an int map).
+data Arr a = E | N {-# UNPACK #-} !Int {-# UNPACK #-} !Int !(Arr a) a !(Arr a)
+
+size :: Arr a -> Int
+size E               = 0
+size (N sz _ _ _ _)  = sz
+
+height :: Arr a -> Int
+height E               = 0
+height (N _ h _ _ _)   = h
+
+mk :: Arr a -> a -> Arr a -> Arr a
+mk l x r = N sz h l x r
+  where
+    sl = size l
+    sr = size r
+    hl = height l
+    hr = height r
+    sz = 1 + sl + sr
+    h  = 1 + (if hl >= hr then hl else hr)
+
+rotateL :: Arr a -> Arr a
+rotateL (N _ _ l x (N _ _ rl y rr)) = mk (mk l x rl) y rr
+rotateL _ = error "rotateL: malformed tree"
+
+rotateR :: Arr a -> Arr a
+rotateR (N _ _ (N _ _ ll y lr) x r) = mk ll y (mk lr x r)
+rotateR _ = error "rotateR: malformed tree"
+
+balance :: Arr a -> Arr a
+balance t@(N _ _ l x r)
+  | height l > height r + 1 =
+      case l of
+        N _ _ ll _ lr ->
+          if height ll >= height lr
+             then rotateR t
+             else rotateR (mk (rotateL l) x r)
+        _ -> t
+  | height r > height l + 1 =
+      case r of
+        N _ _ rl _ rr ->
+          if height rr >= height rl
+             then rotateL t
+             else rotateL (mk l x (rotateR r))
+        _ -> t
+  | otherwise = mk l x r
+balance t = t
+
+indexA :: Arr a -> Int -> a
+indexA t i =
+  case t of
+    E -> error ("index out of bounds: " ++ show i)
+    N _ _ l x r ->
+      let sl = size l in
+      if i < 0 || i >= 1 + sl + size r then error ("index out of bounds: " ++ show i)
+      else if i < sl then indexA l i
+      else if i == sl then x
+      else indexA r (i - sl - 1)
+
+setA :: Arr a -> Int -> a -> Arr a
+setA t i y =
+  case t of
+    E -> error ("index out of bounds when setting: " ++ show i)
+    N _ _ l x r ->
+      let sl = size l in
+      if i < 0 || i >= 1 + sl + size r then error ("index out of bounds: " ++ show i)
+      else if i < sl then balance (mk (setA l i y) x r)
+      else if i == sl then mk l y r
+      else balance (mk l x (setA r (i - sl - 1) y))
+
+fromList :: [a] -> Arr a
+fromList xs = fst (build (length xs) xs)
+  where
+    build :: Int -> [a] -> (Arr a, [a])
+    build 0 ys = (E, ys)
+    build n ys =
+      let (!l, !ys1)   = build (n `div` 2) ys
+          (x:ys2)      = ys1
+          (!r, !ys3)   = build (n - n `div` 2 - 1) ys2
+      in (mk l x r, ys3)
