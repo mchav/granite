@@ -11,7 +11,7 @@ copyright:          (c) 2024-2025 Michael Chavinda
 bug-reports:        https://github.com/mchav/granite/issues
 category:           Graphics
 build-type:         Simple
-extra-doc-files:    CHANGELOG.md
+extra-doc-files:    CHANGELOG.md README.md
 
 source-repository head
   type:     git
