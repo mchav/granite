@@ -1,5 +1,9 @@
 # Revision history for granite
 
+## 0.1.0.2 -- 2025-08-20
+
+* Add README to doc files.
+
 ## 0.1.0.1 -- 2025-08-20
 
 * Remove IO monad from plotting functions.
