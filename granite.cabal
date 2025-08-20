@@ -7,11 +7,15 @@ license:            MIT
 license-file:       LICENSE
 author:             Michael Chavinda
 maintainer:         mschavinda@gmail.com
--- copyright:
+copyright:          (c) 2024-2025 Michael Chavinda
+bug-reports:        https://github.com/mchav/granite/issues
 category:           Graphics
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
--- extra-source-files:
+
+source-repository head
+  type:     git
+  location: https://github.com/mchav/granite
 
 common warnings
     ghc-options: -Wall
@@ -28,8 +32,6 @@ library
 executable granite
     import:           warnings
     main-is:          Main.hs
-    -- other-modules:
-    -- other-extensions:
     build-depends:
         base >=4 && <5,
         granite,

@@ -284,8 +284,8 @@ mod' a m = a - fromIntegral (floor (a / m) :: Int) * m
 series :: String -> [(Double,Double)] -> (String, [(Double,Double)])
 series = (,)
 
-scatter :: String -> [(String, [(Double,Double)])] -> Plot -> IO String
-scatter title sers cfg = pure $
+scatter :: String -> [(String, [(Double,Double)])] -> Plot -> String
+scatter title sers cfg =
   let wC = widthChars cfg; hC = heightChars cfg
       plotC = newCanvas wC hC
       (xmin,xmax,ymin,ymax) = boundsXY (concatMap snd sers)
@@ -342,8 +342,8 @@ data Bins = Bins { nBins :: !Int, lo :: !Double, hi :: !Double } deriving (Eq, S
 bins :: Int -> Double -> Double -> Bins
 bins n a b = Bins (max 1 n) (min a b) (max a b)
 
-histogram :: String -> Bins -> [Double] -> Plot -> IO String
-histogram title (Bins n a b) xs cfg = pure $
+histogram :: String -> Bins -> [Double] -> Plot -> String
+histogram title (Bins n a b) xs cfg =
   let step    = (b - a) / fromIntegral n
       binIx x = clamp 0 (n-1) $ floor ((x - a) / step)
       counts  = foldl' (\acc x ->
@@ -374,8 +374,8 @@ histogram title (Bins n a b) xs cfg = pure $
 addAt :: [Int] -> Int -> Int -> [Int]
 addAt xs i v = take i xs ++ [xs !! i + v] ++ drop (i+1) xs
 
-bars :: String -> [(String, Double)] -> Plot -> IO String
-bars title kvs cfg = pure $
+bars :: String -> [(String, Double)] -> Plot -> String
+bars title kvs cfg =
   let wC   = widthChars cfg
       hC   = heightChars cfg
       vals = map snd kvs
@@ -411,8 +411,8 @@ bars title kvs cfg = pure $
       titled = if null title then "" else title
   in drawFrame cfg titled ax legend
 
-pie :: String -> [(String, Double)] -> Plot -> IO String
-pie title parts0 cfg = pure $
+pie :: String -> [(String, Double)] -> Plot -> String
+pie title parts0 cfg =
   let parts = normalize parts0
       wC = widthChars cfg; hC = heightChars cfg
       plotC = newCanvas wC hC
@@ -469,8 +469,8 @@ lineDotsC (x0,y0) (x1,y1) mcol c0 =
             in go x' y' err'' (setDotC c x y mcol)
   in go x0 y0 (dx + dy) c0
 
-lineGraph :: String -> [(String, [(Double,Double)])] -> Plot -> IO String
-lineGraph title sers cfg = pure $
+lineGraph :: String -> [(String, [(Double,Double)])] -> Plot -> String
+lineGraph title sers cfg =
   let wC = widthChars cfg; hC = heightChars cfg
       plotC = newCanvas wC hC
       (xmin,xmax,ymin,ymax) = boundsXY (concatMap snd sers)
@@ -506,8 +506,8 @@ quartiles xs =
      then let m = sum xs / fromIntegral n in (m,m,m,m,m)
      else (head sorted, getIdx q1Idx, getIdx q2Idx, getIdx q3Idx, last sorted)
 
-boxPlot :: String -> [(String, [Double])] -> Plot -> IO String
-boxPlot title datasets cfg = pure $
+boxPlot :: String -> [(String, [Double])] -> Plot -> String
+boxPlot title datasets cfg =
   let wC = widthChars cfg
       hC = heightChars cfg
 
@@ -577,8 +577,8 @@ boxPlot title datasets cfg = pure $
       else grid
       where setAt row i v = take i row ++ [v] ++ drop (i+1) row
 
-heatmap :: String -> [[Double]] -> Plot -> IO String
-heatmap title matrix cfg = pure $
+heatmap :: String -> [[Double]] -> Plot -> String
+heatmap title matrix cfg =
   let rows = length matrix
       cols = if null matrix then 0 else length (head matrix)
 
@@ -633,8 +633,8 @@ heatmap title matrix cfg = pure $
       titled = if null title then "" else title
   in drawFrame cfg titled ax gradientLegend
 
-stackedBars :: String -> [(String, [(String, Double)])] -> Plot -> IO String
-stackedBars title categories cfg = pure $
+stackedBars :: String -> [(String, [(String, Double)])] -> Plot -> String
+stackedBars title categories cfg =
   let wC = widthChars cfg
       hC = heightChars cfg
 
