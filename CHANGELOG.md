@@ -1,5 +1,9 @@
 # Revision history for granite
 
+## 0.1.0.3 -- 2025-08-21
+
+* Fix heatmaps: matrix grid wasn't properly mapping to canvas + axes were reversed.
+
 ## 0.1.0.2 -- 2025-08-20
 
 * Add README to doc files.

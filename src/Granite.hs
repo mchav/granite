@@ -20,6 +20,7 @@ import Data.Char (chr)
 import Data.List (foldl', intercalate, intersperse, dropWhileEnd, sortOn, sort)
 import Numeric (showFFloat, showEFloat)
 import Data.Bits ((.&.), (.|.), xor)
+import Text.Printf
 
 data LegendPos = LegendRight | LegendBottom deriving (Eq, Show)
 
@@ -587,50 +588,39 @@ heatmap title matrix cfg =
       allVals = concat matrix
       vmin = if null allVals then 0 else minimum allVals
       vmax = if null allVals then 1 else maximum allVals
-      vrange = vmax - vmin + eps
+      vrange = vmax - vmin
 
       intensityColors = 
-        [ Blue, Cyan, BrightCyan, Green, BrightGreen, 
-          Yellow, BrightYellow, Red, BrightRed, Magenta, BrightMagenta
+        [ Blue, BrightBlue, Cyan, BrightCyan, Green, BrightGreen, 
+          Yellow, BrightYellow, Magenta, BrightRed, Red
         ]
       
       colorForValue v =
-        let norm = clamp 0 1 ((v - vmin) / vrange)
-            idx = clamp 0 (length intensityColors - 1) 
-                        (floor (norm * fromIntegral (length intensityColors - 1)))
-        in intensityColors !! idx
-      
-      wC = widthChars cfg
-      hC = heightChars cfg
-      
-      resampleMatrix = 
-        let getVal row col = 
-              let ri = fromIntegral row * fromIntegral (rows - 1) / fromIntegral (hC - 1)
-                  ci = fromIntegral col * fromIntegral (cols - 1) / fromIntegral (wC - 1)
-                  r0 = clamp 0 (rows - 1) (floor ri)
-                  r1 = clamp 0 (rows - 1) (ceiling ri)
-                  c0 = clamp 0 (cols - 1) (floor ci)
-                  c1 = clamp 0 (cols - 1) (ceiling ci)
+        if vrange < eps 
+        then Green
+        else
+          let norm = clamp 0 1 ((v - vmin) / vrange)
+              idx = floor (norm * fromIntegral (length intensityColors - 1))
+              idx' = clamp 0 (length intensityColors - 1) idx
+          in intensityColors !! idx'
 
-                  v00 = (matrix !! r0) !! c0
-                  v01 = if c1 < cols then (matrix !! r0) !! c1 else v00
-                  v10 = if r1 < rows then (matrix !! r1) !! c0 else v00
-                  v11 = if r1 < rows && c1 < cols then (matrix !! r1) !! c1 else v00
-                  fr = ri - fromIntegral r0
-                  fc = ci - fromIntegral c0
-                  v0 = v00 * (1 - fc) + v01 * fc
-                  v1 = v10 * (1 - fc) + v11 * fc
-              in v0 * (1 - fr) + v1 * fr
-        in [[getVal i j | j <- [0..wC-1]] | i <- [0..hC-1]]
-
-      grid = [[('█', Just (colorForValue val)) | val <- row] 
-             | row <- resampleMatrix]
+      plotW = widthChars cfg
+      plotH = heightChars cfg
       
-      ax = axisifyGrid cfg grid (0, fromIntegral cols) 
-                               (fromIntegral rows, 0) 
+      displayGrid = 
+        [ [ let 
+                matrixRow = min (rows - 1) ((plotH - 1 - i) * rows `div` plotH)
+                matrixCol = min (cols - 1) (j * cols `div` plotW)
+                val = matrix !! matrixRow !! matrixCol
+            in ('█', Just (colorForValue val))
+          | j <- [0..plotW-1]]
+        | i <- [0..plotH-1]]
 
-      legendColors = take 9 intensityColors
-      gradientLegend = "Min " ++ concat [paint col '█' | col <- legendColors] ++ " Max"
+      ax = axisifyGrid cfg displayGrid (0, fromIntegral cols - 1) (0, fromIntegral rows - 1)
+      
+      gradientLegend = printf "%.2f " vmin ++ 
+                      concat [paint col '█' | col <- intensityColors] ++ 
+                      printf " %.2f" vmax
       
       titled = if null title then "" else title
   in drawFrame cfg titled ax gradientLegend

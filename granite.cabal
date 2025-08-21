@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               granite
-version:            0.1.0.2
+version:            0.1.0.3
 synopsis:           Easy terminal plotting.
 description:        A terminal plotting library for quick and easy visualisation.
 license:            MIT
