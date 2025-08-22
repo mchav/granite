@@ -18,7 +18,20 @@ source-repository head
   location: https://github.com/mchav/granite
 
 common warnings
-    ghc-options: -Wall
+    ghc-options:
+        -Wall
+        -Wcompat
+        -Widentities
+        -Wincomplete-record-updates
+        -Wincomplete-uni-patterns
+        -Winvalid-haddock
+        -Wno-unticked-promoted-constructors
+        -Wno-unused-do-bind
+        -Wpartial-fields
+        -Wredundant-constraints
+        -Wunused-packages
+        -fhide-source-paths
+        -funbox-strict-fields
 
 library
     import:           warnings

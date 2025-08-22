@@ -1,5 +1,4 @@
--- TODO: Remove bang patterns now that strict is enabled.
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE StrictData #-}
 {-# LANGUAGE Strict #-}
 
 module Granite
@@ -25,12 +24,12 @@ import Text.Printf
 data LegendPos = LegendRight | LegendBottom deriving (Eq, Show)
 
 data Plot = Plot
-  { widthChars   :: !Int
-  , heightChars  :: !Int
-  , leftMargin   :: !Int
-  , bottomMargin :: !Int
-  , titleMargin  :: !Int
-  , legendPos    :: !LegendPos
+  { widthChars   :: Int
+  , heightChars  :: Int
+  , leftMargin   :: Int
+  , bottomMargin :: Int
+  , titleMargin  :: Int
+  , legendPos    :: LegendPos
   } deriving (Eq, Show)
 
 defPlot :: Plot
@@ -100,7 +99,7 @@ ink Sparse x  y = (x .&. 1 == 0) && (y `mod` 3 == 0)
 palette :: [Pat]
 palette = [Solid, Checker, DiagA, DiagB, Sparse]
 
-data Array2D a = A2D !Int !Int !(Arr a)
+data Array2D a = A2D Int Int (Arr a)
 
 getA2D :: Array2D a -> Int -> Int -> a
 getA2D (A2D w _ xs) x y = indexA xs (y*w + x)
@@ -126,10 +125,10 @@ toBit ry rx = case (ry,rx) of
   _     -> 0
 
 data Canvas = Canvas
-  { cW     :: !Int
-  , cH     :: !Int
-  , buffer :: !(Array2D Int)
-  , cbuf   :: !(Array2D (Maybe Color))
+  { cW     :: Int
+  , cH     :: Int
+  , buffer :: (Array2D Int)
+  , cbuf   :: (Array2D (Maybe Color))
   }
 
 newCanvas :: Int -> Int -> Canvas
@@ -174,12 +173,12 @@ justifyRight n s = replicate (max 0 (n - wcswidth s)) ' ' ++ s
 wcswidth :: String -> Int
 wcswidth = go 0
   where
-    go !acc [] = acc
-    go !acc ('\ESC':'[':rest) = let rest' = dropWhile (\c -> c /= 'm') rest
+    go acc [] = acc
+    go acc ('\ESC':'[':rest) = let rest' = dropWhile (\c -> c /= 'm') rest
                                 in case rest' of
                                      []     -> acc
                                      (_:xs) -> go acc xs
-    go !acc (_:xs) = go (acc+1) xs
+    go acc (_:xs) = go (acc+1) xs
 
 fmt :: Double -> String
 fmt v
@@ -219,7 +218,7 @@ axisify cfg c (xmin,xmax) (ymin,ymax) =
   in unlines (attachY ++ [xBar, xLine])
 
 axisifyGrid :: Plot -> [[(Char, Maybe Color)]] -> (Double,Double) -> (Double,Double) -> String
-axisifyGrid cfg grid (!xmin,!xmax) (!ymin,!ymax) =
+axisifyGrid cfg grid (xmin,xmax) (ymin,ymax) =
   let plotH = length grid
       plotW = if null grid then 0 else length (head grid)
       left  = leftMargin cfg
@@ -296,9 +295,9 @@ scatter title sers cfg =
       sy y = clamp 0 (hC*4-1)  $ round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC*4-1))
       pats = cycle palette
       cols = cycle paletteColors
-      withSty = zipWith3 (\(!n,!ps) p c -> (n,ps,p,c)) sers pats cols
-      drawOne (!_name, !pts, !pat, !col) c0 =
-        foldl' (\c (!x,!y) -> let xd = sx x; yd = sy y
+      withSty = zipWith3 (\(n,ps) p c -> (n,ps,p,c)) sers pats cols
+      drawOne (_name, pts, pat, col) c0 =
+        foldl' (\c (x,y) -> let xd = sx x; yd = sy y
                             in if ink pat xd yd then setDotC c xd yd (Just col) else c)
                c0 pts
       cDone = foldl' (flip drawOne) plotC withSty
@@ -341,7 +340,12 @@ resampleToWidth w xs
       in concat [ replicate (base + (if i < extra then 1 else 0)) v
                 | (i,v) <- zip [0..] xs ]
 
-data Bins = Bins { nBins :: !Int, lo :: !Double, hi :: !Double } deriving (Eq, Show)
+data Bins = Bins 
+  { nBins :: Int
+  , lo :: Double
+  , hi :: Double
+  } deriving (Eq, Show)
+
 bins :: Int -> Double -> Double -> Bins
 bins n a b = Bins (max 1 n) (min a b) (max a b)
 
@@ -386,7 +390,7 @@ bars title kvs cfg =
 
       cats :: [(String, Double, Color)]
       cats = [ (name, abs v / vmax, col)
-             | (!(!name, !v), !col) <- zip kvs (cycle paletteColors) ]
+             | ((name, v), col) <- zip kvs (cycle paletteColors) ]
 
       nCats = length cats
 
@@ -424,13 +428,13 @@ pie title parts0 cfg =
       cx    = wDots `div` 2
       cy    = hDots `div` 2
       toAng p = p * 2*pi
-      wedges = scanl (\a (_,!p) -> a + toAng p) 0 parts
+      wedges = scanl (\a (_,p) -> a + toAng p) 0 parts
       angles = zip wedges (tail wedges)
       names  = map fst parts
       cols   = cycle pieColors
       withP  = zipWith3 (\n ang col -> (n,ang,col)) names angles cols
 
-      drawOne (!_name,(!a0,!a1),!col) c0 =
+      drawOne (_name,(a0,a1),col) c0 =
         let inside x y =
               let dx  = fromIntegral (x - cx)
                   dy  = fromIntegral (cy - y)
@@ -450,7 +454,7 @@ pie title parts0 cfg =
 normalize :: [(String, Double)] -> [(String, Double)]
 normalize xs =
   let s = sum (map (abs . snd) xs) + 1e-12
-  in [ (n, max 0 (v / s)) | (!n,!v) <- xs ]
+  in [ (n, max 0 (v / s)) | (n,v) <- xs ]
 
 angleWithin :: Double -> Double -> Double -> Bool
 angleWithin ang a0 a1
@@ -458,17 +462,17 @@ angleWithin ang a0 a1
   | otherwise = ang >= a0 || ang <= a1
 
 lineDotsC :: (Int,Int) -> (Int,Int) -> Maybe Color -> Canvas -> Canvas
-lineDotsC (!x0,!y0) (!x1,!y1) mcol c0 =
+lineDotsC (x0,y0) (x1,y1) mcol c0 =
   let dx = abs (x1 - x0)
       sx = if x0 < x1 then 1 else -1
       dy = negate (abs (y1 - y0))
       sy = if y0 < y1 then 1 else -1
-      go !x !y !err c
+      go x y err c
         | x == x1 && y == y1 = setDotC c x y mcol
         | otherwise =
             let e2 = 2*err
-                (!x', !err') = if e2 >= dy then (x + sx, err + dy) else (x, err)
-                (!y', !err'')= if e2 <= dx then (y + sy, err' + dx) else (y, err')
+                (x', err') = if e2 >= dy then (x + sx, err + dy) else (x, err)
+                (y', err'')= if e2 <= dx then (y + sy, err' + dx) else (y, err')
             in go x' y' err'' (setDotC c x y mcol)
   in go x0 y0 (dx + dy) c0
 
@@ -493,7 +497,7 @@ lineGraph title sers cfg =
       cDone = foldl' (flip drawSeries) plotC withSty
       ax = axisify cfg cDone (xmin,xmax) (ymin,ymax)
       legend = legendBlock (legendPos cfg) (leftMargin cfg + widthChars cfg)
-                 [(n, Solid, col) | (!(!n,_), !col) <- withSty]
+                 [(n, Solid, col) | ((n,_), col) <- withSty]
       titled = if null title then "" else title
   in drawFrame cfg titled ax legend
 
@@ -514,7 +518,7 @@ boxPlot title datasets cfg =
   let wC = widthChars cfg
       hC = heightChars cfg
 
-      stats = [(name, quartiles vals) | (!name, !vals) <- datasets]
+      stats = [(name, quartiles vals) | (name, vals) <- datasets]
 
       allVals = concatMap snd datasets
       ymin = if null allVals then 0 else minimum allVals - abs (minimum allVals) * 0.1
@@ -679,7 +683,9 @@ stackedBars title categories cfg =
 -- on linked list for indexing and update (both O(n)) while keeping
 -- the dependencies very light (wouldn't want to install all of containers
 -- just to get an int map).
-data Arr a = E | N {-# UNPACK #-} !Int {-# UNPACK #-} !Int !(Arr a) a !(Arr a)
+data Arr a 
+  = E 
+  | N Int Int (Arr a) a (Arr a)
 
 size :: Arr a -> Int
 size E               = 0
@@ -754,7 +760,7 @@ fromList xs = fst (build (length xs) xs)
     build :: Int -> [a] -> (Arr a, [a])
     build 0 ys = (E, ys)
     build n ys =
-      let (!l, !ys1)   = build (n `div` 2) ys
+      let (l, ys1)   = build (n `div` 2) ys
           (x:ys2)      = ys1
-          (!r, !ys3)   = build (n - n `div` 2 - 1) ys2
+          (r, ys3)   = build (n - n `div` 2 - 1) ys2
       in (mk l x r, ys3)
