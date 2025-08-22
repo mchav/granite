@@ -1,4 +1,5 @@
 {-# LANGUAGE StrictData #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Strict #-}
 
 module Granite
@@ -15,10 +16,12 @@ module Granite
   , boxPlot
   ) where
 
-import Data.Char (chr)
-import Data.List (foldl', intercalate, intersperse, dropWhileEnd, sortOn, sort)
-import Numeric (showFFloat, showEFloat)
 import Data.Bits ((.&.), (.|.), xor)
+import Data.Char (chr)
+import Data.List qualified as List
+import Data.Text (Text)
+import Data.Text qualified as Text
+import Numeric (showFFloat, showEFloat)
 import Text.Printf
 
 data LegendPos = LegendRight | LegendBottom deriving (Eq, Show)
@@ -67,13 +70,14 @@ ansiCode BrightCyan    = 96
 ansiCode BrightWhite   = 97
 ansiCode Default       = 39
 
-ansiOn :: Color -> String
-ansiOn c = "\ESC[" ++ show (ansiCode c) ++ "m"
-ansiOff :: String
+ansiOn :: Color -> Text
+ansiOn c = "\ESC[" <> Text.show (ansiCode c) <> "m"
+
+ansiOff :: Text
 ansiOff = "\ESC[0m"
 
-paint :: Color -> Char -> String
-paint c ch = if ch == ' ' then " " else ansiOn c ++ [ch] ++ ansiOff
+paint :: Color -> Char -> Text
+paint c ch = if ch == ' ' then " " else ansiOn c <> (Text.singleton ch) <> ansiOff
 
 paletteColors :: [Color]
 paletteColors =
@@ -153,25 +157,24 @@ fillDotsC :: (Int,Int) -> (Int,Int) -> (Int -> Int -> Bool) -> Maybe Color -> Ca
 fillDotsC (x0,y0) (x1,y1) p mcol c0 =
   let xs = [max 0 x0 .. min (cW c0*2-1) x1]
       ys = [max 0 y0 .. min (cH c0*4-1) y1]
-  in  foldl' (\c y -> foldl' (\c' x -> if p x y then setDotC c' x y mcol else c') c xs) c0 ys
+  in  List.foldl' (\c y -> List.foldl' (\c' x -> if p x y then setDotC c' x y mcol else c') c xs) c0 ys
 
-renderCanvas :: Canvas -> String
+renderCanvas :: Canvas -> Text
 renderCanvas (Canvas w h a colA) =
-  let glyph 0 = ' '
+  let glyph 0 = ' ' 
       glyph m = chr (0x2800 + m)
-      rows = [ [ let m = getA2D a x y
-                     ch = glyph m
-                     mc = getA2D colA x y
-                 in maybe [ch] (\c -> paint c ch) mc
-               | x <- [0..w-1] ]
-             | y <- [0..h-1] ]
-  in unlines (map concat rows)
+      rows = flip fmap [0..h-1] (\y -> flip fmap [0..w-1] $ \x -> 
+        let m = getA2D a x y
+            ch = glyph m
+            mc = getA2D colA x y
+        in maybe (Text.singleton ch) (\c -> paint c ch) mc)
+  in Text.unlines (fmap Text.concat rows)
 
-justifyRight :: Int -> String -> String
-justifyRight n s = replicate (max 0 (n - wcswidth s)) ' ' ++ s
+justifyRight :: Int -> Text -> Text
+justifyRight n s = Text.replicate (max 0 (n - wcswidth s)) " " <> s
 
-wcswidth :: String -> Int
-wcswidth = go 0
+wcswidth :: Text -> Int
+wcswidth t = go 0 (Text.unpack t)
   where
     go acc [] = acc
     go acc ('\ESC':'[':rest) = let rest' = dropWhile (\c -> c /= 'm') rest
@@ -180,90 +183,110 @@ wcswidth = go 0
                                      (_:xs) -> go acc xs
     go acc (_:xs) = go (acc+1) xs
 
-fmt :: Double -> String
+fmt :: Double -> Text
 fmt v
-  | abs v >= 1000 || (abs v < 0.01 && v /= 0) = strip (showEFloat (Just 1) v "")
-  | otherwise                                 = strip (showFFloat (Just 1) v "")
-  where
-    strip s = s
+  | abs v >= 1000 || (abs v < 0.01 && v /= 0) = Text.pack (showEFloat (Just 1) v "")
+  | otherwise                                 = Text.pack (showFFloat (Just 1) v "")
 
-drawFrame :: Plot -> String -> String -> String -> String
+drawFrame :: Plot -> Text -> Text -> Text -> Text
 drawFrame _cfg titleStr contentWithAxes legendBlockStr =
-  unlines $ filter (not . null)
-    ( [titleStr | not (null titleStr)]
-   ++ [contentWithAxes]
-   ++ [legendBlockStr | not (null legendBlockStr)] )
+  Text.unlines $ filter (not . Text.null)
+    ( [titleStr | not (Text.null titleStr)]
+   <> [contentWithAxes]
+   <> [legendBlockStr | not (Text.null legendBlockStr)] )
 
-axisify :: Plot -> Canvas -> (Double,Double) -> (Double,Double) -> String
+axisify :: Plot -> Canvas -> (Double,Double) -> (Double,Double) -> Text
 axisify cfg c (xmin,xmax) (ymin,ymax) =
   let plotW = cW c
       plotH = cH c
       left  = leftMargin cfg
-      pad   = replicate left ' '
+      pad   = Text.replicate left " "
 
       yTicks  = [(0, ymax), (plotH `div` 2, (ymin+ymax)/2), (plotH-1, ymin)]
       baseLbl = replicate plotH pad
+
+      setAt :: [Text] -> Int -> Text -> [Text]
       setAt xs i v | i < 0 || i >= length xs = xs
-                   | otherwise               = take i xs ++ v : drop (i+1) xs
-      yLabels = foldl' (\acc (row,v) -> setAt acc row (justifyRight left (fmt v)))
+                   | otherwise = take i xs <> [v] <> drop (i+1) xs
+
+      yLabels = List.foldl' (\acc (row,v) -> setAt acc row (justifyRight left (fmt v)))
                        baseLbl yTicks
 
-      canvasLines = lines (renderCanvas c)
-      attachY = zipWith (\lbl line -> lbl ++ "│" ++ line) yLabels canvasLines
+      canvasLines = Text.lines (renderCanvas c)
+      attachY :: [Text]
+      attachY = zipWith (\lbl line -> lbl <> "│" <> line) yLabels canvasLines
 
-      xBar   = pad ++ "│" ++ replicate plotW '─'
+      xBar   = pad <> "│" <> Text.replicate plotW "─"
       xLbls  = [(0, xmin), (plotW `div` 2, (xmin+xmax)/2), (plotW-1, xmax)]
-      xLine  = placeLabels (replicate (left + 1 + plotW) ' ') (left + 1)
+      xLine  = placeLabels (Text.replicate (left + 1 + plotW) " ") (left + 1)
                            [ (x, fmt v) | (x,v) <- xLbls ]
-  in unlines (attachY ++ [xBar, xLine])
+  in Text.unlines (attachY <> [xBar, xLine])
 
-axisifyGrid :: Plot -> [[(Char, Maybe Color)]] -> (Double,Double) -> (Double,Double) -> String
+axisifyGrid :: Plot -> [[(Char, Maybe Color)]] -> (Double,Double) -> (Double,Double) -> Text
 axisifyGrid cfg grid (xmin,xmax) (ymin,ymax) =
   let plotH = length grid
       plotW = if null grid then 0 else length (head grid)
       left  = leftMargin cfg
-      pad   = replicate left ' '
+      pad   = Text.replicate left " "
 
+      yTicks :: [(Int, Double)]
       yTicks  = [(0, ymax), (plotH `div` 2, (ymin+ymax)/2), (plotH-1, ymin)]
-      baseLbl = replicate plotH pad
+
+      baseLbl :: [Text]
+      baseLbl = List.replicate plotH pad
+
+      setAt :: [Text] -> Int -> Text -> [Text]
       setAt xs i v | i < 0 || i >= length xs = xs
-                   | otherwise               = take i xs ++ v : drop (i+1) xs
-      yLabels = foldl' (\acc (row,v) -> setAt acc row (justifyRight left (fmt v)))
-                       baseLbl yTicks
+                   | otherwise = take i xs <> [v] <> drop (i+1) xs
 
-      renderRow cells = concat [ maybe [ch] (\c -> paint c ch) mc | (ch, mc) <- cells ]
-      attachY = zipWith (\lbl cells -> lbl ++ "│" ++ renderRow cells) yLabels grid
+      yLabels :: [Text]
+      yLabels = List.foldl' 
+          (\acc (row,v) -> setAt acc row (justifyRight left (fmt v)))
+          baseLbl
+          yTicks
 
-      xBar   = pad ++ "│" ++ replicate plotW '─'
+      renderRow :: [(Char, Maybe Color)] -> Text
+      renderRow cells = Text.concat $ 
+        fmap (\(ch, mc) -> maybe (Text.singleton ch) (\c -> paint c ch) mc) cells
+
+      attachY :: [Text]
+      attachY = zipWith (\lbl cells -> lbl <> "│" <> renderRow cells) yLabels grid
+
+      xBar :: Text
+      xBar   = pad <> "│" <> Text.replicate plotW "─"
       xLbls  = [(0, xmin), (plotW `div` 2, (xmin+xmax)/2), (plotW-1, xmax)]
-      xLine  = placeLabels (replicate (left + 1 + plotW) ' ') (left + 1)
-                           [ (x, fmt v) | (x,v) <- xLbls ]
-  in unlines (attachY ++ [xBar, xLine])
+      xLine  = placeLabels 
+                 (Text.replicate (left + 1 + plotW) " ")
+                 (left + 1)
+                 (fmap (\(x,v) -> (x, fmt v)) xLbls)
+  in Text.unlines (attachY <> [xBar, xLine])
 
-placeLabels :: String -> Int -> [(Int,String)] -> String
-placeLabels base off xs = foldl' place base xs
+placeLabels :: Text -> Int -> [(Int,Text)] -> Text
+placeLabels base off xs = List.foldl' place base xs
   where
+    place :: Text -> (Int, Text) -> Text
     place acc (x,s) =
       let i = off + x
-      in take i acc ++ s ++ drop (i + wcswidth s) acc
+      in Text.take i acc <> s <> Text.drop (i + wcswidth s) acc
 
-legendBlock :: LegendPos -> Int -> [(String, Pat, Color)] -> String
+legendBlock :: LegendPos -> Int -> [(Text, Pat, Color)] -> Text
 legendBlock LegendBottom width entries =
-  let cells = [ sample pat col ++ " " ++ name | (name, pat, col) <- entries ]
-      line  = intercalate "   " cells
+  let cells = [ sample pat col <> " " <> name | (name, pat, col) <- entries ]
+      line  = Text.intercalate "   " cells
       pad   = let vis = wcswidth line
-              in if vis < width then replicate ((width - vis) `div` 2) ' ' else ""
-  in pad ++ line
+              in if vis < width then Text.replicate ((width - vis) `div` 2) " " else ""
+  in pad <> line
 legendBlock LegendRight _ entries =
-  unlines [ sample pat col ++ " " ++ name | (name, pat, col) <- entries ]
+  Text.unlines $
+    fmap (\(name, pat, col) -> sample pat col <> " " <> name) entries
 
-sample :: Pat -> Color -> String
+sample :: Pat -> Color -> Text
 sample p col =
-  let c = foldl' (\cv (dx,dy) -> if ink p dx dy then setDotC cv (dx `mod` 2) (dy `mod` 4) (Just col) else cv)
+  let c = List.foldl' (\cv (dx,dy) -> if ink p dx dy then setDotC cv (dx `mod` 2) (dy `mod` 4) (Just col) else cv)
                  (newCanvas 1 1)
                  [(x,y) | y <- [0..3], x <- [0..1]]
       s = renderCanvas c
-  in dropWhileEnd (== '\n') s
+  in Text.dropWhileEnd (== '\n') s
 
 clamp :: Ord a => a -> a -> a -> a
 clamp low high x = max low (min high x)
@@ -283,10 +306,10 @@ boundsXY pts =
 mod' :: Double -> Double -> Double
 mod' a m = a - fromIntegral (floor (a / m) :: Int) * m
 
-series :: String -> [(Double,Double)] -> (String, [(Double,Double)])
+series :: Text -> [(Double,Double)] -> (Text, [(Double,Double)])
 series = (,)
 
-scatter :: String -> [(String, [(Double,Double)])] -> Plot -> String
+scatter :: Text -> [(Text, [(Double,Double)])] -> Plot -> Text
 scatter title sers cfg =
   let wC = widthChars cfg; hC = heightChars cfg
       plotC = newCanvas wC hC
@@ -297,15 +320,14 @@ scatter title sers cfg =
       cols = cycle paletteColors
       withSty = zipWith3 (\(n,ps) p c -> (n,ps,p,c)) sers pats cols
       drawOne (_name, pts, pat, col) c0 =
-        foldl' (\c (x,y) -> let xd = sx x; yd = sy y
+        List.foldl' (\c (x,y) -> let xd = sx x; yd = sy y
                             in if ink pat xd yd then setDotC c xd yd (Just col) else c)
                c0 pts
-      cDone = foldl' (flip drawOne) plotC withSty
+      cDone = List.foldl' (flip drawOne) plotC withSty
       ax    = axisify cfg cDone (xmin,xmax) (ymin,ymax)
       legend = legendBlock (legendPos cfg) (leftMargin cfg + widthChars cfg)
                  [ (n,p, col) | (n,_,p,col) <- withSty ]
-      titled = if null title then "" else title
-  in drawFrame cfg titled ax legend
+  in drawFrame cfg title ax legend
 
 
 blockChar :: Int -> Char
@@ -320,7 +342,7 @@ colGlyphs hC frac =
       rem8  = ticks - full*8
       topPad = hC - full - (if rem8>0 then 1 else 0)
       middle = [blockChar rem8 | rem8 > 0]
-  in replicate topPad ' ' ++ middle ++ replicate full '█'
+  in replicate topPad ' ' <> middle <> replicate full '█'
 
 resampleToWidth :: Int -> [Double] -> [Double]
 resampleToWidth w xs
@@ -349,11 +371,11 @@ data Bins = Bins
 bins :: Int -> Double -> Double -> Bins
 bins n a b = Bins (max 1 n) (min a b) (max a b)
 
-histogram :: String -> Bins -> [Double] -> Plot -> String
+histogram :: Text -> Bins -> [Double] -> Plot -> Text
 histogram title (Bins n a b) xs cfg =
   let step    = (b - a) / fromIntegral n
       binIx x = clamp 0 (n-1) $ floor ((x - a) / step)
-      counts  = foldl' (\acc x ->
+      counts  = List.foldl' (\acc x ->
                           if x < a || x > b then acc
                           else addAt acc (binIx x) 1)
                        (replicate n 0 :: [Int]) xs
@@ -366,7 +388,7 @@ histogram title (Bins n a b) xs cfg =
 
       dataCols  = [ (colGlyphs hC f, Just BrightCyan) | f <- colsF ]
       gutterCol = (replicate hC ' ', Nothing)
-      columns   = concat (intersperse [gutterCol] (map pure dataCols))
+      columns   = concat (List.intersperse [gutterCol] (map pure dataCols))
 
       grid :: [[(Char, Maybe Color)]]
       grid = [ [ (fst col !! y, snd col) | col <- columns ]
@@ -375,20 +397,19 @@ histogram title (Bins n a b) xs cfg =
       ax     = axisifyGrid cfg grid (a,b) (0, fromIntegral (maximum (1:counts)))
       legendWidth = leftMargin cfg + 1 + (if null grid then 0 else length (head grid))
       legend = legendBlock (legendPos cfg) legendWidth [("count", Solid, BrightCyan)]
-      titled = if null title then "" else title
-  in drawFrame cfg titled ax legend
+  in drawFrame cfg title ax legend
 
 addAt :: [Int] -> Int -> Int -> [Int]
-addAt xs i v = take i xs ++ [xs !! i + v] ++ drop (i+1) xs
+addAt xs i v = take i xs <> [xs !! i + v] <> drop (i+1) xs
 
-bars :: String -> [(String, Double)] -> Plot -> String
+bars :: Text -> [(Text, Double)] -> Plot -> Text
 bars title kvs cfg =
   let wC   = widthChars cfg
       hC   = heightChars cfg
       vals = map snd kvs
       vmax = maximum (1e-12 : map abs vals)
 
-      cats :: [(String, Double, Color)]
+      cats :: [(Text, Double, Color)]
       cats = [ (name, abs v / vmax, col)
              | ((name, v), col) <- zip kvs (cycle paletteColors) ]
 
@@ -405,7 +426,7 @@ bars title kvs cfg =
         ]
 
       gutterCol = (replicate hC ' ', Nothing)
-      columns   = concat (intersperse [gutterCol] catGroups)
+      columns   = concat (List.intersperse [gutterCol] catGroups)
 
       grid :: [[(Char, Maybe Color)]]
       grid = [ [ (glyphs !! y, mc) | (glyphs, mc) <- columns ]
@@ -415,10 +436,9 @@ bars title kvs cfg =
       legendWidth = leftMargin cfg + 1 + (if null grid then 0 else length (head grid))
       legend = legendBlock (legendPos cfg) legendWidth
                  [ (name, Checker, col) | (name, _, col) <- cats ]
-      titled = if null title then "" else title
-  in drawFrame cfg titled ax legend
+  in drawFrame cfg title ax legend
 
-pie :: String -> [(String, Double)] -> Plot -> String
+pie :: Text -> [(Text, Double)] -> Plot -> Text
 pie title parts0 cfg =
   let parts = normalize parts0
       wC = widthChars cfg; hC = heightChars cfg
@@ -432,6 +452,7 @@ pie title parts0 cfg =
       angles = zip wedges (tail wedges)
       names  = map fst parts
       cols   = cycle pieColors
+      withP :: [(Text, (Double, Double), Color)]
       withP  = zipWith3 (\n ang col -> (n,ang,col)) names angles cols
 
       drawOne (_name,(a0,a1),col) c0 =
@@ -444,14 +465,13 @@ pie title parts0 cfg =
               in rr2 <= r2 && angleWithin ang a0 a1
         in fillDotsC (cx - r, cy - r) (cx + r, cy + r) (\x y -> inside x y) (Just col) c0
 
-      cDone  = foldl' (flip drawOne) plotC withP
+      cDone  = List.foldl' (flip drawOne) plotC withP
       ax     = axisify cfg cDone (0,1) (0,1)
       legend = legendBlock (legendPos cfg) (leftMargin cfg + widthChars cfg)
                  [ (n, Solid, col) | (n,_,col) <- withP ]
-      titled= if null title then "" else title
-  in drawFrame cfg titled ax legend
+  in drawFrame cfg title ax legend
 
-normalize :: [(String, Double)] -> [(String, Double)]
+normalize :: [(Text, Double)] -> [(Text, Double)]
 normalize xs =
   let s = sum (map (abs . snd) xs) + 1e-12
   in [ (n, max 0 (v / s)) | (n,v) <- xs ]
@@ -476,7 +496,7 @@ lineDotsC (x0,y0) (x1,y1) mcol c0 =
             in go x' y' err'' (setDotC c x y mcol)
   in go x0 y0 (dx + dy) c0
 
-lineGraph :: String -> [(String, [(Double,Double)])] -> Plot -> String
+lineGraph :: Text -> [(Text, [(Double,Double)])] -> Plot -> Text
 lineGraph title sers cfg =
   let wC = widthChars cfg; hC = heightChars cfg
       plotC = newCanvas wC hC
@@ -488,22 +508,23 @@ lineGraph title sers cfg =
       withSty = zip sers cols
       
       drawSeries ((_name, pts), col) c0 =
-        let sortedPts = sortOn fst pts
+        let sortedPts = List.sortOn fst pts
             dotPairs = zip sortedPts (tail sortedPts)
-        in foldl' (\c ((x1,y1), (x2,y2)) -> 
+        in List.foldl' (\c ((x1,y1), (x2,y2)) -> 
                     lineDotsC (sx x1, sy y1) (sx x2, sy y2) (Just col) c)
                   c0 dotPairs
       
-      cDone = foldl' (flip drawSeries) plotC withSty
+      cDone = List.foldl' (flip drawSeries) plotC withSty
+      ax :: Text
       ax = axisify cfg cDone (xmin,xmax) (ymin,ymax)
+      legend :: Text
       legend = legendBlock (legendPos cfg) (leftMargin cfg + widthChars cfg)
                  [(n, Solid, col) | ((n,_), col) <- withSty]
-      titled = if null title then "" else title
-  in drawFrame cfg titled ax legend
+  in drawFrame cfg title ax legend
 
 quartiles :: [Double] -> (Double, Double, Double, Double, Double)
 quartiles xs = 
-  let sorted = sort xs
+  let sorted = List.sort xs
       n = length sorted
       q1Idx = n `div` 4
       q2Idx = n `div` 2
@@ -513,7 +534,7 @@ quartiles xs =
      then let m = sum xs / fromIntegral n in (m,m,m,m,m)
      else (head sorted, getIdx q1Idx, getIdx q2Idx, getIdx q3Idx, last sorted)
 
-boxPlot :: String -> [(String, [Double])] -> Plot -> String
+boxPlot :: Text -> [(Text, [Double])] -> Plot -> Text
 boxPlot title datasets cfg =
   let wC = widthChars cfg
       hC = heightChars cfg
@@ -559,32 +580,31 @@ boxPlot title datasets cfg =
             grid9 = setGridChar grid8 xMid maxRow '┴' (Just col)
         in grid9
       
-      finalGrid = foldl' drawBox emptyGrid (zip [0..] stats)
+      finalGrid = List.foldl' drawBox emptyGrid (zip [0..] stats)
       
       ax = axisifyGrid cfg finalGrid (0, fromIntegral nBoxes) (ymin, ymax)
       legend = legendBlock (legendPos cfg) (leftMargin cfg + widthChars cfg)
                  [(name, Solid, pieColors !! (i `mod` length pieColors)) 
                   | (i, (name, _)) <- zip [0..] stats]
-      titled = if null title then "" else title
-  in drawFrame cfg titled ax legend
+  in drawFrame cfg title ax legend
   where
     drawVLine grid x y1 y2 ch col =
       let yStart = min y1 y2
           yEnd = max y1 y2
-      in foldl' (\g y -> setGridChar g x y ch col) grid [yStart..yEnd]
+      in List.foldl' (\g y -> setGridChar g x y ch col) grid [yStart..yEnd]
     
     drawHLine grid x1 x2 y ch col =
       let xStart = min x1 x2
           xEnd = max x1 x2
-      in foldl' (\g x -> setGridChar g x y ch col) grid [xStart..xEnd]
+      in List.foldl' (\g x -> setGridChar g x y ch col) grid [xStart..xEnd]
     
     setGridChar grid x y ch col =
       if y >= 0 && y < length grid && x >= 0 && x < length (head grid)
-      then take y grid ++ [setAt (grid !! y) x (ch, col)] ++ drop (y+1) grid
+      then take y grid <> [setAt (grid !! y) x (ch, col)] <> drop (y+1) grid
       else grid
-      where setAt row i v = take i row ++ [v] ++ drop (i+1) row
+      where setAt row i v = take i row <> [v] <> drop (i+1) row
 
-heatmap :: String -> [[Double]] -> Plot -> String
+heatmap :: Text -> [[Double]] -> Plot -> Text
 heatmap title matrix cfg =
   let rows = length matrix
       cols = if null matrix then 0 else length (head matrix)
@@ -622,14 +642,13 @@ heatmap title matrix cfg =
 
       ax = axisifyGrid cfg displayGrid (0, fromIntegral cols - 1) (0, fromIntegral rows - 1)
       
-      gradientLegend = printf "%.2f " vmin ++ 
-                      concat [paint col '█' | col <- intensityColors] ++ 
-                      printf " %.2f" vmax
+      gradientLegend = (Text.pack $ printf "%.2f " vmin) <> 
+                      Text.concat (fmap (\col -> paint col '█') intensityColors) <> 
+                      (Text.pack $ printf " %.2f" vmax)
       
-      titled = if null title then "" else title
-  in drawFrame cfg titled ax gradientLegend
+  in drawFrame cfg title ax gradientLegend
 
-stackedBars :: String -> [(String, [(String, Double)])] -> Plot -> String
+stackedBars :: Text -> [(Text, [(Text, Double)])] -> Plot -> Text
 stackedBars title categories cfg =
   let wC = widthChars cfg
       hC = heightChars cfg
@@ -654,6 +673,7 @@ stackedBars title categories cfg =
         let cumHeights = scanl (+) 0 [v / maxHeight | (_, v) <- series']
             segments = zip3 (map fst series') cumHeights (tail cumHeights)
             
+            makeColumn :: [(Char, Maybe Color)]
             makeColumn = 
               [ let heightFromBottom = fromIntegral (hC - y) / fromIntegral hC
                     findSegment [] = (' ', Nothing)
@@ -667,16 +687,17 @@ stackedBars title categories cfg =
       
       gutterCol = replicate hC (' ', Nothing)
       allBars = zipWith makeBar categories widths
-      columns = concat (intersperse [gutterCol] allBars)
+      columns = concat (List.intersperse [gutterCol] allBars)
       
       grid = [[col !! y | col <- columns] | y <- [0..hC-1]]
       
+      ax :: Text
       ax = axisifyGrid cfg grid (0, fromIntegral (max 1 nCats)) (0, maxHeight)
+      legend :: Text
       legend = legendBlock (legendPos cfg) (leftMargin cfg + 1 + 
                           (if null grid then 0 else length (head grid)))
                  [(name, Solid, col) | (name, col) <- seriesColors]
-      titled = if null title then "" else title
-  in drawFrame cfg titled ax legend
+  in drawFrame cfg title ax legend
 
 -- AVL Tree we'll use as an array.
 -- This improves upon the previous implementation that relies
@@ -735,10 +756,10 @@ balance t = t
 indexA :: Arr a -> Int -> a
 indexA t i =
   case t of
-    E -> error ("index out of bounds: " ++ show i)
+    E -> error ("index out of bounds: " <> show i)
     N _ _ l x r ->
       let sl = size l in
-      if i < 0 || i >= 1 + sl + size r then error ("index out of bounds: " ++ show i)
+      if i < 0 || i >= 1 + sl + size r then error ("index out of bounds: " <> show i)
       else if i < sl then indexA l i
       else if i == sl then x
       else indexA r (i - sl - 1)
@@ -746,10 +767,10 @@ indexA t i =
 setA :: Arr a -> Int -> a -> Arr a
 setA t i y =
   case t of
-    E -> error ("index out of bounds when setting: " ++ show i)
+    E -> error ("index out of bounds when setting: " <> show i)
     N _ _ l x r ->
       let sl = size l in
-      if i < 0 || i >= 1 + sl + size r then error ("index out of bounds: " ++ show i)
+      if i < 0 || i >= 1 + sl + size r then error ("index out of bounds: " <> show i)
       else if i < sl then balance (mk (setA l i y) x r)
       else if i == sl then mk l y r
       else balance (mk l x (setA r (i - sl - 1) y))
