@@ -1,5 +1,5 @@
 # Granite
-A library for producing terminal plots. It depends only on Haskell's base and text (only for efficient but it could equally use `String`) packages so it should be easy to use and install.
+A library for producing terminal plots. It depends only on Haskell's base and text (only for efficieny but it could use `String`) packages so it should be easy to use and install.
 
 # Supported graph types
 
