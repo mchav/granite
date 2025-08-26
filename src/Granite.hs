@@ -300,8 +300,8 @@ eps = 1e-12
 boundsXY :: [(Double,Double)] -> (Double,Double,Double,Double)
 boundsXY pts =
   let xs = map fst pts; ys = map snd pts
-      xmin = minimum xs; xmax = maximum xs
-      ymin = minimum ys; ymax = maximum ys
+      xmin = minimum' xs; xmax = maximum' xs
+      ymin = minimum' ys; ymax = maximum' ys
       padx = (xmax - xmin) * 0.05 + 1e-9
       pady = (ymax - ymin) * 0.05 + 1e-9
   in (xmin - padx, xmax + padx, ymin - pady, ymax + pady)
@@ -410,7 +410,7 @@ bars kvs cfg =
   let wC   = widthChars cfg
       hC   = heightChars cfg
       vals = map snd kvs
-      vmax = maximum (1e-12 : map abs vals)
+      vmax = maximum' (map abs vals)
 
       cats :: [(Text, Double, Color)]
       cats = [ (name, abs v / vmax, col)
@@ -546,8 +546,8 @@ boxPlot datasets cfg =
       stats = [(name, quartiles vals) | (name, vals) <- datasets]
 
       allVals = concatMap snd datasets
-      ymin = if null allVals then 0 else minimum allVals - abs (minimum allVals) * 0.1
-      ymax = if null allVals then 1 else maximum allVals + abs (maximum allVals) * 0.1
+      ymin = if null allVals then 0 else minimum' allVals - abs (minimum' allVals) * 0.1
+      ymax = if null allVals then 1 else maximum' allVals + abs (maximum' allVals) * 0.1
 
       nBoxes = length datasets
       boxWidth = if nBoxes == 0 then 1 else max 1 (wC `div` (nBoxes * 2))
@@ -614,8 +614,8 @@ heatmap matrix cfg =
       cols = gridWidth matrix
 
       allVals = concat matrix
-      vmin = if null allVals then 0 else minimum allVals
-      vmax = if null allVals then 1 else maximum allVals
+      vmin = if null allVals then 0 else minimum' allVals
+      vmax = if null allVals then 1 else maximum' allVals
       vrange = vmax - vmin
 
       intensityColors = 
@@ -706,6 +706,13 @@ stackedBars categories cfg =
 gridWidth :: [[a]] -> Int
 gridWidth []     = 0
 gridWidth (x:_) = length x
+
+-- | Min and max function for axis bounds which defaults to 0 and 1 when empty.
+minimum', maximum' :: [Double] -> Double
+minimum' [] = 0
+minimum' xs = minimum xs
+maximum' [] = 1
+maximum' xs = maximum xs
 
 -- AVL Tree we'll use as an array.
 -- This improves upon the previous implementation that relies
