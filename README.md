@@ -1,5 +1,5 @@
 # Granite
-A library for producing terminal plots. It depends only on Haskell's base and text (only for efficieny but it could use `String`) packages so it should be easy to use and install.
+A library for producing terminal plots. It depends only on Haskell's base and text (only for efficieny but it could use `String`. In fact, we expose an API that uses `String` for easier use in GHCi) packages so it should be easy to use and install.
 
 # Supported graph types
 
@@ -18,12 +18,10 @@ A library for producing terminal plots. It depends only on Haskell's base and te
 ![Scatter Plot](https://github.com/mchav/granite/blob/main/static/scatter_plot.png)
 
 ```haskell
-{-# LANGUAGE OverloadedStrings #-}
 import           Control.Monad
-import qualified Data.Text.IO as T
 import           System.Random.Stateful
 
-import Granite
+import Granite.String
 
 main :: IO ()
 main = do
@@ -33,8 +31,8 @@ main = do
   ptsA_y <- replicateM 600 (uniformRM range g)
   ptsB_x <- replicateM 600 (uniformRM range g)
   ptsB_y <- replicateM 600 (uniformRM range g)
-  T.putStrLn (scatter "Random points" [series "A" (zip ptsA_x ptsA_y), series "B" (zip ptsB_x ptsB_y)]
-              defPlot{widthChars=68,heightChars=22,plotTitle="Random points"})
+  putStrLn (scatter "Random points" [series "A" (zip ptsA_x ptsA_y), series "B" (zip ptsB_x ptsB_y)]
+            defPlot{widthChars=68,heightChars=22,plotTitle="Random points"})
 ```
 
 ### Bar chart
