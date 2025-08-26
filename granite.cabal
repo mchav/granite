@@ -60,5 +60,5 @@ test-suite granite-test
     hs-source-dirs:   test
     main-is:          Main.hs
     build-depends:
-        base >=4
+        base >=4 && <5
 
