@@ -1,8 +1,9 @@
 # Revision history for granite
 
-## 0.2.0.0
+## 0.2.0.0 -- 2025-08-26
 * Plot title is now part of the configuration options.
 * API now uses Text instead of String.
+* You can now specify the bounds of a plot e.g. `T.putStrLn $ lineGraph [("Foo", [(0, 0), (10, 1)]), ("Bar", [(0, 1), (10, 0)])] defPlot { xBounds = (Just 0, Just 10), yBounds = (Just 0, Just 1) }`
 
 ## 0.1.0.3 -- 2025-08-21
 
