@@ -1,5 +1,9 @@
 # Revision history for granite
 
+## 0.2.0.0
+* Plot title is now part of the configuration options.
+* API now uses Text instead of String.
+
 ## 0.1.0.3 -- 2025-08-21
 
 * Fix heatmaps: matrix grid wasn't properly mapping to canvas + axes were reversed.
