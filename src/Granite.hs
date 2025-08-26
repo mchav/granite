@@ -614,7 +614,7 @@ ansiCode BrightWhite   = 97
 ansiCode Default       = 39
 
 ansiOn :: Color -> Text
-ansiOn c = "\ESC[" <> Text.show (ansiCode c) <> "m"
+ansiOn c = "\ESC[" <> Text.pack (show (ansiCode c)) <> "m"
 
 ansiOff :: Text
 ansiOff = "\ESC[0m"

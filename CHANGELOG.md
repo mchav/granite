@@ -1,5 +1,8 @@
 # Revision history for granite
 
+## 0.2.0.1 -- 2025-08-26
+* Loosen bounds for text
+
 ## 0.2.0.0 -- 2025-08-26
 * Plot title is now part of the configuration options.
 * API now uses Text instead of String.
