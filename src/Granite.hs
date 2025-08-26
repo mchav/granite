@@ -33,6 +33,13 @@ data Plot = Plot
   , leftMargin   :: Int
   , bottomMargin :: Int
   , titleMargin  :: Int
+  -- first element is xmin second is xmax.
+  -- Similar scheme for yBounds.
+  -- Note: Here nothing does not mean the axis is
+  -- unbounded it means we fall back to the default bounding
+  -- logic.
+  , xBounds      :: (Maybe Double, Maybe Double)
+  , yBounds      :: (Maybe Double, Maybe Double)
   , plotTitle    :: Text
   , legendPos    :: LegendPos
   } deriving (Eq, Show)
@@ -44,6 +51,8 @@ defPlot = Plot
   , leftMargin   = 6
   , bottomMargin = 2
   , titleMargin  = 1
+  , xBounds      = (Nothing, Nothing)
+  , yBounds      = (Nothing, Nothing)
   , plotTitle    = ""
   , legendPos    = LegendRight
   }
@@ -297,14 +306,17 @@ clamp low high x = max low (min high x)
 eps :: Double
 eps = 1e-12
 
-boundsXY :: [(Double,Double)] -> (Double,Double,Double,Double)
-boundsXY pts =
+boundsXY :: Plot -> [(Double,Double)] -> (Double,Double,Double,Double)
+boundsXY cfg pts =
   let xs = map fst pts; ys = map snd pts
       xmin = minimum' xs; xmax = maximum' xs
       ymin = minimum' ys; ymax = maximum' ys
       padx = (xmax - xmin) * 0.05 + 1e-9
       pady = (ymax - ymin) * 0.05 + 1e-9
-  in (xmin - padx, xmax + padx, ymin - pady, ymax + pady)
+  in (fromMaybe (xmin - padx) (fst (xBounds cfg)),
+      fromMaybe (xmax + padx) (snd (xBounds cfg)),
+      fromMaybe (ymin - pady) (fst (yBounds cfg)),
+      fromMaybe (ymax + pady) (snd (yBounds cfg)))
 
 mod' :: Double -> Double -> Double
 mod' a m = a - fromIntegral (floor (a / m) :: Int) * m
@@ -316,7 +328,7 @@ scatter :: [(Text, [(Double,Double)])] -> Plot -> Text
 scatter sers cfg =
   let wC = widthChars cfg; hC = heightChars cfg
       plotC = newCanvas wC hC
-      (xmin,xmax,ymin,ymax) = boundsXY (concatMap snd sers)
+      (xmin,xmax,ymin,ymax) = boundsXY cfg (concatMap snd sers)
       sx x = clamp 0 (wC*2-1)  $ round ((x - xmin) / (xmax - xmin + eps) * fromIntegral (wC*2-1))
       sy y = clamp 0 (hC*4-1)  $ round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC*4-1))
       pats = cycle palette
@@ -503,7 +515,7 @@ lineGraph :: [(Text, [(Double,Double)])] -> Plot -> Text
 lineGraph sers cfg =
   let wC = widthChars cfg; hC = heightChars cfg
       plotC = newCanvas wC hC
-      (xmin,xmax,ymin,ymax) = boundsXY (concatMap snd sers)
+      (xmin,xmax,ymin,ymax) = boundsXY cfg (concatMap snd sers)
       sx x = clamp 0 (wC*2-1) $ round ((x - xmin) / (xmax - xmin + eps) * fromIntegral (wC*2-1))
       sy y = clamp 0 (hC*4-1) $ round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC*4-1))
       
