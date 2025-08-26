@@ -58,6 +58,7 @@ module Granite
   -- * Data Preparation
   , series
   , bins
+  , Bins(..)
   -- * Chart Types
   , histogram
   , bars

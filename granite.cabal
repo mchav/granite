@@ -35,7 +35,8 @@ common ghc-options
 
 library
     import:           ghc-options
-    exposed-modules:  Granite
+    exposed-modules:  Granite,
+                      Granite.String
     build-depends:
         base >=4 && <5,
         text >= 1 && < 3
