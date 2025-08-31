@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Strict #-}
-{-# LANGUAGE StrictData #-}
+
 
 {- |
 Module      : Granite
@@ -59,6 +59,8 @@ module Granite (
 
     -- * Formatting
     Color (..),
+    LabelFormatter,
+    AxisEnv(..),
 
     -- * Data Preparation
     series,
@@ -122,9 +124,9 @@ data Plot = Plot
     -- ^ Position of the legend (default: 'LegendRight')
     , colorPalette :: [Color]
     -- ^ Color palette that'll be used by the plot.
-    , xFormatter :: (Int -> Double -> Text)
+    , xFormatter :: LabelFormatter
     -- ^ Formatter for x-axis labels.
-    , yFormatter :: (Int -> Double -> Text)
+    , yFormatter :: LabelFormatter
     -- ^ Formatter for y-axis labels.
     }
 
@@ -159,9 +161,31 @@ defPlot =
         , plotTitle = ""
         , legendPos = LegendRight
         , colorPalette = paletteColors
-        , xFormatter = \_ -> fmt
-        , yFormatter = \_ -> fmt
+        , xFormatter = fmt
+        , yFormatter = fmt
         }
+
+-- | Axis-aware, width-limited, tick-label formatter.
+--
+-- Given:
+--    * axis context
+--    * a per-tick width budget (in terminal cells)
+--    * and the raw tick value.
+-- returns the label to render.
+type LabelFormatter =  AxisEnv    -- ^ Axis context (domain, tick index/count, etc)
+                    -> Int        -- ^ Slot width budget in characters for this tick.
+                    -> Double     -- ^ Raw data value for the tick
+                    -> Text.Text  -- ^ Rendered label (if it doesn't fit in the slot it will be truncated)
+
+-- | What the formatter gets to know about the axis/ticks
+data AxisEnv = AxisEnv
+  { domain     :: (Double, Double)
+    -- ^ min/max of the axis in data space
+  , tickIndex  :: Int
+    -- ^ index of THIS tick [0..tickCount-1]
+  , tickCount  :: Int
+    -- ^ total number of ticks
+  }
 
 -- | Supported ANSI colo(u)rs.
 data Color
@@ -333,7 +357,7 @@ bars kvs cfg =
         nCats = length cats
 
         (base, extra) =
-            if nCats == 0 then (0, 0) else (wC `div` nCats, wC - (wC `div` nCats) * nCats)
+            if nCats == 0 then (0, 0) else (wC `div` nCats, wC - wC `div` nCats * nCats)
         widths = [base + (if i < extra then 1 else 0) | i <- [0 .. nCats - 1]]
 
         catGroups :: [[(String, Maybe Color)]]
@@ -343,7 +367,7 @@ bars kvs cfg =
             ]
 
         gutterCol = (replicate hC ' ', Nothing)
-        columns = concat (List.intersperse [gutterCol] catGroups)
+        columns = List.intercalate [gutterCol] catGroups
 
         grid :: [[(Char, Maybe Color)]]
         grid =
@@ -352,7 +376,7 @@ bars kvs cfg =
             ]
 
         ax = axisifyGrid cfg grid (0, fromIntegral (max 1 nCats)) (0, vmax)
-        legendWidth = leftMargin cfg + 1 + (gridWidth grid)
+        legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend =
             legendBlock
                 (legendPos cfg)
@@ -394,7 +418,7 @@ stackedBars categories cfg =
         (base, extra) =
             if nCats == 0
                 then (0, 0)
-                else (wC `div` nCats, wC - (wC `div` nCats) * nCats)
+                else (wC `div` nCats, wC - wC `div` nCats * nCats)
         widths = [base + (if i < extra then 1 else 0) | i <- [0 .. nCats - 1]]
 
         cols = cycle paletteColors
@@ -419,7 +443,7 @@ stackedBars categories cfg =
 
         gutterCol = replicate hC (' ', Nothing)
         allBars = zipWith makeBar categories widths
-        columns = concat (List.intersperse [gutterCol] allBars)
+        columns = List.intercalate [gutterCol] allBars
 
         grid = [[col !! y | col <- columns] | y <- [0 .. hC - 1]]
 
@@ -431,7 +455,7 @@ stackedBars categories cfg =
                 (legendPos cfg)
                 ( leftMargin cfg
                     + 1
-                    + (gridWidth grid)
+                    + gridWidth grid
                 )
                 [(name, Solid, col) | (name, col) <- seriesColors]
      in drawFrame cfg ax legend
@@ -498,7 +522,7 @@ histogram (Bins n a b) xs cfg =
 
         dataCols = [(colGlyphs hC f, Just BrightCyan) | f <- colsF]
         gutterCol = (replicate hC ' ', Nothing)
-        columns = concat (List.intersperse [gutterCol] (map pure dataCols))
+        columns = List.intercalate [gutterCol] (map pure dataCols)
 
         grid :: [[(Char, Maybe Color)]]
         grid =
@@ -507,7 +531,7 @@ histogram (Bins n a b) xs cfg =
             ]
 
         ax = axisifyGrid cfg grid (a, b) (0, fromIntegral (maximum (1 : counts)))
-        legendWidth = leftMargin cfg + 1 + (gridWidth grid)
+        legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend = legendBlock (legendPos cfg) legendWidth [("count", Solid, BrightCyan)]
      in drawFrame cfg ax legend
 
@@ -545,7 +569,7 @@ pie parts0 cfg =
         names = map fst parts
         cols = cycle pieColors
         withP :: [(Text, (Double, Double), Color)]
-        withP = zipWith3 (\n ang col -> (n, ang, col)) names angles cols
+        withP = zip3 names angles cols
 
         drawOne (_name, (a0, a1), col) c0 =
             let inside x y =
@@ -555,7 +579,7 @@ pie parts0 cfg =
                         r2 = fromIntegral (r * r)
                         ang = atan2 dy dx `mod'` (2 * pi)
                      in rr2 <= r2 && angleWithin ang a0 a1
-             in fillDotsC (cx - r, cy - r) (cx + r, cy + r) (\x y -> inside x y) (Just col) c0
+             in fillDotsC (cx - r, cy - r) (cx + r, cy + r) inside (Just col) c0
 
         cDone = List.foldl' (flip drawOne) plotC withP
         ax = axisify cfg cDone (0, 1) (0, 1)
@@ -634,9 +658,9 @@ heatmap matrix cfg =
         ax = axisifyGrid cfg displayGrid (0, fromIntegral cols - 1) (0, fromIntegral rows - 1)
 
         gradientLegend =
-            (Text.pack $ printf "%.2f " vmin)
-                <> Text.concat (fmap (\col -> paint col '█') intensityColors)
-                <> (Text.pack $ printf " %.2f" vmax)
+            Text.pack (printf "%.2f " vmin)
+                <> Text.concat (fmap (`paint` '█') intensityColors)
+                <> Text.pack (printf " %.2f" vmax)
      in drawFrame cfg ax gradientLegend
 
 {- | Create a box plot showing statistical distributions.
@@ -764,7 +788,7 @@ ansiOff :: Text
 ansiOff = "\ESC[0m"
 
 paint :: Color -> Char -> Text
-paint c ch = if ch == ' ' then " " else ansiOn c <> (Text.singleton ch) <> ansiOff
+paint c ch = if ch == ' ' then " " else ansiOn c <> Text.singleton ch <> ansiOff
 
 paletteColors :: [Color]
 paletteColors =
@@ -794,10 +818,10 @@ data Pat = Solid | Checker | DiagA | DiagB | Sparse deriving (Eq, Show)
 
 ink :: Pat -> Int -> Int -> Bool
 ink Solid _ _ = True
-ink Checker x y = ((x `xor` y) .&. 1) == 0
+ink Checker x y = (x `xor` y) .&. 1 == 0
 ink DiagA x y = (x + y) `mod` 3 /= 1
 ink DiagB x y = (x - y) `mod` 3 /= 1
-ink Sparse x y = (x .&. 1 == 0) && (y `mod` 3 == 0)
+ink Sparse x y = x .&. 1 == 0 && y `mod` 3 == 0
 
 palette :: [Pat]
 palette = [Solid, Checker, DiagA, DiagB, Sparse]
@@ -830,8 +854,8 @@ toBit ry rx = case (ry, rx) of
 data Canvas = Canvas
     { cW :: Int
     , cH :: Int
-    , buffer :: (Array2D Int)
-    , cbuf :: (Array2D (Maybe Color))
+    , buffer :: Array2D Int
+    , cbuf :: Array2D (Maybe Color)
     }
 
 newCanvas :: Int -> Int -> Canvas
@@ -863,35 +887,32 @@ renderCanvas (Canvas w h a colA) =
     let glyph 0 = ' '
         glyph m = chr (0x2800 + m)
         rows =
-            flip
-                fmap
-                [0 .. h - 1]
-                ( \y -> flip fmap [0 .. w - 1] $ \x ->
+            fmap ( \y -> flip fmap [0 .. w - 1] $ \x ->
                     let m = getA2D a x y
                         ch = glyph m
                         mc = getA2D colA x y
-                     in maybe (Text.singleton ch) (\c -> paint c ch) mc
-                )
+                     in maybe (Text.singleton ch) (`paint` ch) mc
+                ) [0 .. h - 1]
      in Text.unlines (fmap Text.concat rows)
 
 justifyRight :: Int -> Text -> Text
 justifyRight n s = Text.replicate (max 0 (n - wcswidth s)) " " <> s
 
 wcswidth :: Text -> Int
-wcswidth t = go 0 t
+wcswidth = go 0
   where
     go acc xs
         | Text.null xs = acc
         | Text.isPrefixOf "\ESC[" xs =
             let
-                rest' = Text.dropWhile (\c -> c /= 'm') xs
+                rest' = Text.dropWhile (/= 'm') xs
              in
                 if Text.null rest' then acc else go acc (Text.tail rest')
         | otherwise = go (acc + 1) (Text.tail xs)
 
-fmt :: Double -> Text
-fmt v
-    | abs v >= 10000 || (abs v < 0.01 && v /= 0) = Text.pack (showEFloat (Just 1) v "")
+fmt :: AxisEnv -> Int ->Double -> Text
+fmt _ _ v
+    | abs v >= 10000 || abs v < 0.01 && v /= 0 = Text.pack (showEFloat (Just 1) v "")
     | otherwise = Text.pack (showFFloat (Just 1) v "")
 
 drawFrame :: Plot -> Text -> Text -> Text
@@ -919,9 +940,10 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
             | i < 0 || i >= length xs = xs
             | otherwise = take i xs <> [v] <> drop (i + 1) xs
 
+        yEnv n = AxisEnv (ymin, ymax) n 3
         yLabels =
             List.foldl'
-                (\acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg row v)))
+                (\acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) 4 v)))
                 baseLbl
                 yTicks
 
@@ -930,12 +952,15 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
         attachY = zipWith (\lbl line -> lbl <> "│" <> line) yLabels canvasLines
 
         xBar = pad <> "│" <> Text.replicate plotW "─"
+
+        slotW = plotW `div` 2
+        xEnv n = AxisEnv (xmin, xmax) n 3
         xLbls = [(0, xmin), (plotW `div` 2, (xmin + xmax) / 2), (plotW - 1, xmax)]
         xLine =
             placeLabels
                 (Text.replicate (left + 1 + plotW) " ")
                 (left + 1)
-                [(x, xFormatter cfg x v) | (x, v) <- xLbls]
+                [(x, xFormatter cfg (xEnv x) slotW v) | (x, v) <- xLbls]
      in Text.unlines (attachY <> [xBar, xLine])
 
 axisifyGrid :: Plot -> [[(Char, Maybe Color)]] -> (Double, Double) -> (Double, Double) -> Text
@@ -956,33 +981,37 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) =
             | i < 0 || i >= length xs = xs
             | otherwise = take i xs <> [v] <> drop (i + 1) xs
 
+        yEnv n = AxisEnv (ymin, ymax) n 3
         yLabels :: [Text]
         yLabels =
             List.foldl'
-                (\acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg row v)))
+                (\acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) 4 v)))
                 baseLbl
                 yTicks
 
         renderRow :: [(Char, Maybe Color)] -> Text
         renderRow cells =
             Text.concat $
-                fmap (\(ch, mc) -> maybe (Text.singleton ch) (\c -> paint c ch) mc) cells
+                fmap (\(ch, mc) -> maybe (Text.singleton ch) (`paint` ch) mc) cells
 
         attachY :: [Text]
         attachY = zipWith (\lbl cells -> lbl <> "│" <> renderRow cells) yLabels grid
 
         xBar :: Text
         xBar = pad <> "│" <> Text.replicate plotW "─"
+
+        slotW = (plotW - Text.length pad) `div` 3
+        xEnv n = AxisEnv (xmin, xmax) n 3
         xLbls = [(0, xmin), (plotW `div` 2, (xmin + xmax) / 2), (plotW - 1, xmax)]
         xLine =
             placeLabels
                 (Text.replicate (left + 1 + plotW) " ")
                 (left + 1)
-                (fmap (\(x, v) -> (x, xFormatter cfg x v)) xLbls)
+                (fmap (\(x, v) -> (x, xFormatter cfg (xEnv x) slotW v)) xLbls)
      in Text.unlines (attachY <> [xBar, xLine])
 
 placeLabels :: Text -> Int -> [(Int, Text)] -> Text
-placeLabels base off xs = List.foldl' place base xs
+placeLabels base off = List.foldl' place base
   where
     place :: Text -> (Int, Text) -> Text
     place acc (x, s) =
@@ -1114,11 +1143,11 @@ quartiles xs =
         n = length sorted
         q1Idx = n `div` 4
         q2Idx = n `div` 2
-        q3Idx = (3 * n) `div` 4
+        q3Idx = 3 * n `div` 4
         getIdx i = if i < n then sorted !! i else last sorted
      in if n < 5
             then let m = sum xs / fromIntegral n in (m, m, m, m, m)
-            else (fromMaybe 0 (fmap fst (List.uncons sorted)), getIdx q1Idx, getIdx q2Idx, getIdx q3Idx, last sorted)
+            else (maybe 0 fst (List.uncons sorted), getIdx q1Idx, getIdx q2Idx, getIdx q3Idx, last sorted)
 
 gridWidth :: [[a]] -> Int
 gridWidth [] = 0
@@ -1156,7 +1185,7 @@ mk l x r = N sz h l x r
     hl = height l
     hr = height r
     sz = 1 + sl + sr
-    h = 1 + (if hl >= hr then hl else hr)
+    h = 1 + max hl hr
 
 rotateL :: Arr a -> Arr a
 rotateL (N _ _ l x (N _ _ rl y rr)) = mk (mk l x rl) y rr

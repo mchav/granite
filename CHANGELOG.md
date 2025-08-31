@@ -1,5 +1,9 @@
 # Revision history for granite
 
+## 0.3.0.0 -- 2025-08-31
+* Export a `LabelFormatter` function along with AxisEnv to define smarter labels.
+* Change API of formatter to use AxisEnv and slot budget.
+
 ## 0.2.0.2 -- 2025-08-30
 * Add plot option to define the format of labels on both axes.
 

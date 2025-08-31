@@ -1,5 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
-
 {- |
 Module      : Granite.String
 Copyright   : (c) 2024
@@ -49,6 +47,9 @@ module Granite.String (
     module RE,
     bins,
 
+    -- * Formatting
+    LabelFormatter,
+
     -- * Chart Types
     scatter,
     lineGraph,
@@ -62,10 +63,11 @@ module Granite.String (
 
 import Data.Text (Text)
 
+import Data.Bifunctor
 import Data.Text qualified as Text
 import Granite qualified as G
 
-import Granite as RE (Bins, Color (..), LegendPos (..))
+import Granite as RE (Bins, Color (..), LegendPos (..), AxisEnv(..))
 
 {- | Plot configuration parameters.
 
@@ -96,11 +98,23 @@ data Plot = Plot
     -- ^ Position of the legend (default: 'LegendRight')
     , colorPalette :: [G.Color]
     -- ^ Color palette that'll be used by the plot.
-    , xFormatter :: (Int -> Double -> String)
+    , xFormatter :: LabelFormatter
     -- ^ Formatter for x-axis labels.
-    , yFormatter :: (Int -> Double -> String)
+    , yFormatter :: LabelFormatter
     -- ^ Formatter for y-axis labels.
     }
+
+-- | Axis-aware, width-limited, tick-label formatter.
+--
+-- Given:
+--    * axis context
+--    * a per-tick width budget (in terminal cells)
+--    * and the raw tick value.
+-- returns the label to render.
+type LabelFormatter =  G.AxisEnv  -- ^ Axis context (domain, tick index/count, etc)
+                    -> Int        -- ^ Slot width budget in characters for this tick.
+                    -> Double     -- ^ Raw data value for the tick
+                    -> String     -- ^ Rendered label (if it doesn't fit in the slot it will be truncated)
 
 {- | Default plot configuration.
 
@@ -249,7 +263,7 @@ stackedBars ::
 stackedBars categories plot =
     Text.unpack $
         G.stackedBars
-            (map (\(cat, items) -> (Text.pack cat, map (mapFirst Text.pack) items)) categories)
+            (map (Data.Bifunctor.bimap Text.pack (map (mapFirst Text.pack))) categories)
             (toGranitePlot plot)
 
 {- | Create a histogram from numerical data.
@@ -387,8 +401,8 @@ fromGranitePlot p =
 mapFirst :: (a -> b) -> (a, c) -> (b, c)
 mapFirst f (a, c) = (f a, c)
 
-formatWithText :: (Int -> Double -> String) -> Int -> Double -> Text
-formatWithText f i d = Text.pack (f i d)
+formatWithText :: (G.AxisEnv -> Int -> Double -> String) -> G.AxisEnv -> Int -> Double -> Text
+formatWithText f env i d = Text.pack (f env i d )
 
-formatWithString :: (Int -> Double -> Text) -> Int -> Double -> String
-formatWithString f i d = Text.unpack (f i d)
+formatWithString :: (G.AxisEnv -> Int -> Double -> Text) -> G.AxisEnv -> Int -> Double -> String
+formatWithString f env i d = Text.unpack (f env i d)
