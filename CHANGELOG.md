@@ -1,5 +1,8 @@
 # Revision history for granite
 
+## 0.2.0.2 -- 2025-08-30
+* Add plot option to define the format of labels on both axes.
+
 ## 0.2.0.1 -- 2025-08-26
 * Loosen bounds for text
 
