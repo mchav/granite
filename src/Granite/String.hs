@@ -67,7 +67,7 @@ import Data.Bifunctor
 import Data.Text qualified as Text
 import Granite qualified as G
 
-import Granite as RE (Bins, Color (..), LegendPos (..), AxisEnv(..))
+import Granite as RE (AxisEnv (..), Bins, Color (..), LegendPos (..))
 
 {- | Plot configuration parameters.
 
@@ -104,17 +104,23 @@ data Plot = Plot
     -- ^ Formatter for y-axis labels.
     }
 
--- | Axis-aware, width-limited, tick-label formatter.
---
--- Given:
---    * axis context
---    * a per-tick width budget (in terminal cells)
---    * and the raw tick value.
--- returns the label to render.
-type LabelFormatter =  G.AxisEnv  -- ^ Axis context (domain, tick index/count, etc)
-                    -> Int        -- ^ Slot width budget in characters for this tick.
-                    -> Double     -- ^ Raw data value for the tick
-                    -> String     -- ^ Rendered label (if it doesn't fit in the slot it will be truncated)
+{- | Axis-aware, width-limited, tick-label formatter.
+
+Given:
+   * axis context
+   * a per-tick width budget (in terminal cells)
+   * and the raw tick value.
+returns the label to render.
+-}
+type LabelFormatter =
+    -- | Axis context (domain, tick index/count, etc)
+    G.AxisEnv ->
+    -- | Slot width budget in characters for this tick.
+    Int ->
+    -- | Raw data value for the tick
+    Double ->
+    -- | Rendered label (if it doesn't fit in the slot it will be truncated)
+    String
 
 {- | Default plot configuration.
 
@@ -402,7 +408,7 @@ mapFirst :: (a -> b) -> (a, c) -> (b, c)
 mapFirst f (a, c) = (f a, c)
 
 formatWithText :: (G.AxisEnv -> Int -> Double -> String) -> G.AxisEnv -> Int -> Double -> Text
-formatWithText f env i d = Text.pack (f env i d )
+formatWithText f env i d = Text.pack (f env i d)
 
 formatWithString :: (G.AxisEnv -> Int -> Double -> Text) -> G.AxisEnv -> Int -> Double -> String
 formatWithString f env i d = Text.unpack (f env i d)

@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Strict #-}
 
-
 {- |
 Module      : Granite
 Copyright   : (c) 2025
@@ -60,7 +59,7 @@ module Granite (
     -- * Formatting
     Color (..),
     LabelFormatter,
-    AxisEnv(..),
+    AxisEnv (..),
 
     -- * Data Preparation
     series,
@@ -165,27 +164,33 @@ defPlot =
         , yFormatter = fmt
         }
 
--- | Axis-aware, width-limited, tick-label formatter.
---
--- Given:
---    * axis context
---    * a per-tick width budget (in terminal cells)
---    * and the raw tick value.
--- returns the label to render.
-type LabelFormatter =  AxisEnv    -- ^ Axis context (domain, tick index/count, etc)
-                    -> Int        -- ^ Slot width budget in characters for this tick.
-                    -> Double     -- ^ Raw data value for the tick
-                    -> Text.Text  -- ^ Rendered label (if it doesn't fit in the slot it will be truncated)
+{- | Axis-aware, width-limited, tick-label formatter.
+
+Given:
+   * axis context
+   * a per-tick width budget (in terminal cells)
+   * and the raw tick value.
+returns the label to render.
+-}
+type LabelFormatter =
+    -- | Axis context (domain, tick index/count, etc)
+    AxisEnv ->
+    -- | Slot width budget in characters for this tick.
+    Int ->
+    -- | Raw data value for the tick
+    Double ->
+    -- | Rendered label (if it doesn't fit in the slot it will be truncated)
+    Text.Text
 
 -- | What the formatter gets to know about the axis/ticks
 data AxisEnv = AxisEnv
-  { domain     :: (Double, Double)
+    { domain :: (Double, Double)
     -- ^ min/max of the axis in data space
-  , tickIndex  :: Int
+    , tickIndex :: Int
     -- ^ index of THIS tick [0..tickCount-1]
-  , tickCount  :: Int
+    , tickCount :: Int
     -- ^ total number of ticks
-  }
+    }
 
 -- | Supported ANSI colo(u)rs.
 data Color
@@ -887,12 +892,14 @@ renderCanvas (Canvas w h a colA) =
     let glyph 0 = ' '
         glyph m = chr (0x2800 + m)
         rows =
-            fmap ( \y -> flip fmap [0 .. w - 1] $ \x ->
+            fmap
+                ( \y -> flip fmap [0 .. w - 1] $ \x ->
                     let m = getA2D a x y
                         ch = glyph m
                         mc = getA2D colA x y
                      in maybe (Text.singleton ch) (`paint` ch) mc
-                ) [0 .. h - 1]
+                )
+                [0 .. h - 1]
      in Text.unlines (fmap Text.concat rows)
 
 justifyRight :: Int -> Text -> Text
@@ -910,7 +917,7 @@ wcswidth = go 0
                 if Text.null rest' then acc else go acc (Text.tail rest')
         | otherwise = go (acc + 1) (Text.tail xs)
 
-fmt :: AxisEnv -> Int ->Double -> Text
+fmt :: AxisEnv -> Int -> Double -> Text
 fmt _ _ v
     | abs v >= 10000 || abs v < 0.01 && v /= 0 = Text.pack (showEFloat (Just 1) v "")
     | otherwise = Text.pack (showFFloat (Just 1) v "")

@@ -50,9 +50,7 @@ main = do
             , ("Product B", [(1, 80), (2, 85), (3, 95), (4, 92), (5, 110), (6, 125)])
             , ("Product C", [(1, 60), (2, 62), (3, 70), (4, 85), (5, 82), (6, 90)])
             ]
-            defPlot{
-                plotTitle = "Monthly Sales Trends"
-                , xFormatter = \_ w v -> Text.pack (show (round (v * 100) :: Int)) <> Text.replicate (w - 1 - 2) "."  <> "?"}
+            defPlot{plotTitle = "Monthly Sales Trends"}
 
     -- box plot
     Text.putStrLn $
