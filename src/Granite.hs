@@ -79,6 +79,7 @@ module Granite (
 
 import Data.Bits (xor, (.&.), (.|.))
 import Data.Char (chr)
+import Data.Function (on)
 import Data.List qualified as List
 import Data.Maybe
 import Data.Text (Text)
@@ -127,6 +128,10 @@ data Plot = Plot
     -- ^ Formatter for x-axis labels.
     , yFormatter :: LabelFormatter
     -- ^ Formatter for y-axis labels.
+    , xNumTicks :: Int
+    -- ^ Number of ticks on the x axis.
+    , yNumTicks :: Int
+    -- ^ Number of ticks on the y axis.
     }
 
 {- | Default plot configuration.
@@ -144,6 +149,11 @@ defPlot = Plot
   , yBounds      = (Nothing, Nothing)
   , plotTitle    = ""
   , legendPos    = LegendRight
+  , colorPalette = [ BrightBlue, BrightMagenta, BrightCyan, BrightGreen, BrightYellow, BrightRed, BrightWhite, BrightBlack]
+  , xFormatter   = \ _ _ v -> show v
+  , yFormatter   = \ _ _ v -> show v
+  , xNumTicks    = 2
+  , yNumTicks    = 2
   }
 @
 -}
@@ -162,6 +172,8 @@ defPlot =
         , colorPalette = paletteColors
         , xFormatter = fmt
         , yFormatter = fmt
+        , xNumTicks = 3
+        , yNumTicks = 3
         }
 
 {- | Axis-aware, width-limited, tick-label formatter.
@@ -258,7 +270,7 @@ scatter sers cfg =
         sx x = clamp 0 (wC * 2 - 1) $ round ((x - xmin) / (xmax - xmin + eps) * fromIntegral (wC * 2 - 1))
         sy y = clamp 0 (hC * 4 - 1) $ round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC * 4 - 1))
         pats = cycle palette
-        cols = cycle paletteColors
+        cols = cycle (colorPalette cfg)
         withSty = zipWith3 (\(n, ps) p c -> (n, ps, p, c)) sers pats cols
         drawOne (_name, pts, pat, col) c0 =
             List.foldl'
@@ -305,7 +317,7 @@ lineGraph sers cfg =
         sx x = clamp 0 (wC * 2 - 1) $ round ((x - xmin) / (xmax - xmin + eps) * fromIntegral (wC * 2 - 1))
         sy y = clamp 0 (hC * 4 - 1) $ round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC * 4 - 1))
 
-        cols = cycle paletteColors
+        cols = cycle (colorPalette cfg)
         withSty = zip sers cols
 
         drawSeries ((_name, pts), col) c0 =
@@ -356,7 +368,7 @@ bars kvs cfg =
         cats :: [(Text, Double, Color)]
         cats =
             [ (name, abs v / vmax, col)
-            | ((name, v), col) <- zip kvs (cycle paletteColors)
+            | ((name, v), col) <- zip kvs (cycle (colorPalette cfg))
             ]
 
         nCats = length cats
@@ -426,7 +438,7 @@ stackedBars categories cfg =
                 else (wC `div` nCats, wC - wC `div` nCats * nCats)
         widths = [base + (if i < extra then 1 else 0) | i <- [0 .. nCats - 1]]
 
-        cols = cycle paletteColors
+        cols = cycle (colorPalette cfg)
         seriesColors = zip seriesNames cols
 
         makeBar (_, series') width =
@@ -932,6 +944,39 @@ drawFrame _cfg contentWithAxes legendBlockStr =
                 <> [legendBlockStr | not (Text.null legendBlockStr)]
             )
 
+{- | Evenly spaced tick positions in screen space paired with data values.
+  If invertY = True, 0 maps to ymax (top row) and 1 maps to ymin (bottom).
+-}
+ticks1D ::
+    -- | screen length in chars (width for X, height for Y)
+    Int ->
+    -- | requested number of ticks (will clamp to >= 2)
+    Int ->
+    -- | (vmin, vmax) in data space
+    (Double, Double) ->
+    -- | invertY? (True for Y axis so row 0 = ymax)
+    Bool ->
+    -- | (screenPos, dataValue)
+    [(Int, Double)]
+ticks1D screenLen want (vmin, vmax) invertY =
+    let n = max 2 want
+        lastIx = max 0 (screenLen - 1)
+        toVal t =
+            if invertY
+                then vmax - t * (vmax - vmin)
+                else vmin + t * (vmax - vmin)
+        mk' k =
+            let t = if n == 1 then 0 else fromIntegral k / fromIntegral (n - 1)
+                pos = round (t * fromIntegral lastIx)
+             in (pos, toVal t)
+        raw = [mk' k | k <- [0 .. n - 1]]
+        dedup = List.nubBy ((==) `on` fst) raw
+     in dedup
+
+slotBudget :: Int -> Int -> Int
+slotBudget plotPixels numTicks =
+    max 1 (plotPixels `div` max 1 numTicks)
+
 axisify :: Plot -> Canvas -> (Double, Double) -> (Double, Double) -> Text
 axisify cfg c (xmin, xmax) (ymin, ymax) =
     let plotW = cW c
@@ -939,7 +984,10 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
         left = leftMargin cfg
         pad = Text.replicate left " "
 
-        yTicks = [(0, ymax), (plotH `div` 2, (ymin + ymax) / 2), (plotH - 1, ymin)]
+        yTicks :: [(Int, Double)]
+        yTicks = ticks1D plotH (yNumTicks cfg) (ymin, ymax) True
+
+        baseLbl :: [Text]
         baseLbl = replicate plotH pad
 
         setAt :: [Text] -> Int -> Text -> [Text]
@@ -948,26 +996,30 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
             | otherwise = take i xs <> [v] <> drop (i + 1) xs
 
         yEnv n = AxisEnv (ymin, ymax) n 3
+        ySlot = max 1 left
         yLabels =
             List.foldl'
-                (\acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) 4 v)))
+                ( \acc (row, v) ->
+                    setAt acc row (justifyRight left (yFormatter cfg (yEnv row) ySlot v))
+                )
                 baseLbl
                 yTicks
 
         canvasLines = Text.lines (renderCanvas c)
-        attachY :: [Text]
         attachY = zipWith (\lbl line -> lbl <> "│" <> line) yLabels canvasLines
 
         xBar = pad <> "│" <> Text.replicate plotW "─"
 
-        slotW = plotW `div` 2
+        xTicks :: [(Int, Double)]
+        xTicks = ticks1D plotW (xNumTicks cfg) (xmin, xmax) False
+
         xEnv n = AxisEnv (xmin, xmax) n 3
-        xLbls = [(0, xmin), (plotW `div` 2, (xmin + xmax) / 2), (plotW - 1, xmax)]
+        slotW = slotBudget plotW (max 1 (length xTicks))
         xLine =
             placeLabels
                 (Text.replicate (left + 1 + plotW) " ")
                 (left + 1)
-                [(x, xFormatter cfg (xEnv x) slotW v) | (x, v) <- xLbls]
+                [(x, xFormatter cfg (xEnv x) slotW v) | (x, v) <- xTicks]
      in Text.unlines (attachY <> [xBar, xLine])
 
 axisifyGrid :: Plot -> [[(Char, Maybe Color)]] -> (Double, Double) -> (Double, Double) -> Text
@@ -977,10 +1029,7 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) =
         left = leftMargin cfg
         pad = Text.replicate left " "
 
-        yTicks :: [(Int, Double)]
-        yTicks = [(0, ymax), (plotH `div` 2, (ymin + ymax) / 2), (plotH - 1, ymin)]
-
-        baseLbl :: [Text]
+        yTicks = ticks1D plotH (yNumTicks cfg) (ymin, ymax) True
         baseLbl = List.replicate plotH pad
 
         setAt :: [Text] -> Int -> Text -> [Text]
@@ -989,32 +1038,29 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) =
             | otherwise = take i xs <> [v] <> drop (i + 1) xs
 
         yEnv n = AxisEnv (ymin, ymax) n 3
-        yLabels :: [Text]
+        ySlot = max 1 left
         yLabels =
             List.foldl'
-                (\acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) 4 v)))
+                (\acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) ySlot v)))
                 baseLbl
                 yTicks
 
         renderRow :: [(Char, Maybe Color)] -> Text
         renderRow cells =
-            Text.concat $
-                fmap (\(ch, mc) -> maybe (Text.singleton ch) (`paint` ch) mc) cells
+            Text.concat (fmap (\(ch, mc) -> maybe (Text.singleton ch) (`paint` ch) mc) cells)
 
-        attachY :: [Text]
         attachY = zipWith (\lbl cells -> lbl <> "│" <> renderRow cells) yLabels grid
 
-        xBar :: Text
         xBar = pad <> "│" <> Text.replicate plotW "─"
 
-        slotW = (plotW - Text.length pad) `div` 3
+        xTicks = ticks1D plotW (xNumTicks cfg) (xmin, xmax) False
         xEnv n = AxisEnv (xmin, xmax) n 3
-        xLbls = [(0, xmin), (plotW `div` 2, (xmin + xmax) / 2), (plotW - 1, xmax)]
+        slotW = slotBudget plotW (max 1 (length xTicks))
         xLine =
             placeLabels
                 (Text.replicate (left + 1 + plotW) " ")
                 (left + 1)
-                (fmap (\(x, v) -> (x, xFormatter cfg (xEnv x) slotW v)) xLbls)
+                [(x, xFormatter cfg (xEnv x) slotW v) | (x, v) <- xTicks]
      in Text.unlines (attachY <> [xBar, xLine])
 
 placeLabels :: Text -> Int -> [(Int, Text)] -> Text

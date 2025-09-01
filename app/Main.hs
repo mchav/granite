@@ -31,6 +31,8 @@ main = do
                 , heightChars = 18
                 , legendPos = LegendBottom
                 , xFormatter = \_ _ v -> Text.pack (show (round v :: Int))
+                , xNumTicks = 10
+                , yNumTicks = 10
                 , plotTitle = "Heights (cm)"
                 }
 

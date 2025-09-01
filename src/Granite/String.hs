@@ -102,6 +102,10 @@ data Plot = Plot
     -- ^ Formatter for x-axis labels.
     , yFormatter :: LabelFormatter
     -- ^ Formatter for y-axis labels.
+    , xNumTicks :: Int
+    -- ^ Number of ticks on the x axis.
+    , yNumTicks :: Int
+    -- ^ Number of ticks on the y axis.
     }
 
 {- | Axis-aware, width-limited, tick-label formatter.
@@ -140,6 +144,8 @@ defPlot = Plot
   , colorPalette = [BrightBlue, BrightMagenta, BrightCyan, BrightGreen, BrightYellow, BrightRed, BrightWhite, BrightBlack]
   , xFormatter   = \_ d -> show d
   , yFormatter   = \_ d -> show d
+  , xNumTicks    = 2
+  , yNumTicks    = 2
   }
 @
 -}
@@ -384,6 +390,8 @@ toGranitePlot p =
         , G.colorPalette = colorPalette p
         , G.xFormatter = formatWithText (xFormatter p)
         , G.yFormatter = formatWithText (yFormatter p)
+        , G.xNumTicks = xNumTicks p
+        , G.yNumTicks = yNumTicks p
         }
 
 -- | Convert Granite's Text-based Plot to our String-based Plot
@@ -402,6 +410,8 @@ fromGranitePlot p =
         , colorPalette = G.colorPalette p
         , xFormatter = formatWithString (G.xFormatter p)
         , yFormatter = formatWithString (G.yFormatter p)
+        , xNumTicks = G.xNumTicks p
+        , yNumTicks = G.yNumTicks p
         }
 
 mapFirst :: (a -> b) -> (a, c) -> (b, c)
