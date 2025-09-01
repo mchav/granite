@@ -6,6 +6,7 @@ description:        A terminal plotting library for quick and easy visualisation
 license:            MIT
 license-file:       LICENSE
 author:             Michael Chavinda
+tested-with:        GHC ==9.8.2
 maintainer:         mschavinda@gmail.com
 copyright:          (c) 2024-2025 Michael Chavinda
 bug-reports:        https://github.com/mchav/granite/issues
@@ -44,7 +45,6 @@ library
     default-language: GHC2021
 
 executable granite
-    import:           ghc-options
     main-is:          Main.hs
     build-depends:
         base >=4 && <5,
@@ -55,11 +55,21 @@ executable granite
     default-language: GHC2021
 
 test-suite granite-test
-    import:           ghc-options
-    default-language: GHC2021
-    type:             exitcode-stdio-1.0
-    hs-source-dirs:   test
-    main-is:          Main.hs
+    import: ghc-options
+    type: exitcode-stdio-1.0
+    main-is: Spec.hs
+    
+    other-modules:
+        GraniteSpec
+    
     build-depends:
-        base >=4 && <5
-
+        base >= 4.14 && < 5
+        , granite ^>= 0.3
+        , text >= 1.2 && < 3
+        , hspec >= 2.7 && < 2.12
+        , QuickCheck >= 2.14 && < 2.15
+    
+    hs-source-dirs: test
+    
+    build-tool-depends:
+        hspec-discover:hspec-discover >= 2.7
