@@ -89,10 +89,10 @@ import Granite
 
 main :: IO ()
 main = T.putStrLn $ boxPlot [ ("Class A", [78, 82, 85, 88, 90, 92, 85, 87, 89, 91, 76, 94, 88])
-                                                               , ("Class B", [70, 75, 72, 80, 85, 78, 82, 77, 79, 81, 74, 83])
-                                                               , ("Class C", [88, 92, 95, 90, 93, 89, 91, 94, 96, 87, 90, 92])
-                                                               , ("Class D", [65, 70, 72, 68, 75, 80, 73, 71, 69, 74, 77, 76])
-                                                               ] defPlot {plotTitle="Test Score Distribution by Class"}
+                            , ("Class B", [70, 75, 72, 80, 85, 78, 82, 77, 79, 81, 74, 83])
+                            , ("Class C", [88, 92, 95, 90, 93, 89, 91, 94, 96, 87, 90, 92])
+                            , ("Class D", [65, 70, 72, 68, 75, 80, 73, 71, 69, 74, 77, 76])
+                            ] defPlot {plotTitle="Test Score Distribution by Class"}
 ```
 
 ### Line graph
@@ -129,4 +129,31 @@ main = do
                , [0.1,  0.2,  0.4,  0.7,  1.0]
                ]
   T.putStrLn $ heatmap matrix defPlot {plotTitle="Correlation Matrix"}
+```
+
+### Histogram
+![Histogram](https://github.com/mchav/granite/blob/main/static/histogram.png)
+
+```haskell
+{-# LANGUAGE OverloadedStrings #-}
+import qualified Data.Text.IO as T
+
+import Granite
+
+main :: IO ()
+main = do
+  heights <- replicateM 5000 (uniformRM (160 :: Double, 190 :: Double) g)
+  Text.putStrLn $
+      histogram
+          (bins 30 155 195)
+          heights
+          defPlot
+              { widthChars = 68
+              , heightChars = 18
+              , legendPos = LegendBottom
+              , xFormatter = \_ _ v -> Text.pack (show (round v :: Int))
+              , xNumTicks = 10
+              , yNumTicks = 5
+              , plotTitle = "Heights (cm)"
+              }
 ```

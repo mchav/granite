@@ -392,7 +392,7 @@ bars kvs cfg =
             | y <- [0 .. hC - 1]
             ]
 
-        ax = axisifyGrid cfg grid (0, fromIntegral (max 1 nCats)) (0, vmax) (map fst kvs) (fmap (+1) (safeHead widths))
+        ax = axisifyGrid cfg grid (0, fromIntegral (max 1 nCats)) (0, vmax) (map fst kvs) (fmap (+ 1) (safeHead widths))
         legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend =
             legendBlock
@@ -465,7 +465,7 @@ stackedBars categories cfg =
         grid = [[col !! y | col <- columns] | y <- [0 .. hC - 1]]
 
         ax :: Text
-        ax = axisifyGrid cfg grid (0, fromIntegral (max 1 nCats)) (0, maxHeight) (map fst categories) (fmap (+1) (safeHead widths))
+        ax = axisifyGrid cfg grid (0, fromIntegral (max 1 nCats)) (0, maxHeight) (map fst categories) (fmap (+ 1) (safeHead widths))
         legend :: Text
         legend =
             legendBlock
@@ -1061,7 +1061,7 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
             placeGridLabels
                 (Text.replicate (left + 1) " ")
                 slotW
-                (if hasCategories then categories else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0..] xTicks])
+                (if hasCategories then categories else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0 ..] xTicks])
      in Text.unlines (attachY <> [xBar, xLine])
 
 placeLabels :: Text -> Int -> [(Int, Text)] -> Text
@@ -1222,7 +1222,7 @@ maximum' xs = maximum xs
 
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
-safeHead (x:_) = Just x 
+safeHead (x : _) = Just x
 
 -- AVL Tree we'll use as an array.
 -- This improves upon the previous implementation that relies
