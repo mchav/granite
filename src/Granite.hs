@@ -1008,7 +1008,7 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
         canvasLines = Text.lines (renderCanvas c)
         attachY = zipWith (\lbl line -> lbl <> "│" <> line) yLabels canvasLines
 
-        xBar = pad <> "│" <> Text.replicate plotW "─"
+        xBar = pad <> "└" <> Text.replicate plotW "─"
 
         xTicks :: [(Int, Double)]
         xTicks = ticks1D plotW (xNumTicks cfg) (xmin, xmax) False
@@ -1050,7 +1050,7 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
 
         attachY = zipWith (\lbl cells -> lbl <> "│" <> renderRow cells) yLabels grid
 
-        xBar = pad <> "│" <> Text.replicate plotW "─"
+        xBar = pad <> "└" <> Text.replicate plotW "─"
 
         slotW = fromMaybe (slotBudget plotW (max 1 ((if hasCategories then length categories else xNumTicks cfg)))) w
         nSlots = plotW `div` slotW
