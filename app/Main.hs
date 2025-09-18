@@ -5,23 +5,20 @@ module Main where
 import Control.Monad
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
-import System.Random.Stateful
 
 import Granite
 
 main :: IO ()
 main = do
     -- scatter
-    g <- newIOGenM =<< newStdGen
-    let range = (0 :: Double, 1 :: Double)
-    ptsA_x <- replicateM 600 (uniformRM range g)
-    ptsA_y <- replicateM 600 (uniformRM range g)
-    ptsB_x <- replicateM 600 (uniformRM range g)
-    ptsB_y <- replicateM 600 (uniformRM range g)
+    let ptsA_x = [0..599]
+    let ptsA_y = [0..599]
+    let ptsB_x = [0..599]
+    let ptsB_y = [599,598..0]
     Text.putStrLn $ scatter [series "A" (zip ptsA_x ptsA_y), series "B" (zip ptsB_x ptsB_y)] defPlot{widthChars = 68, heightChars = 22, plotTitle = "Random points"}
 
     -- histogram
-    heights <- replicateM 5000 (uniformRM (160 :: Double, 190 :: Double) g)
+    let heights = [100..200]
     Text.putStrLn $
         histogram
             (bins 30 155 195)
