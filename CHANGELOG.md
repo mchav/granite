@@ -1,10 +1,13 @@
 # Revision history for granite
 
+## 0.3.0.1 -- 2025-09-17
+* Left edge of plots now has an elbow instead of disjoint bars.
+* Remove dependency on random.
+
 ## 0.3.0.0 -- 2025-08-31
 * Export a `LabelFormatter` function along with AxisEnv to define smarter labels.
 * Change API of formatter to use AxisEnv and slot budget.
 * Users can now specify the number of ticks to show and the colour palette for a plot.
-* Left edge of plots now has an elbow instead of disjoint bars.
 
 ## 0.2.0.2 -- 2025-08-30
 * Add plot option to define the format of labels on both axes.
