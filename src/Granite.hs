@@ -935,14 +935,11 @@ fmt _ _ v
     | otherwise = Text.pack (showFFloat (Just 1) v "")
 
 drawFrame :: Plot -> Text -> Text -> Text
-drawFrame _cfg contentWithAxes legendBlockStr =
+drawFrame cfg contentWithAxes legendBlockStr =
     Text.unlines $
         filter
             (not . Text.null)
-            ( [plotTitle _cfg | not (Text.null (plotTitle _cfg))]
-                <> [contentWithAxes]
-                <> [legendBlockStr | not (Text.null legendBlockStr)]
-            )
+            [plotTitle cfg, contentWithAxes, legendBlockStr]
 
 {- | Evenly spaced tick positions in screen space paired with data values.
   If invertY = True, 0 maps to ymax (top row) and 1 maps to ymin (bottom).
