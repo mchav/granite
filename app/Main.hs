@@ -11,14 +11,14 @@ import Granite
 main :: IO ()
 main = do
     -- scatter
-    let ptsA_x = [0..599]
-    let ptsA_y = [0..599]
-    let ptsB_x = [0..599]
-    let ptsB_y = [599,598..0]
+    let ptsA_x = [0 .. 599]
+    let ptsA_y = [0 .. 599]
+    let ptsB_x = [0 .. 599]
+    let ptsB_y = [599, 598 .. 0]
     Text.putStrLn $ scatter [series "A" (zip ptsA_x ptsA_y), series "B" (zip ptsB_x ptsB_y)] defPlot{widthChars = 68, heightChars = 22, plotTitle = "Random points"}
 
     -- histogram
-    let heights = [100..200]
+    let heights = [100 .. 200]
     Text.putStrLn $
         histogram
             (bins 30 155 195)
