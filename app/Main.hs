@@ -15,7 +15,10 @@ main = do
     let ptsA_y = [0 .. 599]
     let ptsB_x = [0 .. 599]
     let ptsB_y = [599, 598 .. 0]
-    Text.putStrLn $ scatter [series "A" (zip ptsA_x ptsA_y), series "B" (zip ptsB_x ptsB_y)] defPlot{widthChars = 68, heightChars = 22, plotTitle = "Random points"}
+    Text.putStrLn $
+        scatter
+            [series "A" (zip ptsA_x ptsA_y), series "B" (zip ptsB_x ptsB_y)]
+            defPlot{widthChars = 68, heightChars = 22, plotTitle = "Random points"}
 
     -- histogram
     let heights = [100 .. 200]
@@ -34,13 +37,21 @@ main = do
                 }
 
     -- bars
-    Text.putStrLn $ bars [("Q1", 12), ("Q2", 18), ("Q3", 9), ("Q4", 15)] defPlot{plotTitle = "Sales", xNumTicks = 4}
+    Text.putStrLn $
+        bars
+            [("Q1", 12), ("Q2", 18), ("Q3", 9), ("Q4", 15)]
+            defPlot{plotTitle = "Sales", xNumTicks = 4}
 
     -- pie
     Text.putStrLn $
         pie
             [("Alpha", 0.35), ("Beta", 0.25), ("Gamma", 0.20), ("Delta", 0.20)]
-            defPlot{widthChars = 46, heightChars = 18, legendPos = LegendRight, plotTitle = "Share"}
+            defPlot
+                { widthChars = 46
+                , heightChars = 18
+                , legendPos = LegendRight
+                , plotTitle = "Share"
+                }
 
     -- line graph
     Text.putStrLn $

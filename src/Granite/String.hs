@@ -207,7 +207,8 @@ scatter ::
     -- | Rendered chart as String
     String
 scatter seriesList plot =
-    Text.unpack $ G.scatter (map (mapFirst Text.pack) seriesList) (toGranitePlot plot)
+    Text.unpack $
+        G.scatter (map (mapFirst Text.pack) seriesList) (toGranitePlot plot)
 
 {- | Create a line graph connecting data points.
 
@@ -230,7 +231,8 @@ lineGraph ::
     -- | Rendered chart as String
     String
 lineGraph seriesList plot =
-    Text.unpack $ G.lineGraph (map (mapFirst Text.pack) seriesList) (toGranitePlot plot)
+    Text.unpack $
+        G.lineGraph (map (mapFirst Text.pack) seriesList) (toGranitePlot plot)
 
 {- | Create a bar chart from categorical data.
 
@@ -417,8 +419,10 @@ fromGranitePlot p =
 mapFirst :: (a -> b) -> (a, c) -> (b, c)
 mapFirst f (a, c) = (f a, c)
 
-formatWithText :: (G.AxisEnv -> Int -> Double -> String) -> G.AxisEnv -> Int -> Double -> Text
+formatWithText ::
+    (G.AxisEnv -> Int -> Double -> String) -> G.AxisEnv -> Int -> Double -> Text
 formatWithText f env i d = Text.pack (f env i d)
 
-formatWithString :: (G.AxisEnv -> Int -> Double -> Text) -> G.AxisEnv -> Int -> Double -> String
+formatWithString ::
+    (G.AxisEnv -> Int -> Double -> Text) -> G.AxisEnv -> Int -> Double -> String
 formatWithString f env i d = Text.unpack (f env i d)

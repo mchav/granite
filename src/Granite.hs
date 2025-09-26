@@ -269,8 +269,12 @@ scatter sers cfg =
         hC = heightChars cfg
         plotC = newCanvas wC hC
         (xmin, xmax, ymin, ymax) = boundsXY cfg (concatMap snd sers)
-        sx x = clamp 0 (wC * 2 - 1) $ round ((x - xmin) / (xmax - xmin + eps) * fromIntegral (wC * 2 - 1))
-        sy y = clamp 0 (hC * 4 - 1) $ round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC * 4 - 1))
+        sx x =
+            clamp 0 (wC * 2 - 1) $
+                round ((x - xmin) / (xmax - xmin + eps) * fromIntegral (wC * 2 - 1))
+        sy y =
+            clamp 0 (hC * 4 - 1) $
+                round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC * 4 - 1))
         pats = cycle palette
         cols = cycle (colorPalette cfg)
         withSty = zipWith3 (\(n, ps) p c -> (n, ps, p, c)) sers pats cols
@@ -316,8 +320,12 @@ lineGraph sers cfg =
         hC = heightChars cfg
         plotC = newCanvas wC hC
         (xmin, xmax, ymin, ymax) = boundsXY cfg (concatMap snd sers)
-        sx x = clamp 0 (wC * 2 - 1) $ round ((x - xmin) / (xmax - xmin + eps) * fromIntegral (wC * 2 - 1))
-        sy y = clamp 0 (hC * 4 - 1) $ round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC * 4 - 1))
+        sx x =
+            clamp 0 (wC * 2 - 1) $
+                round ((x - xmin) / (xmax - xmin + eps) * fromIntegral (wC * 2 - 1))
+        sy y =
+            clamp 0 (hC * 4 - 1) $
+                round ((ymax - y) / (ymax - ymin + eps) * fromIntegral (hC * 4 - 1))
 
         cols = cycle (colorPalette cfg)
         withSty = zip sers cols
@@ -394,7 +402,14 @@ bars kvs cfg =
             | y <- [0 .. hC - 1]
             ]
 
-        ax = axisifyGrid cfg grid (0, fromIntegral (max 1 nCats)) (0, vmax) (map fst kvs) (fmap (+ 1) (safeHead widths))
+        ax =
+            axisifyGrid
+                cfg
+                grid
+                (0, fromIntegral (max 1 nCats))
+                (0, vmax)
+                (map fst kvs)
+                (fmap (+ 1) (safeHead widths))
         legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend =
             legendBlock
@@ -467,7 +482,14 @@ stackedBars categories cfg =
         grid = [[col !! y | col <- columns] | y <- [0 .. hC - 1]]
 
         ax :: Text
-        ax = axisifyGrid cfg grid (0, fromIntegral (max 1 nCats)) (0, maxHeight) (map fst categories) (fmap (+ 1) (safeHead widths))
+        ax =
+            axisifyGrid
+                cfg
+                grid
+                (0, fromIntegral (max 1 nCats))
+                (0, maxHeight)
+                (map fst categories)
+                (fmap (+ 1) (safeHead widths))
         legend :: Text
         legend =
             legendBlock
@@ -549,7 +571,8 @@ histogram (Bins n a b) xs cfg =
             | y <- [0 .. hC - 1]
             ]
 
-        ax = axisifyGrid cfg grid (a, b) (0, fromIntegral (maximum (1 : counts))) [] Nothing
+        ax =
+            axisifyGrid cfg grid (a, b) (0, fromIntegral (maximum (1 : counts))) [] Nothing
         legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend = legendBlock (legendPos cfg) legendWidth [("count", Solid, BrightCyan)]
      in drawFrame cfg ax legend
@@ -674,7 +697,14 @@ heatmap matrix cfg =
             | i <- [0 .. plotH - 1]
             ]
 
-        ax = axisifyGrid cfg displayGrid (0, fromIntegral cols - 1) (0, fromIntegral rows - 1) [] (Just (plotW `div` cols))
+        ax =
+            axisifyGrid
+                cfg
+                displayGrid
+                (0, fromIntegral cols - 1)
+                (0, fromIntegral rows - 1)
+                []
+                (Just (plotW `div` cols))
 
         gradientLegend =
             Text.pack (printf "%.2f " vmin)
@@ -721,7 +751,9 @@ boxPlot datasets cfg =
         boxWidth = if nBoxes == 0 then 1 else max 1 (wC `div` (nBoxes * 2))
         spacing = if nBoxes <= 1 then 0 else (wC - boxWidth * nBoxes) `div` (nBoxes - 1)
 
-        scaleY v = clamp 0 (hC - 1) $ round ((ymax - v) / (ymax - ymin + eps) * fromIntegral (hC - 1))
+        scaleY v =
+            clamp 0 (hC - 1) $
+                round ((ymax - v) / (ymax - ymin + eps) * fromIntegral (hC - 1))
 
         emptyGrid = replicate hC (replicate wC (' ', Nothing))
 
@@ -754,7 +786,14 @@ boxPlot datasets cfg =
 
         finalGrid = List.foldl' drawBox emptyGrid (zip [0 ..] stats)
 
-        ax = axisifyGrid cfg finalGrid (0, fromIntegral nBoxes) (ymin, ymax) (map fst datasets) (Just (boxWidth + spacing))
+        ax =
+            axisifyGrid
+                cfg
+                finalGrid
+                (0, fromIntegral nBoxes)
+                (ymin, ymax)
+                (map fst datasets)
+                (Just (boxWidth + spacing))
         legend =
             legendBlock
                 (legendPos cfg)
@@ -895,11 +934,20 @@ setDotC c xDot yDot mcol
                 Nothing -> c'
                 Just col -> c'{cbuf = setA2D (cbuf c) cx cy (Just col)}
 
-fillDotsC :: (Int, Int) -> (Int, Int) -> (Int -> Int -> Bool) -> Maybe Color -> Canvas -> Canvas
+fillDotsC ::
+    (Int, Int) ->
+    (Int, Int) ->
+    (Int -> Int -> Bool) ->
+    Maybe Color ->
+    Canvas ->
+    Canvas
 fillDotsC (x0, y0) (x1, y1) p mcol c0 =
     let xs = [max 0 x0 .. min (cW c0 * 2 - 1) x1]
         ys = [max 0 y0 .. min (cH c0 * 4 - 1) y1]
-     in List.foldl' (\c y -> List.foldl' (\c' x -> if p x y then setDotC c' x y mcol else c') c xs) c0 ys
+     in List.foldl'
+            (\c y -> List.foldl' (\c' x -> if p x y then setDotC c' x y mcol else c') c xs)
+            c0
+            ys
 
 renderCanvas :: Canvas -> Text
 renderCanvas (Canvas w h a colA) =
@@ -933,7 +981,8 @@ wcswidth = go 0
 
 fmt :: AxisEnv -> Int -> Double -> Text
 fmt _ _ v
-    | abs v >= 10000 || abs v < 0.01 && v /= 0 = Text.pack (showEFloat (Just 1) v "")
+    | abs v >= 10000 || abs v < 0.01 && v /= 0 =
+        Text.pack (showEFloat (Just 1) v "")
     | otherwise = Text.pack (showFFloat (Just 1) v "")
 
 drawFrame :: Plot -> Text -> Text -> Text
@@ -1021,7 +1070,14 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
                 [(x, xFormatter cfg (xEnv x) slotW v) | (x, v) <- xTicks]
      in Text.unlines (attachY <> [xBar, xLine])
 
-axisifyGrid :: Plot -> [[(Char, Maybe Color)]] -> (Double, Double) -> (Double, Double) -> [Text] -> Maybe Int -> Text
+axisifyGrid ::
+    Plot ->
+    [[(Char, Maybe Color)]] ->
+    (Double, Double) ->
+    (Double, Double) ->
+    [Text] ->
+    Maybe Int ->
+    Text
 axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
     let plotH = length grid
         plotW = gridWidth grid
@@ -1040,18 +1096,27 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
         ySlot = max 1 left
         yLabels =
             List.foldl'
-                (\acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) ySlot v)))
+                ( \acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) ySlot v))
+                )
                 baseLbl
                 yTicks
 
         renderRow :: [(Char, Maybe Color)] -> Text
-        renderRow cells = Text.concat (fmap (\(ch, mc) -> maybe (Text.singleton ch) (`paint` ch) mc) cells)
+        renderRow cells =
+            Text.concat
+                (fmap (\(ch, mc) -> maybe (Text.singleton ch) (`paint` ch) mc) cells)
 
         attachY = zipWith (\lbl cells -> lbl <> "│" <> renderRow cells) yLabels grid
 
         xBar = pad <> "└" <> Text.replicate plotW "─"
 
-        slotW = fromMaybe (slotBudget plotW (max 1 ((if hasCategories then length categories else xNumTicks cfg)))) w
+        slotW =
+            fromMaybe
+                ( slotBudget
+                    plotW
+                    (max 1 ((if hasCategories then length categories else xNumTicks cfg)))
+                )
+                w
         nSlots = plotW `div` slotW
         hasCategories = not (null (filter (not . Text.null) categories))
         xTicks = ticks1D plotW nSlots (xmin, xmax) False
@@ -1060,7 +1125,10 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
             placeGridLabels
                 (Text.replicate (left + 1) " ")
                 slotW
-                (if hasCategories then (evenlyKeep (xNumTicks cfg) categories) else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0 ..] xTicks])
+                ( if hasCategories
+                    then (evenlyKeep (xNumTicks cfg) categories)
+                    else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0 ..] xTicks]
+                )
      in Text.unlines (attachY <> [xBar, xLine])
 
 evenlyKeep :: Int -> [Text] -> [Text]
@@ -1108,7 +1176,8 @@ sample :: Pat -> Color -> Text
 sample p col =
     let c =
             List.foldl'
-                (\cv (dx, dy) -> if ink p dx dy then setDotC cv (dx `mod` 2) (dy `mod` 4) (Just col) else cv)
+                ( \cv (dx, dy) -> if ink p dx dy then setDotC cv (dx `mod` 2) (dy `mod` 4) (Just col) else cv
+                )
                 (newCanvas 1 1)
                 [(x, y) | y <- [0 .. 3], x <- [0 .. 1]]
         s = renderCanvas c
@@ -1221,7 +1290,13 @@ quartiles xs =
         getIdx i = if i < n then sorted !! i else last sorted
      in if n < 5
             then let m = sum xs / fromIntegral n in (m, m, m, m, m)
-            else (maybe 0 fst (List.uncons sorted), getIdx q1Idx, getIdx q2Idx, getIdx q3Idx, last sorted)
+            else
+                ( maybe 0 fst (List.uncons sorted)
+                , getIdx q1Idx
+                , getIdx q2Idx
+                , getIdx q3Idx
+                , last sorted
+                )
 
 gridWidth :: [[a]] -> Int
 gridWidth [] = 0

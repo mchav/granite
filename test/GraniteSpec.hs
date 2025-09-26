@@ -351,5 +351,6 @@ paint c ch = if ch == ' ' then " " else ansiOn c <> Text.singleton ch <> ansiOff
 
 fmt :: AxisEnv -> Int -> Double -> Text
 fmt _ _ v
-    | abs v >= 10000 || abs v < 0.01 && v /= 0 = Text.pack (showEFloat (Just 1) v "")
+    | abs v >= 10000 || abs v < 0.01 && v /= 0 =
+        Text.pack (showEFloat (Just 1) v "")
     | otherwise = Text.pack (showFFloat (Just 1) v "")
