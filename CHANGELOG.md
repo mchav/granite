@@ -1,5 +1,9 @@
 # Revision history for granite
 
+## 0.3.0.2 -- 2025-09-26
+* Make legend optional.
+* xNumTicks now applies to categories.
+
 ## 0.3.0.1 -- 2025-09-17
 * Left edge of plots now has an elbow instead of disjoint bars.
 * Remove dependency on random.

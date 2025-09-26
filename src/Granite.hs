@@ -1060,8 +1060,21 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
             placeGridLabels
                 (Text.replicate (left + 1) " ")
                 slotW
-                (if hasCategories then categories else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0 ..] xTicks])
+                (if hasCategories then (evenlyKeep (xNumTicks cfg) categories) else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0 ..] xTicks])
      in Text.unlines (attachY <> [xBar, xLine])
+
+evenlyKeep :: Int -> [Text] -> [Text]
+evenlyKeep n xs = zipWith keep [0..] xs
+  where
+    m = length xs
+    idxs
+      | n <= 0    = []
+      | n >= m    = [0 .. m-1]
+      | n == 1    = [0]
+      | otherwise = [ floor (fromIntegral i * fromIntegral (m-1) / fromIntegral (n-1))
+                    | i <- [0 .. n-1]
+                    ]
+    keep i s' = if i `elem` idxs then s' else ""
 
 placeLabels :: Text -> Int -> [(Int, Text)] -> Text
 placeLabels base off = List.foldl' place base

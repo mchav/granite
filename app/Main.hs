@@ -34,7 +34,7 @@ main = do
                 }
 
     -- bars
-    Text.putStrLn $ bars [("Q1", 12), ("Q2", 18), ("Q3", 9), ("Q4", 15)] defPlot{plotTitle = "Sales"}
+    Text.putStrLn $ bars [("Q1", 12), ("Q2", 18), ("Q3", 9), ("Q4", 15)] defPlot{plotTitle = "Sales", xNumTicks = 4}
 
     -- pie
     Text.putStrLn $
@@ -69,7 +69,7 @@ main = do
             , ("Q3", [("Hardware", 110), ("Software", 240), ("Services", 110)])
             , ("Q4", [("Hardware", 145), ("Software", 260), ("Services", 125)])
             ]
-            defPlot{plotTitle = "Quarterly Revenue Breakdown"}
+            defPlot{plotTitle = "Quarterly Revenue Breakdown", xNumTicks = 4}
 
     -- heatmap
     let matrix =
