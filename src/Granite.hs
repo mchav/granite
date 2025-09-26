@@ -1133,27 +1133,26 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
 
 keepPercentiles :: Int -> Int -> [Text] -> [Text]
 keepPercentiles n k xs
-  | k <= 0     = []
-  | null xs    = replicate k ""
-  | n <= 1     = replicate k ""
-  | otherwise  = (init (map (valueAt pairs) [0 .. k - 1])) ++ [last xs]
+    | k <= 0 = []
+    | null xs = replicate k ""
+    | n <= 1 = replicate k ""
+    | otherwise = (init (map (valueAt pairs) [0 .. k - 1])) ++ [last xs]
   where
     m = length xs
     pairs :: [(Int, Text)]
     pairs =
-      [ ( slotIx
-        , xs !! srcIx
-        )
-      | i <- [0 .. n - 2]
-      , let srcIx  = (i * (m - 1)) `div` (n - 1)
-      , let slotIx = (i * (k - 1)) `div` (n - 1)
-      ]
+        [ ( slotIx
+          , xs !! srcIx
+          )
+        | i <- [0 .. n - 2]
+        , let srcIx = (i * (m - 1)) `div` (n - 1)
+        , let slotIx = (i * (k - 1)) `div` (n - 1)
+        ]
     valueAt :: [(Int, Text)] -> Int -> Text
     valueAt [] _ = ""
     valueAt ((j, v) : rest) i
-      | i == j    = v
-      | otherwise = valueAt rest i
-
+        | i == j = v
+        | otherwise = valueAt rest i
 
 placeLabels :: Text -> Int -> [(Int, Text)] -> Text
 placeLabels base off = List.foldl' place base
