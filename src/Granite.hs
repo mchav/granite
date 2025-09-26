@@ -1114,7 +1114,7 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
             fromMaybe
                 ( slotBudget
                     plotW
-                    (max 1 ((if hasCategories then length categories else xNumTicks cfg)))
+                    (max 1 (xNumTicks cfg))
                 )
                 w
         nSlots = plotW `div` slotW
@@ -1140,7 +1140,7 @@ evenlyKeep n xs = zipWith keep [0 ..] xs
         | n >= m = [0 .. m - 1]
         | n == 1 = [0]
         | otherwise =
-            [ floor (fromIntegral i * fromIntegral (m - 1) / fromIntegral (n - 1))
+            [ floor ((fromIntegral i :: Double) * fromIntegral (m - 1) / fromIntegral (n - 1))
             | i <- [0 .. n - 1]
             ]
     keep i s' = if i `elem` idxs then s' else ""

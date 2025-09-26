@@ -1,5 +1,8 @@
 # Revision history for granite
 
+## 0.3.0.3 -- 2025-09-26
+* slot width for bar charts now depends on xNumTicks not categories.
+
 ## 0.3.0.2 -- 2025-09-26
 * Make legend optional.
 * xNumTicks now applies to categories.
