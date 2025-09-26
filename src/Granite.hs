@@ -93,6 +93,8 @@ data LegendPos
       LegendRight
     | -- | Display legend below the plot
       LegendBottom
+    | -- | Do not display legend.
+      LegendNone
     deriving (Eq, Show)
 
 {- | Plot configuration parameters.
@@ -1086,6 +1088,7 @@ legendBlock LegendBottom width entries =
 legendBlock LegendRight _ entries =
     Text.unlines $
         fmap (\(name, pat, col) -> sample pat col <> " " <> name) entries
+legendBlock LegendNone _ _ = ""
 
 sample :: Pat -> Color -> Text
 sample p col =
