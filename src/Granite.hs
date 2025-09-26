@@ -381,7 +381,7 @@ bars kvs cfg =
             | ((name, v), col) <- zip kvs (cycle (colorPalette cfg))
             ]
 
-        nCats = length cats
+        nCats = min wC (length cats)
 
         (base, extra) =
             if nCats == 0 then (0, 0) else (wC `div` nCats, wC - wC `div` nCats * nCats)
@@ -1126,24 +1126,34 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
                 (Text.replicate (left + 1) " ")
                 slotW
                 ( if hasCategories
-                    then (evenlyKeep (xNumTicks cfg) categories)
+                    then (keepPercentiles (xNumTicks cfg) (length xTicks + 1) categories)
                     else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0 ..] xTicks]
                 )
      in Text.unlines (attachY <> [xBar, xLine])
 
-evenlyKeep :: Int -> [Text] -> [Text]
-evenlyKeep n xs = zipWith keep [0 ..] xs
+keepPercentiles :: Int -> Int -> [Text] -> [Text]
+keepPercentiles n k xs
+  | k <= 0     = []
+  | null xs    = replicate k ""
+  | n <= 1     = replicate k ""
+  | otherwise  = (init (map (valueAt pairs) [0 .. k - 1])) ++ [last xs]
   where
     m = length xs
-    idxs
-        | n <= 0 = []
-        | n >= m = [0 .. m - 1]
-        | n == 1 = [0]
-        | otherwise =
-            [ floor ((fromIntegral i :: Double) * fromIntegral (m - 1) / fromIntegral (n - 1))
-            | i <- [0 .. n - 1]
-            ]
-    keep i s' = if i `elem` idxs then s' else ""
+    pairs :: [(Int, Text)]
+    pairs =
+      [ ( slotIx
+        , xs !! srcIx
+        )
+      | i <- [0 .. n - 2]
+      , let srcIx  = (i * (m - 1)) `div` (n - 1)
+      , let slotIx = (i * (k - 1)) `div` (n - 1)
+      ]
+    valueAt :: [(Int, Text)] -> Int -> Text
+    valueAt [] _ = ""
+    valueAt ((j, v) : rest) i
+      | i == j    = v
+      | otherwise = valueAt rest i
+
 
 placeLabels :: Text -> Int -> [(Int, Text)] -> Text
 placeLabels base off = List.foldl' place base

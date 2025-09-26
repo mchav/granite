@@ -1,5 +1,8 @@
 # Revision history for granite
 
+## 0.3.0.4 -- 2025-09-26
+* Fix issue with x-axis spacing when categories is greater than width.
+
 ## 0.3.0.3 -- 2025-09-26
 * slot width for bar charts now depends on xNumTicks not categories.
 
