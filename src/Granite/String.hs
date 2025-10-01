@@ -142,8 +142,8 @@ defPlot = Plot
   , plotTitle    = ""
   , legendPos    = LegendRight
   , colorPalette = [BrightBlue, BrightMagenta, BrightCyan, BrightGreen, BrightYellow, BrightRed, BrightWhite, BrightBlack]
-  , xFormatter   = \_ d -> show d
-  , yFormatter   = \_ d -> show d
+  , xFormatter   = \\_ _ d -> show d
+  , yFormatter   = \\_ _ d -> show d
   , xNumTicks    = 2
   , yNumTicks    = 2
   }
@@ -241,8 +241,8 @@ Each bar is colored differently and labeled with its category name.
 ==== __Example__
 
 @
-let data = [("Apple", 45.2), ("Banana", 38.1), ("Orange", 52.7)]
-    chart = bars data defPlot { plotTitle = "Fruit Sales" }
+let fruits = [(\"Apple\", 45.2), (\"Banana\", 38.1), (\"Orange\", 52.7)]
+    chart = bars fruits defPlot { plotTitle = "Fruit Sales" }
 @
 -}
 bars ::
@@ -262,9 +262,9 @@ Each category can have multiple stacked components.
 ==== __Example__
 
 @
-let data = [("Q1", [("Product A", 100), ("Product B", 150)]),
-            ("Q2", [("Product A", 120), ("Product B", 180)])]
-    chart = stackedBars data defPlot
+let sales = [(\"Q1\", [(\"Product A\", 100), (\"Product B\", 150)]),
+             (\"Q2\", [(\"Product A\", 120), (\"Product B\", 180)])]
+    chart = stackedBars sales defPlot
 @
 -}
 stackedBars ::
@@ -313,8 +313,8 @@ Values are normalized to sum to 100%. Negative values are treated as zero.
 ==== __Example__
 
 @
-let data = [("Chrome", 65), ("Firefox", 20), ("Safari", 10), ("Other", 5)]
-    chart = pie data defPlot { plotTitle = "Browser Market Share" }
+let browsers = [(\"Chrome\", 65), (\"Firefox\", 20), (\"Safari\", 10), (\"Other\", 5)]
+    chart = pie browsers defPlot { plotTitle = "Browser Market Share" }
 @
 -}
 pie ::

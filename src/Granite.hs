@@ -152,8 +152,8 @@ defPlot = Plot
   , plotTitle    = ""
   , legendPos    = LegendRight
   , colorPalette = [ BrightBlue, BrightMagenta, BrightCyan, BrightGreen, BrightYellow, BrightRed, BrightWhite, BrightBlack]
-  , xFormatter   = \ _ _ v -> show v
-  , yFormatter   = \ _ _ v -> show v
+  , xFormatter   = \\ _ _ v -> show v
+  , yFormatter   = \\ _ _ v -> show v
   , xNumTicks    = 2
   , yNumTicks    = 2
   }
@@ -181,9 +181,11 @@ defPlot =
 {- | Axis-aware, width-limited, tick-label formatter.
 
 Given:
+
    * axis context
    * a per-tick width budget (in terminal cells)
    * and the raw tick value.
+
 returns the label to render.
 -}
 type LabelFormatter =
@@ -358,8 +360,8 @@ Each bar is colored differently and labeled with its category name.
 ==== __Example__
 
 @
-let data = [("Apple", 45.2), ("Banana", 38.1), ("Orange", 52.7)]
-    chart = bars data defPlot { plotTitle = "Fruit Sales" }
+let fruits = [(\"Apple\", 45.2), (\"Banana\", 38.1), (\"Orange\", 52.7)]
+    chart = bars fruits defPlot { plotTitle = "Fruit Sales" }
 @
 -}
 bars ::
@@ -425,9 +427,9 @@ Each category can have multiple stacked components.
 ==== __Example__
 
 @
-let data = [("Q1", [("Product A", 100), ("Product B", 150)]),
-            ("Q2", [("Product A", 120), ("Product B", 180)])]
-    chart = stackedBars data defPlot
+let sales = [(\"Q1\", [(\"Product A\", 100), (\"Product B\", 150)]),
+             (\"Q2\", [(\"Product A\", 120), (\"Product B\", 180)])]
+    chart = stackedBars sales defPlot
 @
 -}
 stackedBars ::
@@ -584,8 +586,8 @@ Values are normalized to sum to 100%. Negative values are treated as zero.
 ==== __Example__
 
 @
-let data = [("Chrome", 65), ("Firefox", 20), ("Safari", 10), ("Other", 5)]
-    chart = pie data defPlot { plotTitle = "Browser Market Share" }
+let browsers = [(\"Chrome\", 65), (\"Firefox\", 20), (\"Safari\", 10), (\"Other\", 5)]
+    chart = pie browsers defPlot { plotTitle = "Browser Market Share" }
 @
 -}
 pie ::
@@ -1118,7 +1120,7 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
                 )
                 w
         nSlots = plotW `div` slotW
-        hasCategories = not (null (filter (not . Text.null) categories))
+        hasCategories = not (all Text.null categories)
         xTicks = ticks1D plotW nSlots (xmin, xmax) False
         xEnv n = AxisEnv (xmin, xmax) n nSlots
         xLine =
@@ -1126,7 +1128,7 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
                 (Text.replicate (left + 1) " ")
                 slotW
                 ( if hasCategories
-                    then (keepPercentiles (xNumTicks cfg) (length xTicks + 1) categories)
+                    then keepPercentiles (xNumTicks cfg) (length xTicks + 1) categories
                     else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0 ..] xTicks]
                 )
      in Text.unlines (attachY <> [xBar, xLine])
@@ -1136,7 +1138,7 @@ keepPercentiles n k xs
     | k <= 0 = []
     | null xs = replicate k ""
     | n <= 1 = replicate k ""
-    | otherwise = (init (map (valueAt pairs) [0 .. k - 1])) ++ [last xs]
+    | otherwise = init (map (valueAt pairs) [0 .. k - 1]) ++ [last xs]
   where
     m = length xs
     pairs :: [(Int, Text)]
@@ -1166,7 +1168,7 @@ placeGridLabels :: Text -> Int -> [Text] -> Text
 placeGridLabels base slotW = List.foldl' place base
   where
     place :: Text -> Text -> Text
-    place acc s = acc <> Text.take slotW (s <> (Text.replicate slotW " "))
+    place acc s = acc <> Text.take slotW (s <> Text.replicate slotW " ")
 
 legendBlock :: LegendPos -> Int -> [(Text, Pat, Color)] -> Text
 legendBlock LegendBottom width entries =
