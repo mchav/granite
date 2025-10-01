@@ -18,8 +18,8 @@ A library for producing terminal plots. It depends only on Haskell's base and te
 ![Scatter Plot](https://github.com/mchav/granite/blob/main/static/scatter_plot.png)
 
 ```haskell
-import           Control.Monad
-import           System.Random.Stateful
+import Control.Monad
+import System.Random.Stateful
 
 import Granite.String
 
@@ -31,7 +31,7 @@ main = do
   ptsA_y <- replicateM 600 (uniformRM range g)
   ptsB_x <- replicateM 600 (uniformRM range g)
   ptsB_y <- replicateM 600 (uniformRM range g)
-  putStrLn (scatter "Random points" [series "A" (zip ptsA_x ptsA_y), series "B" (zip ptsB_x ptsB_y)]
+  putStrLn (scatter [series "A" (zip ptsA_x ptsA_y), series "B" (zip ptsB_x ptsB_y)]
             defPlot{widthChars=68,heightChars=22,plotTitle="Random points"})
 ```
 
@@ -106,9 +106,9 @@ import Granite
 
 main :: IO ()
 main = T.putStrLn $ lineGraph [ ("Product A", [(1, 100), (2, 120), (3, 115), (4, 140), (5, 155), (6, 148)])
-                                              , ("Product B", [(1, 80), (2, 85), (3, 95), (4, 92), (5, 110), (6, 125)])
-                                              , ("Product C", [(1, 60), (2, 62), (3, 70), (4, 85), (5, 82), (6, 90)])
-                                              ] defPlot {plotTitle="Monthly Sales Trends"}
+                              , ("Product B", [(1, 80), (2, 85), (3, 95), (4, 92), (5, 110), (6, 125)])
+                              , ("Product C", [(1, 60), (2, 62), (3, 70), (4, 85), (5, 82), (6, 90)])
+                              ] defPlot {plotTitle="Monthly Sales Trends"}
 ```
 
 ### Heatmap
@@ -136,14 +136,17 @@ main = do
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
+import qualified Data.Text as T
 import qualified Data.Text.IO as T
-
+import Control.Monad
 import Granite
+import System.Random.Stateful
 
 main :: IO ()
 main = do
+  g <- newIOGenM =<< newStdGen
   heights <- replicateM 5000 (uniformRM (160 :: Double, 190 :: Double) g)
-  Text.putStrLn $
+  T.putStrLn $
       histogram
           (bins 30 155 195)
           heights
@@ -151,7 +154,7 @@ main = do
               { widthChars = 68
               , heightChars = 18
               , legendPos = LegendBottom
-              , xFormatter = \_ _ v -> Text.pack (show (round v :: Int))
+              , xFormatter = \_ _ v -> T.pack (show (round v :: Int))
               , xNumTicks = 10
               , yNumTicks = 5
               , plotTitle = "Heights (cm)"
