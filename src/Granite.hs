@@ -1411,6 +1411,14 @@ fromList xs = fst (build (length xs) xs)
             (r, ys3) = build (n - n `div` 2 - 1) ys2
          in (mk l x r, ys3)
 
+-- >>> setAt "abc" (-1) 'x'
+-- "abc"
+-- >>> setAt "abc" 0 'x'
+-- "xbc"
+-- >>> setAt "abc" 2 'x'
+-- "abx"
+-- >>> setAt "abc" 10 'x'
+-- "abc"
 setAt :: [a] -> Int -> a -> [a]
 setAt xs i v
     | i < 0 = xs
