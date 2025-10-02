@@ -819,8 +819,6 @@ boxPlot datasets cfg =
         if y >= 0 && y < length grid && x >= 0 && x < gridWidth grid
             then take y grid <> [setAt (grid !! y) x (ch, col)] <> drop (y + 1) grid
             else grid
-      where
-        setAt row i v = take i row <> [v] <> drop (i + 1) row
 
 ansiCode :: Color -> Int
 ansiCode Black = 30
@@ -1040,11 +1038,6 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
         baseLbl :: [Text]
         baseLbl = replicate plotH pad
 
-        setAt :: [Text] -> Int -> Text -> [Text]
-        setAt xs i v
-            | i < 0 || i >= length xs = xs
-            | otherwise = take i xs <> [v] <> drop (i + 1) xs
-
         yEnv n = AxisEnv (ymin, ymax) n 3
         ySlot = max 1 left
         yLabels =
@@ -1088,11 +1081,6 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
 
         yTicks = ticks1D plotH (yNumTicks cfg) (ymin, ymax) True
         baseLbl = List.replicate plotH pad
-
-        setAt :: [Text] -> Int -> Text -> [Text]
-        setAt xs i v
-            | i < 0 || i >= length xs = xs
-            | otherwise = take i xs <> [v] <> drop (i + 1) xs
 
         yEnv n = AxisEnv (ymin, ymax) n 3
         ySlot = max 1 left
@@ -1422,3 +1410,13 @@ fromList xs = fst (build (length xs) xs)
                 (v : vs) -> (v, vs)
             (r, ys3) = build (n - n `div` 2 - 1) ys2
          in (mk l x r, ys3)
+
+setAt :: [a] -> Int -> a -> [a]
+setAt xs i v
+    | i < 0 = xs
+    | otherwise = go xs i
+  where
+    go [] _ = []
+    go (_ : rest) 0 = v : rest
+    go (x : rest) n =
+        x : go rest (n - 1)
