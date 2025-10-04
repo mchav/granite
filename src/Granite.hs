@@ -782,8 +782,8 @@ boxPlot datasets cfg =
 
                 grid7 = drawHLine grid6 xStart xEnd medRow '═' (Just col)
 
-                grid8 = setGridChar grid7 xMid minRow '┬' (Just col)
-                grid9 = setGridChar grid8 xMid maxRow '┴' (Just col)
+                grid8 = setGridChar grid7 xMid minRow '┴' (Just col)
+                grid9 = setGridChar grid8 xMid maxRow '┬' (Just col)
              in grid9
 
         finalGrid = List.foldl' drawBox emptyGrid (zip [0 ..] stats)
