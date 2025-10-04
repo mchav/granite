@@ -411,7 +411,7 @@ bars kvs cfg =
                 (0, fromIntegral (max 1 nCats))
                 (0, vmax)
                 (map fst kvs)
-                (fmap (+ 1) (safeHead widths))
+                (fmap (+ 1) (listToMaybe widths))
         legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend =
             legendBlock
@@ -491,7 +491,7 @@ stackedBars categories cfg =
                 (0, fromIntegral (max 1 nCats))
                 (0, maxHeight)
                 (map fst categories)
-                (fmap (+ 1) (safeHead widths))
+                (fmap (+ 1) (listToMaybe widths))
         legend :: Text
         legend =
             legendBlock
@@ -1302,10 +1302,6 @@ minimum' [] = 0
 minimum' xs = minimum xs
 maximum' [] = 1
 maximum' xs = maximum xs
-
-safeHead :: [a] -> Maybe a
-safeHead [] = Nothing
-safeHead (x : _) = Just x
 
 -- AVL Tree we'll use as an array.
 -- This improves upon the previous implementation that relies
