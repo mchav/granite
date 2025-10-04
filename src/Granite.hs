@@ -1129,7 +1129,7 @@ keepPercentiles n k xs
     | k <= 0 = []
     | null xs = replicate k ""
     | n <= 1 = replicate k ""
-    | otherwise = init (map (valueAt pairs) [0 .. k - 1]) ++ [last xs]
+    | otherwise = map valueAt [0 .. k - 2] ++ [last xs]
   where
     m = length xs
     pairs :: [(Int, Text)]
@@ -1141,11 +1141,9 @@ keepPercentiles n k xs
         , let srcIx = (i * (m - 1)) `div` (n - 1)
         , let slotIx = (i * (k - 1)) `div` (n - 1)
         ]
-    valueAt :: [(Int, Text)] -> Int -> Text
-    valueAt [] _ = ""
-    valueAt ((j, v) : rest) i
-        | i == j = v
-        | otherwise = valueAt rest i
+
+    valueAt :: Int -> Text
+    valueAt i = fromMaybe "" $ List.lookup i pairs
 
 placeLabels :: Text -> Int -> [(Int, Text)] -> Text
 placeLabels base off = List.foldl' place base
