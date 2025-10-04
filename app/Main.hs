@@ -70,7 +70,7 @@ main = do
             , ("Class C", [88, 92, 95, 90, 93, 89, 91, 94, 96, 87, 90, 92])
             , ("Class D", [65, 70, 72, 68, 75, 80, 73, 71, 69, 74, 77, 76])
             ]
-            defPlot{plotTitle = "Test Score Distribution by Class"}
+            defPlot{plotTitle = "Test Score Distribution by Class", xNumTicks = 4}
 
     -- stacked bar chart
     Text.putStrLn $
