@@ -280,7 +280,7 @@ scatter sers cfg =
         pats = cycle palette
         cols = cycle (colorPalette cfg)
         withSty = zipWith3 (\(n, ps) p c -> (n, ps, p, c)) sers pats cols
-        drawOne (_name, pts, pat, col) c0 =
+        drawOne c0 (_name, pts, pat, col) =
             List.foldl'
                 ( \c (x, y) ->
                     let xd = sx x; yd = sy y
@@ -288,7 +288,7 @@ scatter sers cfg =
                 )
                 c0
                 pts
-        cDone = List.foldl' (flip drawOne) plotC withSty
+        cDone = List.foldl' drawOne plotC withSty
         ax = axisify cfg cDone (xmin, xmax) (ymin, ymax)
         legend =
             legendBlock
@@ -374,7 +374,7 @@ bars ::
 bars kvs cfg =
     let wC = widthChars cfg
         hC = heightChars cfg
-        vals = map snd kvs
+        (catNames, vals) = unzip kvs
         vmax = maximum' (map abs vals)
 
         cats :: [(Text, Double, Color)]
@@ -410,8 +410,8 @@ bars kvs cfg =
                 grid
                 (0, fromIntegral (max 1 nCats))
                 (0, vmax)
-                (map fst kvs)
-                (fmap (+ 1) (safeHead widths))
+                catNames
+                (fmap (+ 1) (listToMaybe widths))
         legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend =
             legendBlock
@@ -491,7 +491,7 @@ stackedBars categories cfg =
                 (0, fromIntegral (max 1 nCats))
                 (0, maxHeight)
                 (map fst categories)
-                (fmap (+ 1) (safeHead widths))
+                (fmap (+ 1) (listToMaybe widths))
         legend :: Text
         legend =
             legendBlock
@@ -782,8 +782,8 @@ boxPlot datasets cfg =
 
                 grid7 = drawHLine grid6 xStart xEnd medRow '═' (Just col)
 
-                grid8 = setGridChar grid7 xMid minRow '┬' (Just col)
-                grid9 = setGridChar grid8 xMid maxRow '┴' (Just col)
+                grid8 = setGridChar grid7 xMid minRow '┴' (Just col)
+                grid9 = setGridChar grid8 xMid maxRow '┬' (Just col)
              in grid9
 
         finalGrid = List.foldl' drawBox emptyGrid (zip [0 ..] stats)
@@ -816,11 +816,7 @@ boxPlot datasets cfg =
          in List.foldl' (\g x -> setGridChar g x y ch col) grid [xStart .. xEnd]
 
     setGridChar grid x y ch col =
-        if y >= 0 && y < length grid && x >= 0 && x < gridWidth grid
-            then take y grid <> [setAt (grid !! y) x (ch, col)] <> drop (y + 1) grid
-            else grid
-      where
-        setAt row i v = take i row <> [v] <> drop (i + 1) row
+        updateAt grid y (\row -> setAt row x (ch, col))
 
 ansiCode :: Color -> Int
 ansiCode Black = 30
@@ -925,10 +921,8 @@ setDotC :: Canvas -> Int -> Int -> Maybe Color -> Canvas
 setDotC c xDot yDot mcol
     | xDot < 0 || yDot < 0 || xDot >= cW c * 2 || yDot >= cH c * 4 = c
     | otherwise =
-        let cx = xDot `div` 2
-            cy = yDot `div` 4
-            rx = xDot - 2 * cx
-            ry = yDot - 4 * cy
+        let (cx, rx) = xDot `divMod` 2
+            (cy, ry) = yDot `divMod` 4
             b = toBit ry rx
             m = getA2D (buffer c) cx cy
             c' = c{buffer = setA2D (buffer c) cx cy (m .|. b)}
@@ -1040,17 +1034,15 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
         baseLbl :: [Text]
         baseLbl = replicate plotH pad
 
-        setAt :: [Text] -> Int -> Text -> [Text]
-        setAt xs i v
-            | i < 0 || i >= length xs = xs
-            | otherwise = take i xs <> [v] <> drop (i + 1) xs
-
         yEnv n = AxisEnv (ymin, ymax) n 3
         ySlot = max 1 left
         yLabels =
             List.foldl'
                 ( \acc (row, v) ->
-                    setAt acc row (justifyRight left (yFormatter cfg (yEnv row) ySlot v))
+                    setAt acc row
+                        . ellipsisize left
+                        . justifyRight left
+                        $ yFormatter cfg (yEnv row) ySlot v
                 )
                 baseLbl
                 yTicks
@@ -1089,16 +1081,15 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
         yTicks = ticks1D plotH (yNumTicks cfg) (ymin, ymax) True
         baseLbl = List.replicate plotH pad
 
-        setAt :: [Text] -> Int -> Text -> [Text]
-        setAt xs i v
-            | i < 0 || i >= length xs = xs
-            | otherwise = take i xs <> [v] <> drop (i + 1) xs
-
         yEnv n = AxisEnv (ymin, ymax) n 3
         ySlot = max 1 left
         yLabels =
             List.foldl'
-                ( \acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) ySlot v))
+                ( \acc (row, v) ->
+                    setAt acc row
+                        . ellipsisize left
+                        . justifyRight left
+                        $ yFormatter cfg (yEnv row) ySlot v
                 )
                 baseLbl
                 yTicks
@@ -1138,7 +1129,7 @@ keepPercentiles n k xs
     | k <= 0 = []
     | null xs = replicate k ""
     | n <= 1 = replicate k ""
-    | otherwise = init (map (valueAt pairs) [0 .. k - 1]) ++ [last xs]
+    | otherwise = map valueAt [0 .. k - 2] ++ [last xs]
   where
     m = length xs
     pairs :: [(Int, Text)]
@@ -1150,11 +1141,9 @@ keepPercentiles n k xs
         , let srcIx = (i * (m - 1)) `div` (n - 1)
         , let slotIx = (i * (k - 1)) `div` (n - 1)
         ]
-    valueAt :: [(Int, Text)] -> Int -> Text
-    valueAt [] _ = ""
-    valueAt ((j, v) : rest) i
-        | i == j = v
-        | otherwise = valueAt rest i
+
+    valueAt :: Int -> Text
+    valueAt i = fromMaybe "" $ List.lookup i pairs
 
 placeLabels :: Text -> Int -> [(Int, Text)] -> Text
 placeLabels base off = List.foldl' place base
@@ -1202,8 +1191,7 @@ eps = 1e-12
 
 boundsXY :: Plot -> [(Double, Double)] -> (Double, Double, Double, Double)
 boundsXY cfg pts =
-    let xs = map fst pts
-        ys = map snd pts
+    let (xs, ys) = unzip pts
         xmin = minimum' xs
         xmax = maximum' xs
         ymin = minimum' ys
@@ -1263,7 +1251,7 @@ resampleToWidth w xs
                 ]
 
 addAt :: [Int] -> Int -> Int -> [Int]
-addAt xs i v = take i xs <> [xs !! i + v] <> drop (i + 1) xs
+addAt xs i v = updateAt xs i (+ v)
 
 normalize :: [(Text, Double)] -> [(Text, Double)]
 normalize xs =
@@ -1302,7 +1290,7 @@ quartiles xs =
      in if n < 5
             then let m = sum xs / fromIntegral n in (m, m, m, m, m)
             else
-                ( maybe 0 fst (List.uncons sorted)
+                ( fromMaybe 0 (listToMaybe sorted)
                 , getIdx q1Idx
                 , getIdx q2Idx
                 , getIdx q3Idx
@@ -1319,10 +1307,6 @@ minimum' [] = 0
 minimum' xs = minimum xs
 maximum' [] = 1
 maximum' xs = maximum xs
-
-safeHead :: [a] -> Maybe a
-safeHead [] = Nothing
-safeHead (x : _) = Just x
 
 -- AVL Tree we'll use as an array.
 -- This improves upon the previous implementation that relies
@@ -1422,3 +1406,39 @@ fromList xs = fst (build (length xs) xs)
                 (v : vs) -> (v, vs)
             (r, ys3) = build (n - n `div` 2 - 1) ys2
          in (mk l x r, ys3)
+
+-- >>> setAt "abc" (-1) 'x'
+-- "abc"
+-- >>> setAt "abc" 0 'x'
+-- "xbc"
+-- >>> setAt "abc" 2 'x'
+-- "abx"
+-- >>> setAt "abc" 10 'x'
+-- "abc"
+setAt :: [a] -> Int -> a -> [a]
+setAt xs i v = updateAt xs i (const v)
+
+updateAt :: [a] -> Int -> (a -> a) -> [a]
+updateAt xs i f
+    | i < 0 = xs
+    | otherwise = go xs i
+  where
+    go [] _ = []
+    go (x : rest) 0 = f x : rest
+    go (x : rest) n = x : go rest (n - 1)
+
+{- | Ensure the text fits within maxWidth. If it doesn't, truncate and append an ellipsis.
+>>> ellipsisize 5 "Hello, World!"
+"Hell\8230"
+>>> ellipsisize 1 "Hi"
+"\8230"
+>>> ellipsisize 0 "Hello, World!"
+""
+>>> ellipsisize 20 "Hello, World!"
+"Hello, World!"
+-}
+ellipsisize :: Int -> Text -> Text
+ellipsisize maxWidth lbl
+    | maxWidth <= 0 = ""
+    | wcswidth lbl > maxWidth = Text.take (maxWidth - 1) lbl <> "…"
+    | otherwise = lbl
