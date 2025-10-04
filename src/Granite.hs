@@ -280,7 +280,7 @@ scatter sers cfg =
         pats = cycle palette
         cols = cycle (colorPalette cfg)
         withSty = zipWith3 (\(n, ps) p c -> (n, ps, p, c)) sers pats cols
-        drawOne (_name, pts, pat, col) c0 =
+        drawOne c0 (_name, pts, pat, col) =
             List.foldl'
                 ( \c (x, y) ->
                     let xd = sx x; yd = sy y
@@ -288,7 +288,7 @@ scatter sers cfg =
                 )
                 c0
                 pts
-        cDone = List.foldl' (flip drawOne) plotC withSty
+        cDone = List.foldl' drawOne plotC withSty
         ax = axisify cfg cDone (xmin, xmax) (ymin, ymax)
         legend =
             legendBlock
