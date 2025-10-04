@@ -921,10 +921,8 @@ setDotC :: Canvas -> Int -> Int -> Maybe Color -> Canvas
 setDotC c xDot yDot mcol
     | xDot < 0 || yDot < 0 || xDot >= cW c * 2 || yDot >= cH c * 4 = c
     | otherwise =
-        let cx = xDot `div` 2
-            cy = yDot `div` 4
-            rx = xDot - 2 * cx
-            ry = yDot - 4 * cy
+        let (cx, rx) = xDot `divMod` 2
+            (cy, ry) = yDot `divMod` 4
             b = toBit ry rx
             m = getA2D (buffer c) cx cy
             c' = c{buffer = setA2D (buffer c) cx cy (m .|. b)}
@@ -1188,8 +1186,7 @@ eps = 1e-12
 
 boundsXY :: Plot -> [(Double, Double)] -> (Double, Double, Double, Double)
 boundsXY cfg pts =
-    let xs = map fst pts
-        ys = map snd pts
+    let (xs, ys) = unzip pts
         xmin = minimum' xs
         xmax = maximum' xs
         ymin = minimum' ys
@@ -1427,5 +1424,4 @@ updateAt xs i f
   where
     go [] _ = []
     go (x : rest) 0 = f x : rest
-    go (x : rest) n =
-        x : go rest (n - 1)
+    go (x : rest) n = x : go rest (n - 1)
