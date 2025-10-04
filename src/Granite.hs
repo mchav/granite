@@ -1039,7 +1039,10 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
         yLabels =
             List.foldl'
                 ( \acc (row, v) ->
-                    setAt acc row (justifyRight left (yFormatter cfg (yEnv row) ySlot v))
+                    setAt acc row
+                        . ellipsisize left
+                        . justifyRight left
+                        $ yFormatter cfg (yEnv row) ySlot v
                 )
                 baseLbl
                 yTicks
@@ -1082,7 +1085,11 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
         ySlot = max 1 left
         yLabels =
             List.foldl'
-                ( \acc (row, v) -> setAt acc row (justifyRight left (yFormatter cfg (yEnv row) ySlot v))
+                ( \acc (row, v) ->
+                    setAt acc row
+                        . ellipsisize left
+                        . justifyRight left
+                        $ yFormatter cfg (yEnv row) ySlot v
                 )
                 baseLbl
                 yTicks
@@ -1285,7 +1292,7 @@ quartiles xs =
      in if n < 5
             then let m = sum xs / fromIntegral n in (m, m, m, m, m)
             else
-                ( maybe 0 fst (List.uncons sorted)
+                ( fromMaybe 0 (listToMaybe sorted)
                 , getIdx q1Idx
                 , getIdx q2Idx
                 , getIdx q3Idx
@@ -1421,3 +1428,17 @@ updateAt xs i f
     go [] _ = []
     go (x : rest) 0 = f x : rest
     go (x : rest) n = x : go rest (n - 1)
+
+{- | Ensure the text fits within maxWidth. If it doesn't, truncate and append an ellipsis.
+>>> ellipsisize 5 "Hello, World!"
+"Hell\8230"
+>>> ellipsisize 0 "Hello, World!"
+"\8230"
+>>> ellipsisize 20 "Hello, World!"
+"Hello, World!"
+-}
+ellipsisize :: Int -> Text -> Text
+ellipsisize maxWidth lbl =
+    if wcswidth lbl > maxWidth
+        then Text.take (maxWidth - 1) lbl <> "…"
+        else lbl
