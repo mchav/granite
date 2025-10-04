@@ -816,9 +816,7 @@ boxPlot datasets cfg =
          in List.foldl' (\g x -> setGridChar g x y ch col) grid [xStart .. xEnd]
 
     setGridChar grid x y ch col =
-        if y >= 0 && y < length grid && x >= 0 && x < gridWidth grid
-            then take y grid <> [setAt (grid !! y) x (ch, col)] <> drop (y + 1) grid
-            else grid
+        updateAt grid y (\row -> setAt row x (ch, col))
 
 ansiCode :: Color -> Int
 ansiCode Black = 30
@@ -1251,7 +1249,7 @@ resampleToWidth w xs
                 ]
 
 addAt :: [Int] -> Int -> Int -> [Int]
-addAt xs i v = take i xs <> [xs !! i + v] <> drop (i + 1) xs
+addAt xs i v = updateAt xs i (+ v)
 
 normalize :: [(Text, Double)] -> [(Text, Double)]
 normalize xs =
@@ -1420,11 +1418,14 @@ fromList xs = fst (build (length xs) xs)
 -- >>> setAt "abc" 10 'x'
 -- "abc"
 setAt :: [a] -> Int -> a -> [a]
-setAt xs i v
+setAt xs i v = updateAt xs i (const v)
+
+updateAt :: [a] -> Int -> (a -> a) -> [a]
+updateAt xs i f
     | i < 0 = xs
     | otherwise = go xs i
   where
     go [] _ = []
-    go (_ : rest) 0 = v : rest
+    go (x : rest) 0 = f x : rest
     go (x : rest) n =
         x : go rest (n - 1)
