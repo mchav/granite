@@ -374,7 +374,7 @@ bars ::
 bars kvs cfg =
     let wC = widthChars cfg
         hC = heightChars cfg
-        vals = map snd kvs
+        (catNames, vals) = unzip kvs
         vmax = maximum' (map abs vals)
 
         cats :: [(Text, Double, Color)]
@@ -410,7 +410,7 @@ bars kvs cfg =
                 grid
                 (0, fromIntegral (max 1 nCats))
                 (0, vmax)
-                (map fst kvs)
+                catNames
                 (fmap (+ 1) (listToMaybe widths))
         legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend =
