@@ -1432,13 +1432,15 @@ updateAt xs i f
 {- | Ensure the text fits within maxWidth. If it doesn't, truncate and append an ellipsis.
 >>> ellipsisize 5 "Hello, World!"
 "Hell\8230"
->>> ellipsisize 0 "Hello, World!"
+>>> ellipsisize 1 "Hi"
 "\8230"
+>>> ellipsisize 0 "Hello, World!"
+""
 >>> ellipsisize 20 "Hello, World!"
 "Hello, World!"
 -}
 ellipsisize :: Int -> Text -> Text
-ellipsisize maxWidth lbl =
-    if wcswidth lbl > maxWidth
-        then Text.take (maxWidth - 1) lbl <> "…"
-        else lbl
+ellipsisize maxWidth lbl
+    | maxWidth <= 0 = ""
+    | wcswidth lbl > maxWidth = Text.take (maxWidth - 1) lbl <> "…"
+    | otherwise = lbl
