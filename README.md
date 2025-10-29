@@ -15,7 +15,7 @@ A library for producing terminal plots. It depends only on Haskell's base and te
 ## Examples
 
 ### Scatter plot
-![Scatter Plot](https://github.com/mchav/granite/blob/main/static/scatter_plot.png)
+![Scatter Plot](https://github.com/mchav/granite/blob/main/static/scatter_plot.png?raw=true)
 
 ```haskell
 import Control.Monad
@@ -36,7 +36,7 @@ main = do
 ```
 
 ### Bar chart
-![Bar chart](https://github.com/mchav/granite/blob/main/static/bar_chart.png)
+![Bar chart](https://github.com/mchav/granite/blob/main/static/bar_chart.png?raw=true)
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
@@ -49,7 +49,7 @@ main = T.putStrLn (bars [("Q1",12),("Q2",18),("Q3",9),("Q4",15)] defPlot {plotTi
 ```
 
 ### Stacked bar chart
-![Stacked bar chart](https://github.com/mchav/granite/blob/main/static/stacked_bar.png)
+![Stacked bar chart](https://github.com/mchav/granite/blob/main/static/stacked_bar.png?raw=true)
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
@@ -66,7 +66,7 @@ main =  T.putStrLn (stackedBars [ ("Q1", [("Hardware", 120), ("Software", 200), 
 ```
 
 ### Pie chart
-![Pie chart](https://github.com/mchav/granite/blob/main/static/pie_chart.png)
+![Pie chart](https://github.com/mchav/granite/blob/main/static/pie_chart.png?raw=true)
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
@@ -79,7 +79,7 @@ main = T.putStrLn (pie [("Alpha",0.35),("Beta",0.25),("Gamma",0.20),("Delta",0.2
 ```
 
 ### Box plot
-![Box plot](https://github.com/mchav/granite/blob/main/static/box_plot.png)
+![Box plot](https://github.com/mchav/granite/blob/main/static/box_plot.png?raw=true)
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
@@ -96,7 +96,7 @@ main = T.putStrLn $ boxPlot [ ("Class A", [78, 82, 85, 88, 90, 92, 85, 87, 89, 9
 ```
 
 ### Line graph
-![Line graph](https://github.com/mchav/granite/blob/main/static/line_graph.png)
+![Line graph](https://github.com/mchav/granite/blob/main/static/line_graph.png?raw=true)
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
@@ -112,7 +112,7 @@ main = T.putStrLn $ lineGraph [ ("Product A", [(1, 100), (2, 120), (3, 115), (4,
 ```
 
 ### Heatmap
-![Heatmap](https://github.com/mchav/granite/blob/main/static/heatmap.png)
+![Heatmap](https://github.com/mchav/granite/blob/main/static/heatmap.png?raw=true)
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
@@ -132,7 +132,7 @@ main = do
 ```
 
 ### Histogram
-![Histogram](https://github.com/mchav/granite/blob/main/static/histogram.png)
+![Histogram](https://github.com/mchav/granite/blob/main/static/histogram.png?raw=true)
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
