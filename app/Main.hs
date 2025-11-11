@@ -21,10 +21,10 @@ main = do
             defPlot{widthChars = 68, heightChars = 22, plotTitle = "Random points"}
 
     -- histogram
-    let heights = [100 .. 200]
+    let heights = concat $ zipWith replicate [0 .. 40] [160 .. 200]
     Text.putStrLn $
         histogram
-            (bins 30 155 195)
+            (bins 40 155 195)
             heights
             defPlot
                 { widthChars = 68

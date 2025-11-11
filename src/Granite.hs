@@ -564,17 +564,14 @@ histogram (Bins n a b) xs cfg =
         colsF = resampleToWidth wData fracs0
 
         dataCols = [(colGlyphs hC f, Just BrightCyan) | f <- colsF]
-        gutterCol = (replicate hC ' ', Nothing)
-        columns = List.intercalate [gutterCol] (map pure dataCols)
-
         grid :: [[(Char, Maybe Color)]]
         grid =
-            [ [(fst col !! y, snd col) | col <- columns]
+            [ [(fst col !! y, snd col) | col <- dataCols]
             | y <- [0 .. hC - 1]
             ]
 
         ax =
-            axisifyGrid cfg grid (a, b) (0, fromIntegral (maximum (1 : counts))) [] Nothing
+            axisifyGrid cfg grid (a, b) (0, maxC) [] Nothing
         legendWidth = leftMargin cfg + 1 + gridWidth grid
         legend = legendBlock (legendPos cfg) legendWidth [("count", Solid, BrightCyan)]
      in drawFrame cfg ax legend
@@ -1061,7 +1058,7 @@ axisify cfg c (xmin, xmax) (ymin, ymax) =
             placeLabels
                 (Text.replicate (left + 1 + plotW) " ")
                 (left + 1)
-                [(x, xFormatter cfg (xEnv x) slotW v) | (x, v) <- xTicks]
+                [(x, xFormatter cfg (xEnv i) slotW v) | (i, (x, v)) <- zip [0 ..] xTicks]
      in Text.unlines (attachY <> [xBar, xLine])
 
 axisifyGrid ::
@@ -1081,7 +1078,7 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
         yTicks = ticks1D plotH (yNumTicks cfg) (ymin, ymax) True
         baseLbl = List.replicate plotH pad
 
-        yEnv n = AxisEnv (ymin, ymax) n 3
+        yEnv n = AxisEnv (ymin, ymax) n (yNumTicks cfg)
         ySlot = max 1 left
         yLabels =
             List.foldl'
@@ -1103,25 +1100,32 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
 
         xBar = pad <> "└" <> Text.replicate plotW "─"
 
-        slotW =
-            fromMaybe
-                ( slotBudget
-                    plotW
-                    (max 1 (xNumTicks cfg))
-                )
-                w
-        nSlots = plotW `div` slotW
-        hasCategories = not (all Text.null categories)
-        xTicks = ticks1D plotW nSlots (xmin, xmax) False
-        xEnv n = AxisEnv (xmin, xmax) n nSlots
+        hasCategories = not (null categories) && not (all Text.null categories)
+
         xLine =
-            placeGridLabels
-                (Text.replicate (left + 1) " ")
-                slotW
-                ( if hasCategories
-                    then keepPercentiles (xNumTicks cfg) (length xTicks + 1) categories
-                    else [xFormatter cfg (xEnv i) slotW v | (i, (_, v)) <- zip [0 ..] xTicks]
-                )
+            if hasCategories
+                then
+                    let slotW =
+                            fromMaybe
+                                ( slotBudget
+                                    plotW
+                                    (max 1 (xNumTicks cfg))
+                                )
+                                w
+                        nSlots = plotW `div` slotW
+                        xTicks = ticks1D plotW nSlots (xmin, xmax) False
+                     in placeGridLabels
+                            (Text.replicate (left + 1) " ")
+                            slotW
+                            (keepPercentiles (xNumTicks cfg) (length xTicks + 1) categories)
+                else
+                    let xTicks = ticks1D plotW (xNumTicks cfg) (xmin, xmax) False
+                        xEnv i = AxisEnv (xmin, xmax) i (xNumTicks cfg)
+                        slotW = slotBudget plotW (max 1 (length xTicks))
+                     in placeLabels
+                            (Text.replicate (left + 1 + plotW) " ")
+                            (left + 1)
+                            [(x, xFormatter cfg (xEnv i) slotW v) | (i, (x, v)) <- zip [0 ..] xTicks]
      in Text.unlines (attachY <> [xBar, xLine])
 
 keepPercentiles :: Int -> Int -> [Text] -> [Text]
