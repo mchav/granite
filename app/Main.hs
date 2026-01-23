@@ -70,7 +70,7 @@ main = do
             , ("Class C", [88, 92, 95, 90, 93, 89, 91, 94, 96, 87, 90, 92])
             , ("Class D", [65, 70, 72, 68, 75, 80, 73, 71, 69, 74, 77, 76])
             ]
-            defPlot{plotTitle = "Test Score Distribution by Class", xNumTicks = 4}
+            defPlot{plotTitle = "Test Score Distribution by Class"}
 
     -- stacked bar chart
     Text.putStrLn $
@@ -80,7 +80,7 @@ main = do
             , ("Q3", [("Hardware", 110), ("Software", 240), ("Services", 110)])
             , ("Q4", [("Hardware", 145), ("Software", 260), ("Services", 125)])
             ]
-            defPlot{plotTitle = "Quarterly Revenue Breakdown", xNumTicks = 4}
+            defPlot{plotTitle = "Quarterly Revenue Breakdown"}
 
     -- heatmap
     let matrix =

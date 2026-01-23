@@ -681,9 +681,6 @@ heatmap matrix cfg =
                         idx' = clamp 0 (length intensityColors - 1) idx
                      in intensityColors !! idx'
 
-        plotW = widthChars cfg
-        plotH = heightChars cfg
-
         displayGrid =
             [ [ let
                     matrixRow = min (rows - 1) ((plotH - 1 - i) * rows `div` plotH)
@@ -696,14 +693,43 @@ heatmap matrix cfg =
             | i <- [0 .. plotH - 1]
             ]
 
-        ax =
-            axisifyGrid
-                cfg
-                displayGrid
-                (0, fromIntegral cols - 1)
-                (0, fromIntegral rows - 1)
-                []
-                (Just (plotW `div` cols))
+        plotW = widthChars cfg
+        plotH = heightChars cfg
+
+        colLabels = [Text.pack (show i) | i <- [0 .. cols - 1]]
+        rowLabels = [Text.pack (show i) | i <- reverse [0 .. rows - 1]]
+
+        cellHeight = fromIntegral plotH / fromIntegral rows
+        yTicks =
+            [ ( round @Double @Int (fromIntegral i * cellHeight + cellHeight / 2)
+              , rowLabels !! i
+              )
+            | i <- [0 .. rows - 1]
+            ]
+
+        left = leftMargin cfg
+        baseLbl = replicate plotH (Text.replicate left " ")
+        yLabels =
+            List.foldl'
+                ( \acc (row, lbl) ->
+                    setAt acc row (justifyRight left (ellipsisize left lbl))
+                )
+                baseLbl
+                yTicks
+
+        renderRow cells =
+            Text.concat
+                (fmap (\(ch, mc) -> maybe (Text.singleton ch) (`paint` ch) mc) cells)
+        attachY = zipWith (\lbl cells -> lbl <> "│" <> renderRow cells) yLabels displayGrid
+
+        xBar = Text.replicate left " " <> "└" <> Text.replicate plotW "─"
+        xLine =
+            placeGridLabels
+                (Text.replicate (left + 1) " ")
+                (plotW `div` cols)
+                colLabels
+
+        ax = Text.unlines (attachY <> [xBar, xLine])
 
         gradientLegend =
             Text.pack (printf "%.2f " vmin)
@@ -785,14 +811,41 @@ boxPlot datasets cfg =
 
         finalGrid = List.foldl' drawBox emptyGrid (zip [0 ..] stats)
 
-        ax =
-            axisifyGrid
-                cfg
-                finalGrid
-                (0, fromIntegral nBoxes)
-                (ymin, ymax)
-                (map fst datasets)
-                (Just (boxWidth + spacing))
+        left = leftMargin cfg
+        baseLbl = replicate hC (Text.replicate left " ")
+
+        yTicks = ticks1D hC (yNumTicks cfg) (ymin, ymax) True
+        yEnv n = AxisEnv (ymin, ymax) n (yNumTicks cfg)
+        ySlot = max 1 left
+        yLabels =
+            List.foldl'
+                ( \acc (row, v) ->
+                    setAt acc row . ellipsisize left . justifyRight left $
+                        yFormatter cfg (yEnv row) ySlot v
+                )
+                baseLbl
+                yTicks
+
+        renderRow cells =
+            Text.concat
+                (fmap (\(ch, mc) -> maybe (Text.singleton ch) (`paint` ch) mc) cells)
+        attachY = zipWith (\lbl cells -> lbl <> "│" <> renderRow cells) yLabels finalGrid
+
+        xBar = Text.replicate left " " <> "└" <> Text.replicate wC "─"
+
+        xLine =
+            List.foldl'
+                ( \acc (idx, name) ->
+                    let boxCenter = idx * (boxWidth + spacing) + boxWidth `div` 2
+                        lblWidth = wcswidth name
+                        lblStart = left + 1 + boxCenter - lblWidth `div` 2
+                     in Text.take lblStart acc <> name <> Text.drop (lblStart + wcswidth name) acc
+                )
+                (Text.replicate (left + 1 + wC) " ")
+                (zip [0 ..] (map fst datasets))
+
+        ax = Text.unlines (attachY <> [xBar, xLine])
+
         legend =
             legendBlock
                 (legendPos cfg)
@@ -1117,7 +1170,7 @@ axisifyGrid cfg grid (xmin, xmax) (ymin, ymax) categories w =
                      in placeGridLabels
                             (Text.replicate (left + 1) " ")
                             slotW
-                            (keepPercentiles (xNumTicks cfg) (length xTicks + 1) categories)
+                            (keepPercentiles (length categories) (length xTicks + 1) categories)
                 else
                     let xTicks = ticks1D plotW (xNumTicks cfg) (xmin, xmax) False
                         xEnv i = AxisEnv (xmin, xmax) i (xNumTicks cfg)
@@ -1161,7 +1214,11 @@ placeGridLabels :: Text -> Int -> [Text] -> Text
 placeGridLabels base slotW = List.foldl' place base
   where
     place :: Text -> Text -> Text
-    place acc s = acc <> Text.take slotW (s <> Text.replicate slotW " ")
+    place acc s =
+        let lblWidth = wcswidth s
+            padding = max 0 ((slotW - lblWidth) `div` 2)
+            centered = Text.replicate padding " " <> s
+         in acc <> Text.take slotW (centered <> Text.replicate slotW " ")
 
 legendBlock :: LegendPos -> Int -> [(Text, Pat, Color)] -> Text
 legendBlock LegendBottom width entries =
