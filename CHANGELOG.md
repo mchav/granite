@@ -1,5 +1,8 @@
 # Revision history for granite
 
+## 0.4.0.0 -- 2026-02-27
+* Add Svg support.
+
 ## 0.3.0.5 -- 2025-11-10
 * Fix x-axis label alignment for continuous histograms.
 

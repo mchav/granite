@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               granite
-version:            0.3.0.5
+version:            0.4.0.0
 synopsis:           Easy terminal plotting.
 description:        A terminal plotting library for quick and easy visualisation.
 license:            MIT
@@ -42,7 +42,8 @@ common ghc-options
 library
     import:           ghc-options
     exposed-modules:  Granite,
-                      Granite.String
+                      Granite.String,
+                      Granite.Svg
     build-depends:
         base >=4 && <5,
         text >= 1 && < 3
