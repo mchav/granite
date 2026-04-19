@@ -73,7 +73,7 @@ test-suite granite-test
         , granite ^>= 0.4
         , text >= 1.2 && < 3
         , hspec >= 2.7 && < 2.12
-        , QuickCheck >= 2.14 && < 2.17
+        , QuickCheck >= 2.14 && < 3
 
     hs-source-dirs: test
 
