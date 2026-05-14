@@ -1,4 +1,3 @@
-
 {-# LANGUAGE Strict #-}
 
 {- |
@@ -193,7 +192,7 @@ niceTicks (lo, hi) target0
             step = niceNum (range / fromIntegral (target - 1)) True
             gMin = (fromIntegral :: Int -> Double) (floor (lo / step)) * step
             gMax = (fromIntegral :: Int -> Double) (ceiling (hi / step)) * step
-            n = round ((gMax - gMin) / step) + 1
+            n = round ((gMax - gMin) / step) + 1 :: Int
          in [gMin + step * fromIntegral i | i <- [0 .. n - 1]]
   where
     isValid x = not (isNaN x || isInfinite x)

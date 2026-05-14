@@ -7,7 +7,7 @@ Copyright   : (c) 2025
 License     : MIT
 Maintainer  : mschavinda@gmail.com
 
-Chart builders shared between 'Granite' and 'Granite.Svg' for the
+Chart builders shared between "Granite" and "Granite.Svg" for the
 plotly-express-style helpers (area, ribbon, density, errorBars,
 funnel, polarLine, waterfall, distPlot).
 -}
@@ -27,7 +27,6 @@ module Granite.Internal.LegacyChart (
 import Data.Text (Text)
 import Data.Text qualified as Text
 
-import Granite.Data.Frame (Column (..), fromColumns)
 import Granite.Spec
 
 plotChart :: Int -> Int -> Text -> Chart -> Chart

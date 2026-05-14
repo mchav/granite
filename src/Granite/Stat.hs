@@ -9,7 +9,7 @@ Maintainer  : mschavinda@gmail.com
 
 Statistical transforms ('Stat'). Each runs on a layer's mapped X / Y
 columns and returns a new frame, generally with the same column names
-holding the transformed values. 'StatBoxplot' additionally writes
+holding the transformed values. 'Granite.Spec.StatBoxplot' additionally writes
 @__ymin@ / @__q1@ / @__median@ / @__q3@ / @__ymax@ for the boxplot
 geom to read.
 -}
@@ -131,7 +131,7 @@ stepEdges :: Double -> Double -> Double -> [Double]
 stepEdges w lo hi
     | lo == hi = [lo - w / 2, hi + w / 2]
     | otherwise =
-        let n = max 1 (ceiling ((hi - lo) / w))
+        let n = max 1 (ceiling ((hi - lo) / w)) :: Int
          in [lo + w * fromIntegral i | i <- [0 .. n]]
 
 runDensity :: Mapping -> DataFrame -> DataFrame

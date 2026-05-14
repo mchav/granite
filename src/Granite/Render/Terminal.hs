@@ -27,6 +27,7 @@ module Granite.Render.Terminal (
 import Data.Bits ((.|.))
 import Data.Char (chr)
 import Data.List qualified as List
+import Data.Maybe (isNothing)
 import Data.Text (Text)
 import Data.Text qualified as Text
 

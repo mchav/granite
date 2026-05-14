@@ -32,7 +32,6 @@ module Granite.Chart (
 
 import Data.Text (Text)
 
-import Granite.Data.Frame (Column (..), fromColumns)
 import Granite.Spec
 
 {- | Build an IR scatter chart from N series, each with its own (x, y)

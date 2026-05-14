@@ -26,7 +26,7 @@ module Granite.Render.Svg (
 import Data.Text (Text)
 import Data.Text qualified as T
 
-import Granite.Color (Color (..), colorHex)
+import Granite.Color (colorHex)
 import Granite.Internal.Util (escXml, showD)
 import Granite.Render.Scene (
     Mark (..),

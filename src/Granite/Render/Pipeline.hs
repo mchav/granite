@@ -19,6 +19,7 @@ module Granite.Render.Pipeline (
 ) where
 
 import Data.List qualified as List
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text qualified as Text
 
@@ -409,7 +410,7 @@ runLayer ::
     Layer ->
     [Mark]
 runLayer theme box proj palette ix globalFrame layer =
-    let frame0 = Data.Maybe.fromMaybe globalFrame (layerData layer)
+    let frame0 = fromMaybe globalFrame (layerData layer)
         framePostStat = applyStat (layerStat layer) (layerMapping layer) frame0
         frame = applyPosition (layerPosition layer) (layerMapping layer) framePostStat
         m = layerMapping layer
@@ -421,8 +422,8 @@ runLayer theme box proj palette ix globalFrame layer =
         radius = case defSize defaults of
             Just r -> r
             Nothing -> pointSize theme layer
-        alpha = Data.Maybe.fromMaybe 1 (defAlpha defaults)
-        lineW = Data.Maybe.fromMaybe 2 (defLineWidth defaults)
+        alpha = fromMaybe 1 (defAlpha defaults)
+        lineW = fromMaybe 2 (defLineWidth defaults)
      in case layerGeom layer of
             GeomPoint -> drawPoints proj frame m colorSpec radius alpha
             GeomLine -> drawLine proj frame m colorSpec lineW
@@ -670,7 +671,7 @@ drawArcs box frame m palette =
                     cy = boxY box + boxH box / 2
                     r = min (boxW box) (boxH box) / 2 * 0.9
                     fracs = if total == 0 then map (const 0) vs else map (/ total) vs
-                    starts = scanl (+) (- (pi / 2)) (map (* (2 * pi)) fracs)
+                    starts = scanl (+) (-(pi / 2)) (map (* (2 * pi)) fracs)
                     ends = drop 1 starts
                     colorAt i = palette !! (i `mod` max 1 (length palette))
                  in [ MArc
@@ -710,7 +711,7 @@ categoricalIndices xs =
 folds @aesY@ + @aesYmin@ + @aesYmax@ + the conventional internal
 columns so ribbon / errorbar / boxplot layers (which leave 'aesY'
 unset) still get a sensible Y range. Stat and position are applied
-so histogram-style 'count' columns appear.
+so histogram-style @count@ columns appear.
 -}
 unionDataRange ::
     [Mapping -> Maybe ColumnRef] ->
@@ -722,7 +723,7 @@ unionDataRange getRefs layers globalFrame =
             [ values
             | layer <- layers
             , let m = layerMapping layer
-                  base = Data.Maybe.fromMaybe globalFrame (layerData layer)
+                  base = fromMaybe globalFrame (layerData layer)
                   stat' = applyStat (layerStat layer) m base
                   frame = applyPosition (layerPosition layer) m stat'
             , getRef <- getRefs
@@ -791,7 +792,7 @@ applyCategorical getRef layers globalFrame ts =
             let breaks = [fromIntegral i | i <- [0 .. length labels - 1 :: Int]]
              in ts{tsBreaks = breaks, tsLabels = labels}
 
-{- | Read /pre-stat/ — a stat like 'StatBoxplot' consumes the
+{- | Read /pre-stat/ — a stat like 'Granite.Spec.StatBoxplot' consumes the
 categorical X and emits numeric indices, but the labels we want
 are the user's original group names.
 -}
@@ -805,7 +806,7 @@ categoricalLabelsFor getRef layers globalFrame = findFirst layers
     findFirst [] = Nothing
     findFirst (layer : rest) =
         let m = layerMapping layer
-            frame = Data.Maybe.fromMaybe globalFrame (layerData layer)
+            frame = fromMaybe globalFrame (layerData layer)
          in case getRef m of
                 Just (ColumnRef n) -> case lookupColumn n frame of
                     Just (ColCat xs) -> Just (List.nub xs)
@@ -823,7 +824,7 @@ geomAxisPadding getRef isXAxis layers globalFrame =
             | not (needsPadding (layerGeom layer) isXAxis) = 0
             | otherwise =
                 let m = layerMapping layer
-                    base = Data.Maybe.fromMaybe globalFrame (layerData layer)
+                    base = fromMaybe globalFrame (layerData layer)
                     postStat = applyStat (layerStat layer) m base
                     postPos = applyPosition (layerPosition layer) m postStat
                  in case resolveNumColumn postPos (getRef m) of
@@ -861,7 +862,7 @@ barAxisAnchor isXAxis layers globalFrame
 
     anchorFor layer =
         let m = layerMapping layer
-            base = Data.Maybe.fromMaybe globalFrame (layerData layer)
+            base = fromMaybe globalFrame (layerData layer)
             postStat = applyStat (layerStat layer) m base
             postPos = applyPosition (layerPosition layer) m postStat
          in case lookupColumn "__ybase" postPos >>= columnAsNum of
@@ -892,5 +893,5 @@ the terminal backend. SVG reads RGB / Hex directly.
 -}
 specToTerminal :: ColorSpec -> Color
 specToTerminal (NamedColor c) = c
-specToTerminal (RGB {}) = BrightBlue
+specToTerminal (RGB{}) = BrightBlue
 specToTerminal (Hex _) = BrightBlue

@@ -1,4 +1,3 @@
-
 {-# LANGUAGE Strict #-}
 
 {- |
@@ -18,6 +17,7 @@ module Granite.Render.Chrome (
     legendMarks,
 ) where
 
+import Data.Char (isDigit)
 import Data.Text (Text)
 import Data.Text qualified as Text
 
@@ -31,8 +31,6 @@ import Granite.Render.Scene (
     TextStyle (..),
     defaultStyle,
     defaultTextStyle,
-    pxPerChar,
-    pxPerLine,
  )
 import Granite.Scale (TrainedScale (..))
 import Granite.Spec (

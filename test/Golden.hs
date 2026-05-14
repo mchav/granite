@@ -62,7 +62,7 @@ goldenText name actual = do
                                     <> "\n(Re-bless with GRANITE_BLESS_GOLDEN=1 if the change is intentional.)"
 
 firstDiff :: [Text] -> [Text] -> String
-firstDiff as es = go 0 as es
+firstDiff as es = go (0 :: Int) as es
   where
     go _ [] [] = "(unknown — file lengths match but bytes differ)"
     go i [] (e : _) = " (line " <> show i <> ": actual EOF, expected " <> Text.unpack e <> ")"
