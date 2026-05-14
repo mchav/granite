@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" width="240" height="120" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<rect x="10" y="10" width="40" height="30" fill="#3498db"/>
+<circle cx="120" cy="50" r="12" fill="#e74c3c"/>
+<polyline points="20,100 80,80 140,90 220,70" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="120" y="25" text-anchor="start" fill="#f1c40f" font-size="11">Primitives</text>
+<path d="M 200 50 L 220 50 A 20 20 0 0 0 201.41 69.95 Z" fill="#9b59b6"/>
+</svg>

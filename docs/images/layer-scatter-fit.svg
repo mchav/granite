@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 224" width="500" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="380" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="69.77" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="135.43" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="201.09" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="266.74" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">6.0</text>
+<text x="332.40" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">8.0</text>
+<text x="49" y="120.96" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<text x="49" y="41.04" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
+<circle cx="69.77" cy="186.82" r="3" fill="#3498db"/>
+<circle cx="102.60" cy="177.23" r="3" fill="#3498db"/>
+<circle cx="135.43" cy="151.66" r="3" fill="#3498db"/>
+<circle cx="168.26" cy="142.87" r="3" fill="#3498db"/>
+<circle cx="201.09" cy="122.09" r="3" fill="#3498db"/>
+<circle cx="233.91" cy="114.10" r="3" fill="#3498db"/>
+<circle cx="266.74" cy="92.52" r="3" fill="#3498db"/>
+<circle cx="299.57" cy="74.94" r="3" fill="#3498db"/>
+<circle cx="332.40" cy="64.55" r="3" fill="#3498db"/>
+<circle cx="365.23" cy="41.37" r="3" fill="#3498db"/>
+<polyline points="69.77,188.83 102.60,172.82 135.43,156.82 168.26,140.82 201.09,124.82 233.91,108.81 266.74,92.81 299.57,76.81 332.40,60.80 365.23,44.80" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="217.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Scatter + OLS fit</text>
+<rect x="395" y="39" width="12" height="12" fill="#3498db"/>
+<text x="411" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+<rect x="395" y="56" width="12" height="12" fill="#9b59b6"/>
+<text x="411" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
+</svg>

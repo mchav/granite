@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 256" width="480" height="256" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="228.20" x2="360" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="91.97" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="207.50" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="323.03" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="49" y="208.33" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="134.77" text-anchor="end" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="49" y="61.21" text-anchor="end" fill="#7f8c8d" font-size="11">4.0</text>
+<rect x="63.09" y="186.27" width="57.77" height="36.78" fill="#2ecc71"/>
+<rect x="63.09" y="149.49" width="57.77" height="36.78" fill="#2ecc71"/>
+<rect x="63.09" y="112.71" width="57.77" height="36.78" fill="#1abc9c"/>
+<rect x="63.09" y="75.93" width="57.77" height="36.78" fill="#3498db"/>
+<rect x="63.09" y="39.15" width="57.77" height="36.78" fill="#2980b9"/>
+<rect x="120.85" y="186.27" width="57.77" height="36.78" fill="#f1c40f"/>
+<rect x="120.85" y="149.49" width="57.77" height="36.78" fill="#f1c40f"/>
+<rect x="120.85" y="112.71" width="57.77" height="36.78" fill="#2ecc71"/>
+<rect x="120.85" y="75.93" width="57.77" height="36.78" fill="#1abc9c"/>
+<rect x="120.85" y="39.15" width="57.77" height="36.78" fill="#3498db"/>
+<rect x="178.62" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
+<rect x="178.62" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
+<rect x="178.62" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
+<rect x="178.62" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
+<rect x="178.62" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
+<rect x="236.38" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
+<rect x="236.38" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
+<rect x="236.38" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
+<rect x="236.38" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
+<rect x="236.38" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
+<rect x="294.15" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
+<rect x="294.15" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
+<rect x="294.15" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
+<rect x="294.15" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
+<rect x="294.15" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
+<text x="207.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Heatmap</text>
+<rect x="375" y="39" width="12" height="12" fill="#3498db"/>
+<text x="391" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+</svg>

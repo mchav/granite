@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 256" width="400" height="256" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="228.20" x2="280" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="94.45" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">A</text>
+<text x="167.50" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">B</text>
+<text x="240.55" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">C</text>
+<text x="49" y="164.19" text-anchor="end" fill="#7f8c8d" font-size="11">5.0</text>
+<text x="49" y="90.63" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<polygon points="65.23,189.95 123.67,189.95 123.67,131.10 65.23,131.10" fill="#3498db" stroke="#3498db" stroke-width="1" fill-opacity="0.20"/>
+<polyline points="65.23,160.52 123.67,160.52" fill="none" stroke="#3498db" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="94.45,189.95 94.45,219.37" fill="none" stroke="#3498db" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="94.45,131.10 94.45,101.68" fill="none" stroke="#3498db" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="138.28,160.52 196.72,160.52 196.72,101.68 138.28,101.68" fill="#3498db" stroke="#3498db" stroke-width="1" fill-opacity="0.20"/>
+<polyline points="138.28,131.10 196.72,131.10" fill="none" stroke="#3498db" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="167.50,160.52 167.50,189.95" fill="none" stroke="#3498db" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="167.50,101.68 167.50,72.25" fill="none" stroke="#3498db" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="211.33,131.10 269.77,131.10 269.77,72.25 211.33,72.25" fill="#3498db" stroke="#3498db" stroke-width="1" fill-opacity="0.20"/>
+<polyline points="211.33,101.68 269.77,101.68" fill="none" stroke="#3498db" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="240.55,131.10 240.55,160.52" fill="none" stroke="#3498db" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="240.55,72.25 240.55,42.83" fill="none" stroke="#3498db" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="167.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Boxplot</text>
+<rect x="295" y="39" width="12" height="12" fill="#3498db"/>
+<text x="311" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+</svg>

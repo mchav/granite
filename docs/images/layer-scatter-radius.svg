@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 288" width="500" height="288" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="260.20" x2="380" y2="260.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="260.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="69.77" y="275.20" text-anchor="middle" fill="#7f8c8d" font-size="11">-1.0</text>
+<text x="154.19" y="275.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="238.60" y="275.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="323.02" y="275.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="49" y="247.16" text-anchor="end" fill="#7f8c8d" font-size="11">-1.0</text>
+<text x="49" y="182.90" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="118.64" text-anchor="end" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="49" y="54.37" text-anchor="end" fill="#7f8c8d" font-size="11">2.0</text>
+<circle cx="196.40" cy="147.10" r="60" fill="#1abc9c" fill-opacity="0.25"/>
+<circle cx="171.07" cy="147.10" r="3" fill="#9b59b6"/>
+<circle cx="221.72" cy="102.12" r="3" fill="#9b59b6"/>
+<circle cx="111.98" cy="159.95" r="3" fill="#9b59b6"/>
+<circle cx="247.05" cy="192.08" r="3" fill="#9b59b6"/>
+<circle cx="306.14" cy="134.25" r="3" fill="#9b59b6"/>
+<circle cx="128.86" cy="217.79" r="3" fill="#9b59b6"/>
+<circle cx="339.90" cy="82.84" r="3" fill="#9b59b6"/>
+<circle cx="280.81" cy="249.92" r="3" fill="#9b59b6"/>
+<circle cx="162.63" cy="44.28" r="3" fill="#9b59b6"/>
+<circle cx="365.23" cy="159.95" r="3" fill="#9b59b6"/>
+<circle cx="69.77" cy="114.97" r="3" fill="#9b59b6"/>
+<circle cx="213.28" cy="204.94" r="3" fill="#9b59b6"/>
+<text x="217.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Points near POI</text>
+<rect x="395" y="39" width="12" height="12" fill="#3498db"/>
+<text x="411" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+<rect x="395" y="56" width="12" height="12" fill="#9b59b6"/>
+<text x="411" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
+</svg>

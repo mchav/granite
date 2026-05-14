@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 256" width="600" height="256" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="228.20" x2="480" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="114.99" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="216.66" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="318.34" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="420.01" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">3.0</text>
+<text x="49" y="223.04" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="146.28" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
+<text x="49" y="69.52" text-anchor="end" fill="#7f8c8d" font-size="11">40.0</text>
+<rect x="74.32" y="173.32" width="81.34" height="46.06" fill="#3498db"/>
+<rect x="74.32" y="142.61" width="81.34" height="30.70" fill="#3498db"/>
+<rect x="74.32" y="127.26" width="81.34" height="15.35" fill="#3498db"/>
+<rect x="175.99" y="161.80" width="81.34" height="57.57" fill="#3498db"/>
+<rect x="175.99" y="123.42" width="81.34" height="38.38" fill="#3498db"/>
+<rect x="175.99" y="100.40" width="81.34" height="23.03" fill="#3498db"/>
+<rect x="277.67" y="150.29" width="81.34" height="69.08" fill="#3498db"/>
+<rect x="277.67" y="104.23" width="81.34" height="46.06" fill="#3498db"/>
+<rect x="277.67" y="73.53" width="81.34" height="30.70" fill="#3498db"/>
+<rect x="379.34" y="134.94" width="81.34" height="84.43" fill="#3498db"/>
+<rect x="379.34" y="81.21" width="81.34" height="53.73" fill="#3498db"/>
+<rect x="379.34" y="42.83" width="81.34" height="38.38" fill="#3498db"/>
+<text x="267.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Sales by quarter (stacked)</text>
+<rect x="495" y="39" width="12" height="12" fill="#3498db"/>
+<text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">product</text>
+</svg>

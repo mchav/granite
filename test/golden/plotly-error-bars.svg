@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 224" width="560" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="440" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="174.58" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="320.42" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="49" y="178.84" text-anchor="end" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="49" y="124.23" text-anchor="end" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="49" y="69.62" text-anchor="end" fill="#7f8c8d" font-size="11">6.0</text>
+<polyline points="101.67,188.83 101.67,156.06" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="90.00,188.83 113.33,188.83" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="90.00,156.06 113.33,156.06" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="174.58,153.33 174.58,115.10" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="162.92,153.33 186.25,153.33" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="162.92,115.10 186.25,115.10" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="247.50,104.18 247.50,71.41" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="235.83,104.18 259.17,104.18" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="235.83,71.41 259.17,71.41" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="320.42,120.56 320.42,82.33" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="308.75,120.56 332.08,120.56" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="308.75,82.33 332.08,82.33" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="393.33,85.06 393.33,41.37" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="381.67,85.06 405.00,85.06" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="381.67,41.37 405.00,41.37" fill="none" stroke="#3498db" stroke-width="1.50" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="101.67" cy="172.44" r="3" fill="#9b59b6"/>
+<circle cx="174.58" cy="134.21" r="3" fill="#9b59b6"/>
+<circle cx="247.50" cy="87.79" r="3" fill="#9b59b6"/>
+<circle cx="320.42" cy="101.45" r="3" fill="#9b59b6"/>
+<circle cx="393.33" cy="63.22" r="3" fill="#9b59b6"/>
+<text x="247.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Measurements ± CI</text>
+<rect x="455" y="39" width="12" height="12" fill="#3498db"/>
+<text x="471" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+<rect x="455" y="56" width="12" height="12" fill="#9b59b6"/>
+<text x="471" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
+</svg>

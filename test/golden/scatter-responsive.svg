@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 320" preserveAspectRatio="xMidYMid meet" width="100%" style="height:auto" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="292.20" x2="392" y2="292.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="292.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="70.32" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="146.91" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="223.50" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="300.09" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">3.0</text>
+<text x="376.68" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="49" y="284.13" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="210.78" text-anchor="end" fill="#7f8c8d" font-size="11">5.0</text>
+<text x="49" y="137.43" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<text x="49" y="64.07" text-anchor="end" fill="#7f8c8d" font-size="11">15.0</text>
+<circle cx="70.32" cy="280.46" r="3" fill="#3498db"/>
+<circle cx="146.91" cy="265.79" r="3" fill="#3498db"/>
+<circle cx="223.50" cy="221.78" r="3" fill="#3498db"/>
+<circle cx="300.09" cy="148.43" r="3" fill="#3498db"/>
+<circle cx="376.68" cy="45.74" r="3" fill="#3498db"/>
+<circle cx="70.32" cy="265.79" r="3" fill="#9b59b6"/>
+<circle cx="146.91" cy="236.45" r="3" fill="#9b59b6"/>
+<circle cx="223.50" cy="192.44" r="3" fill="#9b59b6"/>
+<circle cx="300.09" cy="133.76" r="3" fill="#9b59b6"/>
+<circle cx="376.68" cy="60.41" r="3" fill="#9b59b6"/>
+<text x="223.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Responsive</text>
+<rect x="407" y="39" width="12" height="12" fill="#3498db"/>
+<text x="423" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">A</text>
+<rect x="407" y="56" width="12" height="12" fill="#9b59b6"/>
+<text x="423" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">B</text>
+</svg>

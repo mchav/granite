@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 224" width="600" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="480" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="74.32" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="267.50" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">500.0</text>
+<text x="460.68" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1000.0</text>
+<text x="49" y="57.33" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="118.77" text-anchor="end" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="49" y="180.21" text-anchor="end" fill="#7f8c8d" font-size="11">4.0</text>
+<rect x="74.32" y="41.37" width="386.36" height="24.58" fill="#3498db"/>
+<rect x="74.32" y="72.09" width="278.18" height="24.58" fill="#3498db"/>
+<rect x="74.32" y="102.81" width="185.45" height="24.58" fill="#3498db"/>
+<rect x="74.32" y="133.53" width="85.00" height="24.58" fill="#3498db"/>
+<rect x="74.32" y="164.25" width="46.36" height="24.58" fill="#3498db"/>
+<text x="267.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Sales funnel</text>
+<rect x="495" y="39" width="12" height="12" fill="#3498db"/>
+<text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+</svg>

@@ -75,17 +75,55 @@ module Granite (
     heatmap,
     lineGraph,
     boxPlot,
+
+    -- * Plotly-Express-style helpers
+    area,
+    ribbon,
+    density,
+    errorBars,
+    funnel,
+    polarLine,
+    waterfall,
+    distPlot,
 ) where
 
-import Data.Bits (xor, (.&.), (.|.))
-import Data.Char (chr)
-import Data.Function (on)
+import Data.Bits (xor, (.&.))
 import Data.List qualified as List
 import Data.Maybe
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Numeric (showEFloat, showFFloat)
 import Text.Printf
+
+import Granite.Color (Color (..), paint, paletteColors, pieColors)
+import Granite.Internal.LegacyChart qualified as LC
+import Granite.Internal.Util (
+    addAt,
+    angleWithin,
+    clamp,
+    ellipsisize,
+    eps,
+    gridWidth,
+    justifyRight,
+    maximum',
+    minimum',
+    mod',
+    normalize,
+    quartiles,
+    setAt,
+    ticks1D,
+    updateAt,
+    wcswidth,
+ )
+import Granite.Render.Pipeline (renderChartTerminal)
+import Granite.Render.Terminal (
+    Canvas (..),
+    fillDotsC,
+    lineDotsC,
+    newCanvas,
+    renderCanvas,
+    setDotC,
+ )
 
 -- | Position of the legend in the plot.
 data LegendPos
@@ -207,27 +245,6 @@ data AxisEnv = AxisEnv
     , tickCount :: Int
     -- ^ total number of ticks
     }
-
--- | Supported ANSI colo(u)rs.
-data Color
-    = Default
-    | Black
-    | Red
-    | Green
-    | Yellow
-    | Blue
-    | Magenta
-    | Cyan
-    | White
-    | BrightBlack
-    | BrightRed
-    | BrightGreen
-    | BrightYellow
-    | BrightBlue
-    | BrightMagenta
-    | BrightCyan
-    | BrightWhite
-    deriving (Eq, Show)
 
 {- | Create a named data series for multi-series plots.
 
@@ -868,58 +885,6 @@ boxPlot datasets cfg =
     setGridChar grid x y ch col =
         updateAt grid y (\row -> setAt row x (ch, col))
 
-ansiCode :: Color -> Int
-ansiCode Black = 30
-ansiCode Red = 31
-ansiCode Green = 32
-ansiCode Yellow = 33
-ansiCode Blue = 34
-ansiCode Magenta = 35
-ansiCode Cyan = 36
-ansiCode White = 37
-ansiCode BrightBlack = 90
-ansiCode BrightRed = 91
-ansiCode BrightGreen = 92
-ansiCode BrightYellow = 93
-ansiCode BrightBlue = 94
-ansiCode BrightMagenta = 95
-ansiCode BrightCyan = 96
-ansiCode BrightWhite = 97
-ansiCode Default = 39
-
-ansiOn :: Color -> Text
-ansiOn c = "\ESC[" <> Text.pack (show (ansiCode c)) <> "m"
-
-ansiOff :: Text
-ansiOff = "\ESC[0m"
-
-paint :: Color -> Char -> Text
-paint c ch = if ch == ' ' then " " else ansiOn c <> Text.singleton ch <> ansiOff
-
-paletteColors :: [Color]
-paletteColors =
-    [ BrightBlue
-    , BrightMagenta
-    , BrightCyan
-    , BrightGreen
-    , BrightYellow
-    , BrightRed
-    , BrightWhite
-    , BrightBlack
-    ]
-
-pieColors :: [Color]
-pieColors =
-    [ BrightRed
-    , BrightGreen
-    , BrightYellow
-    , BrightBlue
-    , BrightMagenta
-    , BrightCyan
-    , BrightWhite
-    , BrightBlack
-    ]
-
 data Pat = Solid | Checker | DiagA | DiagB | Sparse deriving (Eq, Show)
 
 ink :: Pat -> Int -> Int -> Bool
@@ -931,99 +896,6 @@ ink Sparse x y = x .&. 1 == 0 && y `mod` 3 == 0
 
 palette :: [Pat]
 palette = [Solid, Checker, DiagA, DiagB, Sparse]
-
-data Array2D a = A2D Int Int (Arr a)
-
-getA2D :: Array2D a -> Int -> Int -> a
-getA2D (A2D w _ xs) x y = indexA xs (y * w + x)
-
-setA2D :: Array2D a -> Int -> Int -> a -> Array2D a
-setA2D (A2D w h xs) x y v =
-    let i = y * w + x
-     in A2D w h (setA xs i v)
-
-newA2D :: Int -> Int -> a -> Array2D a
-newA2D w h v = A2D w h (fromList (replicate (w * h) v))
-
-toBit :: Int -> Int -> Int
-toBit ry rx = case (ry, rx) of
-    (0, 0) -> 1
-    (1, 0) -> 2
-    (2, 0) -> 4
-    (3, 0) -> 64
-    (0, 1) -> 8
-    (1, 1) -> 16
-    (2, 1) -> 32
-    (3, 1) -> 128
-    _ -> 0
-
-data Canvas = Canvas
-    { cW :: Int
-    , cH :: Int
-    , buffer :: Array2D Int
-    , cbuf :: Array2D (Maybe Color)
-    }
-
-newCanvas :: Int -> Int -> Canvas
-newCanvas w h = Canvas w h (newA2D w h 0) (newA2D w h Nothing)
-
-setDotC :: Canvas -> Int -> Int -> Maybe Color -> Canvas
-setDotC c xDot yDot mcol
-    | xDot < 0 || yDot < 0 || xDot >= cW c * 2 || yDot >= cH c * 4 = c
-    | otherwise =
-        let (cx, rx) = xDot `divMod` 2
-            (cy, ry) = yDot `divMod` 4
-            b = toBit ry rx
-            m = getA2D (buffer c) cx cy
-            c' = c{buffer = setA2D (buffer c) cx cy (m .|. b)}
-         in case mcol of
-                Nothing -> c'
-                Just col -> c'{cbuf = setA2D (cbuf c) cx cy (Just col)}
-
-fillDotsC ::
-    (Int, Int) ->
-    (Int, Int) ->
-    (Int -> Int -> Bool) ->
-    Maybe Color ->
-    Canvas ->
-    Canvas
-fillDotsC (x0, y0) (x1, y1) p mcol c0 =
-    let xs = [max 0 x0 .. min (cW c0 * 2 - 1) x1]
-        ys = [max 0 y0 .. min (cH c0 * 4 - 1) y1]
-     in List.foldl'
-            (\c y -> List.foldl' (\c' x -> if p x y then setDotC c' x y mcol else c') c xs)
-            c0
-            ys
-
-renderCanvas :: Canvas -> Text
-renderCanvas (Canvas w h a colA) =
-    let glyph 0 = ' '
-        glyph m = chr (0x2800 + m)
-        rows =
-            fmap
-                ( \y -> flip fmap [0 .. w - 1] $ \x ->
-                    let m = getA2D a x y
-                        ch = glyph m
-                        mc = getA2D colA x y
-                     in maybe (Text.singleton ch) (`paint` ch) mc
-                )
-                [0 .. h - 1]
-     in Text.unlines (fmap Text.concat rows)
-
-justifyRight :: Int -> Text -> Text
-justifyRight n s = Text.replicate (max 0 (n - wcswidth s)) " " <> s
-
-wcswidth :: Text -> Int
-wcswidth = go 0
-  where
-    go acc xs
-        | Text.null xs = acc
-        | Text.isPrefixOf "\ESC[" xs =
-            let
-                rest' = Text.dropWhile (/= 'm') xs
-             in
-                if Text.null rest' then acc else go acc (Text.tail rest')
-        | otherwise = go (acc + 1) (Text.tail xs)
 
 fmt :: AxisEnv -> Int -> Double -> Text
 fmt _ _ v
@@ -1037,35 +909,6 @@ drawFrame cfg contentWithAxes legendBlockStr =
         filter
             (not . Text.null)
             [plotTitle cfg, contentWithAxes, legendBlockStr]
-
-{- | Evenly spaced tick positions in screen space paired with data values.
-  If invertY = True, 0 maps to ymax (top row) and 1 maps to ymin (bottom).
--}
-ticks1D ::
-    -- | screen length in chars (width for X, height for Y)
-    Int ->
-    -- | requested number of ticks (will clamp to >= 2)
-    Int ->
-    -- | (vmin, vmax) in data space
-    (Double, Double) ->
-    -- | invertY? (True for Y axis so row 0 = ymax)
-    Bool ->
-    -- | (screenPos, dataValue)
-    [(Int, Double)]
-ticks1D screenLen want (vmin, vmax) invertY =
-    let n = max 2 want
-        lastIx = max 0 (screenLen - 1)
-        toVal t =
-            if invertY
-                then vmax - t * (vmax - vmin)
-                else vmin + t * (vmax - vmin)
-        mk' k =
-            let t = if n == 1 then 0 else fromIntegral k / fromIntegral (n - 1)
-                pos = round (t * fromIntegral lastIx)
-             in (pos, toVal t)
-        raw = [mk' k | k <- [0 .. n - 1]]
-        dedup = List.nubBy ((==) `on` fst) raw
-     in dedup
 
 slotBudget :: Int -> Int -> Int
 slotBudget plotPixels numTicks =
@@ -1244,12 +1087,6 @@ sample p col =
         s = renderCanvas c
      in Text.dropWhileEnd (== '\n') s
 
-clamp :: (Ord a) => a -> a -> a -> a
-clamp low high x = max low (min high x)
-
-eps :: Double
-eps = 1e-12
-
 boundsXY :: Plot -> [(Double, Double)] -> (Double, Double, Double, Double)
 boundsXY cfg pts =
     let (xs, ys) = unzip pts
@@ -1264,9 +1101,6 @@ boundsXY cfg pts =
         , fromMaybe (ymin - pady) (fst (yBounds cfg))
         , fromMaybe (ymax + pady) (snd (yBounds cfg))
         )
-
-mod' :: Double -> Double -> Double
-mod' a m = a - fromIntegral (floor (a / m) :: Int) * m
 
 blockChar :: Int -> Char
 blockChar n = case clamp 0 8 n of
@@ -1311,195 +1145,50 @@ resampleToWidth w xs
                 | (i, v) <- zip [0 ..] xs
                 ]
 
-addAt :: [Int] -> Int -> Int -> [Int]
-addAt xs i v = updateAt xs i (+ v)
+-- | Filled-area chart with the curve closed down to @y=0@.
+area :: [(Text, [(Double, Double)])] -> Plot -> Text
+area sers cfg =
+    renderChartTerminal $
+        LC.areaChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
 
-normalize :: [(Text, Double)] -> [(Text, Double)]
-normalize xs =
-    let s = sum (map (abs . snd) xs) + 1e-12
-     in [(n, max 0 (v / s)) | (n, v) <- xs]
+-- | Filled band between @(x, ymin, ymax)@ curves — e.g. CI envelopes.
+ribbon :: [(Text, [(Double, Double, Double)])] -> Plot -> Text
+ribbon sers cfg =
+    renderChartTerminal $
+        LC.ribbonChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
 
-angleWithin :: Double -> Double -> Double -> Bool
-angleWithin ang a0 a1
-    | a1 >= a0 = ang >= a0 && ang <= a1
-    | otherwise = ang >= a0 || ang <= a1
+-- | Gaussian KDE per series (Silverman bandwidth).
+density :: [(Text, [Double])] -> Plot -> Text
+density sers cfg =
+    renderChartTerminal $
+        LC.densityChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
 
-lineDotsC :: (Int, Int) -> (Int, Int) -> Maybe Color -> Canvas -> Canvas
-lineDotsC (x0, y0) (x1, y1) mcol c0 =
-    let dx = abs (x1 - x0)
-        sx = if x0 < x1 then 1 else -1
-        dy = negate (abs (y1 - y0))
-        sy = if y0 < y1 then 1 else -1
-        go x y err c
-            | x == x1 && y == y1 = setDotC c x y mcol
-            | otherwise =
-                let e2 = 2 * err
-                    (x', err') = if e2 >= dy then (x + sx, err + dy) else (x, err)
-                    (y', err'') = if e2 <= dx then (y + sy, err' + dx) else (y, err')
-                 in go x' y' err'' (setDotC c x y mcol)
-     in go x0 y0 (dx + dy) c0
+-- | Points with vertical error bars: @(x, y, ymin, ymax)@ per row.
+errorBars :: [(Text, [(Double, Double, Double, Double)])] -> Plot -> Text
+errorBars sers cfg =
+    renderChartTerminal $
+        LC.errorBarsChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
 
-quartiles :: [Double] -> (Double, Double, Double, Double, Double)
-quartiles [] = (0, 0, 0, 0, 0) -- Idk. Maybe throw an error here???
-quartiles xs =
-    let sorted = List.sort xs
-        n = length sorted
-        q1Idx = n `div` 4
-        q2Idx = n `div` 2
-        q3Idx = 3 * n `div` 4
-        getIdx i = if i < n then sorted !! i else last sorted
-     in if n < 5
-            then let m = sum xs / fromIntegral n in (m, m, m, m, m)
-            else
-                ( fromMaybe 0 (listToMaybe sorted)
-                , getIdx q1Idx
-                , getIdx q2Idx
-                , getIdx q3Idx
-                , last sorted
-                )
+-- | Horizontal bars sized by their values.
+funnel :: [(Text, Double)] -> Plot -> Text
+funnel stages cfg =
+    renderChartTerminal $
+        LC.funnelChart stages (widthChars cfg) (heightChars cfg) (plotTitle cfg)
 
-gridWidth :: [[a]] -> Int
-gridWidth [] = 0
-gridWidth (x : _) = length x
+-- | Polar line chart; theta in radians CCW from +x.
+polarLine :: [(Text, [(Double, Double)])] -> Plot -> Text
+polarLine sers cfg =
+    renderChartTerminal $
+        LC.polarLineChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
 
--- | Min and max function for axis bounds which defaults to 0 and 1 when empty.
-minimum', maximum' :: [Double] -> Double
-minimum' [] = 0
-minimum' xs = minimum xs
-maximum' [] = 1
-maximum' xs = maximum xs
+-- | Waterfall chart: rows are @(label, start, end)@.
+waterfall :: [(Text, Double, Double)] -> Plot -> Text
+waterfall rows cfg =
+    renderChartTerminal $
+        LC.waterfallChart rows (widthChars cfg) (heightChars cfg) (plotTitle cfg)
 
--- AVL Tree we'll use as an array.
--- This improves upon the previous implementation that relies
--- on linked list for indexing and update (both O(n)) while keeping
--- the dependencies very light (wouldn't want to install all of containers
--- just to get an int map).
-data Arr a
-    = E
-    | N Int Int (Arr a) a (Arr a)
-
-size :: Arr a -> Int
-size E = 0
-size (N sz _ _ _ _) = sz
-
-height :: Arr a -> Int
-height E = 0
-height (N _ h _ _ _) = h
-
-mk :: Arr a -> a -> Arr a -> Arr a
-mk l x r = N sz h l x r
-  where
-    sl = size l
-    sr = size r
-    hl = height l
-    hr = height r
-    sz = 1 + sl + sr
-    h = 1 + max hl hr
-
-rotateL :: Arr a -> Arr a
-rotateL (N _ _ l x (N _ _ rl y rr)) = mk (mk l x rl) y rr
-rotateL _ = error "rotateL: malformed tree"
-
-rotateR :: Arr a -> Arr a
-rotateR (N _ _ (N _ _ ll y lr) x r) = mk ll y (mk lr x r)
-rotateR _ = error "rotateR: malformed tree"
-
-balance :: Arr a -> Arr a
-balance t@(N _ _ l x r)
-    | height l > height r + 1 =
-        case l of
-            N _ _ ll _ lr ->
-                if height ll >= height lr
-                    then rotateR t
-                    else rotateR (mk (rotateL l) x r)
-            _ -> t
-    | height r > height l + 1 =
-        case r of
-            N _ _ rl _ rr ->
-                if height rr >= height rl
-                    then rotateL t
-                    else rotateL (mk l x (rotateR r))
-            _ -> t
-    | otherwise = mk l x r
-balance t = t
-
-indexA :: Arr a -> Int -> a
-indexA t i =
-    case t of
-        E -> error ("index out of bounds: " <> show i)
-        N _ _ l x r ->
-            let sl = size l
-             in if i < 0 || i >= 1 + sl + size r
-                    then error ("index out of bounds: " <> show i)
-                    else
-                        if i < sl
-                            then indexA l i
-                            else
-                                if i == sl
-                                    then x
-                                    else indexA r (i - sl - 1)
-
-setA :: Arr a -> Int -> a -> Arr a
-setA t i y =
-    case t of
-        E -> error ("index out of bounds when setting: " <> show i)
-        N _ _ l x r ->
-            let sl = size l
-             in if i < 0 || i >= 1 + sl + size r
-                    then error ("index out of bounds: " <> show i)
-                    else
-                        if i < sl
-                            then balance (mk (setA l i y) x r)
-                            else
-                                if i == sl
-                                    then mk l y r
-                                    else balance (mk l x (setA r (i - sl - 1) y))
-
-fromList :: [a] -> Arr a
-fromList xs = fst (build (length xs) xs)
-  where
-    build :: Int -> [a] -> (Arr a, [a])
-    build 0 ys = (E, ys)
-    build n ys =
-        let (l, ys1) = build (n `div` 2) ys
-            (x, ys2) = case ys1 of
-                [] -> error "IMPOSSIBLE"
-                (v : vs) -> (v, vs)
-            (r, ys3) = build (n - n `div` 2 - 1) ys2
-         in (mk l x r, ys3)
-
--- >>> setAt "abc" (-1) 'x'
--- "abc"
--- >>> setAt "abc" 0 'x'
--- "xbc"
--- >>> setAt "abc" 2 'x'
--- "abx"
--- >>> setAt "abc" 10 'x'
--- "abc"
-setAt :: [a] -> Int -> a -> [a]
-setAt xs i v = updateAt xs i (const v)
-
-updateAt :: [a] -> Int -> (a -> a) -> [a]
-updateAt xs i f
-    | i < 0 = xs
-    | otherwise = go xs i
-  where
-    go [] _ = []
-    go (x : rest) 0 = f x : rest
-    go (x : rest) n = x : go rest (n - 1)
-
-{- | Ensure the text fits within maxWidth. If it doesn't, truncate and append an ellipsis.
->>> ellipsisize 5 "Hello, World!"
-"Hell\8230"
->>> ellipsisize 1 "Hi"
-"\8230"
->>> ellipsisize 0 "Hello, World!"
-""
->>> ellipsisize 20 "Hello, World!"
-"Hello, World!"
--}
-ellipsisize :: Int -> Text -> Text
-ellipsisize maxWidth lbl
-    | maxWidth <= 0 = ""
-    | wcswidth lbl > maxWidth = Text.take (maxWidth - 1) lbl <> "…"
-    | otherwise = lbl
+-- | Histogram + KDE overlay per series.
+distPlot :: [(Text, [Double])] -> Plot -> Text
+distPlot sers cfg =
+    renderChartTerminal $
+        LC.distPlotChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)

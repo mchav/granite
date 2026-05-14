@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 224" width="400" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="280" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="86.76" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="140.59" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="194.41" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="248.24" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">3.0</text>
+<text x="49" y="192.49" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="151.53" text-anchor="end" fill="#7f8c8d" font-size="11">5.0</text>
+<text x="49" y="110.57" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<text x="49" y="69.62" text-anchor="end" fill="#7f8c8d" font-size="11">15.0</text>
+<rect x="65.23" y="90.52" width="43.06" height="98.30" fill="#3498db"/>
+<rect x="119.06" y="131.48" width="43.06" height="57.34" fill="#3498db"/>
+<rect x="172.88" y="41.37" width="43.06" height="147.45" fill="#3498db"/>
+<rect x="226.71" y="115.10" width="43.06" height="73.73" fill="#3498db"/>
+<text x="167.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Bars</text>
+<rect x="295" y="39" width="12" height="12" fill="#3498db"/>
+<text x="311" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+</svg>

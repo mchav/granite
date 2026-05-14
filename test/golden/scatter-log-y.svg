@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" width="600" height="320" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="292.20" x2="480" y2="292.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="292.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="74.32" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="170.91" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="267.50" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="364.09" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">3.0</text>
+<text x="460.68" y="307.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="49" y="221.86" text-anchor="end" fill="#7f8c8d" font-size="11">0.1</text>
+<text x="49" y="143.62" text-anchor="end" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="49" y="65.37" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<circle cx="74.32" cy="280.46" r="3" fill="#3498db"/>
+<circle cx="170.91" cy="139.95" r="3" fill="#3498db"/>
+<circle cx="267.50" cy="92.84" r="3" fill="#3498db"/>
+<circle cx="364.09" cy="65.29" r="3" fill="#3498db"/>
+<circle cx="460.68" cy="45.74" r="3" fill="#3498db"/>
+<circle cx="74.32" cy="139.95" r="3" fill="#9b59b6"/>
+<circle cx="170.91" cy="102.62" r="3" fill="#9b59b6"/>
+<circle cx="267.50" cy="79.07" r="3" fill="#9b59b6"/>
+<circle cx="364.09" cy="61.71" r="3" fill="#9b59b6"/>
+<circle cx="460.68" cy="47.93" r="3" fill="#9b59b6"/>
+<text x="267.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Log Y</text>
+<rect x="495" y="39" width="12" height="12" fill="#3498db"/>
+<text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">A</text>
+<rect x="495" y="56" width="12" height="12" fill="#9b59b6"/>
+<text x="511" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">B</text>
+</svg>

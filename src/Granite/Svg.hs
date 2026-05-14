@@ -6,27 +6,11 @@ Module      : Granite.Svg
 Copyright   : (c) 2025
 License     : MIT
 Maintainer  : mschavinda@gmail.com
-Stability   : experimental
-Portability : POSIX
 
-An SVG-based plotting backend that mirrors the API of "Granite".
-Every chart function returns a self-contained SVG document as 'Text'.
-
-= Basic Usage
-
-@
-{\-# LANGUAGE OverloadedStrings #-\}
-import qualified Data.Text.IO as T
-import Granite.Svg
-
-main = do
-  let chart = bars [(\"Q1\",12),(\"Q2\",18),(\"Q3\",9),(\"Q4\",15)]
-                   defPlot { plotTitle = \"Sales\" }
-  T.writeFile \"chart.svg\" chart
-@
+SVG plotting backend that mirrors the API of "Granite". Each chart
+function returns a self-contained SVG document as 'Text'.
 -}
 module Granite.Svg (
-    -- * Re-exports from Granite
     Plot (..),
     defPlot,
     LegendPos (..),
@@ -36,8 +20,6 @@ module Granite.Svg (
     Bins (..),
     bins,
     series,
-
-    -- * Chart types (SVG output)
     scatter,
     lineGraph,
     bars,
@@ -46,10 +28,18 @@ module Granite.Svg (
     pie,
     heatmap,
     boxPlot,
+    area,
+    ribbon,
+    density,
+    errorBars,
+    funnel,
+    polarLine,
+    waterfall,
+    distPlot,
 ) where
 
 import Data.List qualified as List
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Granite (
@@ -63,52 +53,44 @@ import Granite (
     defPlot,
     series,
  )
+import Granite.Color (colorHex)
+import Granite.Internal.LegacyChart qualified as LC
+import Granite.Internal.Util (
+    addAt,
+    clamp,
+    eps,
+    maximum',
+    minimum',
+    normalize,
+    quartiles,
+    showD,
+    ticks1D,
+ )
+import Granite.Render.Pipeline (renderChartSvg)
+import Granite.Render.Svg (
+    attr,
+    svgCircle,
+    svgDoc,
+    svgLine,
+    svgPath,
+    svgPolyline,
+    svgRect,
+    svgText,
+ )
 import Numeric (showFFloat)
 
-------------------------------------------------------------------------
--- Scaling constants
-------------------------------------------------------------------------
-
--- | Pixels per terminal character width.
 cW :: Double
 cW = 10
 
--- | Pixels per terminal character height.
 cH :: Double
 cH = 16
 
--- | Font size for axis labels (px).
 labelFontSize :: Double
 labelFontSize = 11
 
--- | Font size for chart title (px).
 titleFontSize :: Double
 titleFontSize = 14
 
-------------------------------------------------------------------------
--- Colour mapping  (ANSI → hex)
-------------------------------------------------------------------------
-
-colorHex :: Color -> Text
-colorHex Default = "#555555"
-colorHex Black = "#2c3e50"
-colorHex Red = "#c0392b"
-colorHex Green = "#27ae60"
-colorHex Yellow = "#f39c12"
-colorHex Blue = "#2980b9"
-colorHex Magenta = "#8e44ad"
-colorHex Cyan = "#16a085"
-colorHex White = "#ecf0f1"
-colorHex BrightBlack = "#7f8c8d"
-colorHex BrightRed = "#e74c3c"
-colorHex BrightGreen = "#2ecc71"
-colorHex BrightYellow = "#f1c40f"
-colorHex BrightBlue = "#3498db"
-colorHex BrightMagenta = "#9b59b6"
-colorHex BrightCyan = "#1abc9c"
-colorHex BrightWhite = "#bdc3c7"
-
--- Heatmap intensity palette (low → high).
 heatColors :: [Text]
 heatColors =
     [ "#2980b9"
@@ -123,22 +105,6 @@ heatColors =
     , "#e74c3c"
     , "#c0392b"
     ]
-
-------------------------------------------------------------------------
--- Helpers copied from Granite (not exported there)
-------------------------------------------------------------------------
-
-clamp :: (Ord a) => a -> a -> a -> a
-clamp lo hi x = max lo (min hi x)
-
-eps :: Double
-eps = 1e-12
-
-minimum', maximum' :: [Double] -> Double
-minimum' [] = 0
-minimum' xs = minimum xs
-maximum' [] = 1
-maximum' xs = maximum xs
 
 boundsXY :: Plot -> [(Double, Double)] -> (Double, Double, Double, Double)
 boundsXY cfg pts =
@@ -155,68 +121,20 @@ boundsXY cfg pts =
         , fromMaybe (ymax + pady) (snd (yBounds cfg))
         )
 
-quartiles :: [Double] -> (Double, Double, Double, Double, Double)
-quartiles [] = (0, 0, 0, 0, 0)
-quartiles xs =
-    let sorted = List.sort xs
-        n = length sorted
-        q1Idx = n `div` 4
-        q2Idx = n `div` 2
-        q3Idx = 3 * n `div` 4
-        getIdx i = if i < n then sorted !! i else last sorted
-     in if n < 5
-            then let m = sum xs / fromIntegral n in (m, m, m, m, m)
-            else
-                ( fromMaybe 0 (listToMaybe sorted)
-                , getIdx q1Idx
-                , getIdx q2Idx
-                , getIdx q3Idx
-                , last sorted
-                )
-
-normalize :: [(Text, Double)] -> [(Text, Double)]
-normalize xs =
-    let s = sum (map (abs . snd) xs) + 1e-12
-     in [(n, max 0 (v / s)) | (n, v) <- xs]
-
-ticks1D ::
-    Int ->
-    Int ->
-    (Double, Double) ->
-    Bool ->
-    [(Int, Double)]
-ticks1D screenLen want (vmin, vmax) invertY =
-    let n = max 2 want
-        lastIx = max 0 (screenLen - 1)
-        toVal t =
-            if invertY
-                then vmax - t * (vmax - vmin)
-                else vmin + t * (vmax - vmin)
-        mk' k =
-            let t = if n == 1 then 0 else fromIntegral k / fromIntegral (n - 1)
-                pos = round (t * fromIntegral lastIx)
-             in (pos, toVal t)
-        raw = [mk' k | k <- [0 .. n - 1]]
-     in List.nubBy (\a b -> fst a == fst b) raw
-
-------------------------------------------------------------------------
--- Layout record
-------------------------------------------------------------------------
-
 data Layout = Layout
     { svgW :: !Double
     , svgH :: !Double
-    , plotX :: !Double -- left edge of plot area
-    , plotY :: !Double -- top edge of plot area
-    , plotW :: !Double -- width of plot area
-    , plotH :: !Double -- height of plot area
+    , plotX :: !Double
+    , plotY :: !Double
+    , plotW :: !Double
+    , plotH :: !Double
     }
 
 mkLayout :: Plot -> Layout
 mkLayout cfg =
     let pw = fromIntegral (widthChars cfg) * cW
         ph = fromIntegral (heightChars cfg) * cH
-        lm = fromIntegral (leftMargin cfg) * cW + 10 -- extra padding
+        lm = fromIntegral (leftMargin cfg) * cW + 10
         tm =
             if T.null (plotTitle cfg)
                 then 10
@@ -237,103 +155,6 @@ mkLayout cfg =
             , plotH = ph
             }
 
-------------------------------------------------------------------------
--- SVG primitives
-------------------------------------------------------------------------
-
-showD :: Double -> Text
-showD d
-    | d == fromIntegral (round d :: Int) = T.pack (show (round d :: Int))
-    | otherwise = T.pack (showFFloat (Just 2) d "")
-
-escXml :: Text -> Text
-escXml =
-    T.replace "&" "&amp;"
-        . T.replace "<" "&lt;"
-        . T.replace ">" "&gt;"
-        . T.replace "\"" "&quot;"
-
-attr :: Text -> Text -> Text
-attr k v = " " <> k <> "=\"" <> v <> "\""
-
-svgDoc :: Double -> Double -> Text -> Text
-svgDoc w h content =
-    "<svg xmlns=\"http://www.w3.org/2000/svg\""
-        <> attr "viewBox" ("0 0 " <> showD w <> " " <> showD h)
-        <> attr "width" (showD w)
-        <> attr "height" (showD h)
-        <> attr "font-family" "system-ui, -apple-system, sans-serif"
-        <> ">\n"
-        <> "<rect width=\"100%\" height=\"100%\" fill=\"white\"/>\n"
-        <> content
-        <> "</svg>\n"
-
-svgRect :: Double -> Double -> Double -> Double -> Text -> Text -> Text
-svgRect x y w h fill extra =
-    "<rect"
-        <> attr "x" (showD x)
-        <> attr "y" (showD y)
-        <> attr "width" (showD w)
-        <> attr "height" (showD h)
-        <> attr "fill" fill
-        <> extra
-        <> "/>\n"
-
-svgCircle :: Double -> Double -> Double -> Text -> Text
-svgCircle cx cy r fill =
-    "<circle"
-        <> attr "cx" (showD cx)
-        <> attr "cy" (showD cy)
-        <> attr "r" (showD r)
-        <> attr "fill" fill
-        <> "/>\n"
-
-svgLine :: Double -> Double -> Double -> Double -> Text -> Double -> Text
-svgLine x1 y1 x2 y2 stroke strokeW =
-    "<line"
-        <> attr "x1" (showD x1)
-        <> attr "y1" (showD y1)
-        <> attr "x2" (showD x2)
-        <> attr "y2" (showD y2)
-        <> attr "stroke" stroke
-        <> attr "stroke-width" (showD strokeW)
-        <> "/>\n"
-
-svgPolyline :: [(Double, Double)] -> Text -> Double -> Text
-svgPolyline pts stroke strokeW =
-    "<polyline"
-        <> attr "points" (T.intercalate " " [showD x <> "," <> showD y | (x, y) <- pts])
-        <> attr "fill" "none"
-        <> attr "stroke" stroke
-        <> attr "stroke-width" (showD strokeW)
-        <> attr "stroke-linejoin" "round"
-        <> attr "stroke-linecap" "round"
-        <> "/>\n"
-
-svgText :: Double -> Double -> Text -> Text -> Double -> Text -> Text
-svgText x y anchor fill size content =
-    "<text"
-        <> attr "x" (showD x)
-        <> attr "y" (showD y)
-        <> attr "text-anchor" anchor
-        <> attr "fill" fill
-        <> attr "font-size" (showD size)
-        <> ">"
-        <> escXml content
-        <> "</text>\n"
-
-svgPath :: Text -> Text -> Text -> Text
-svgPath d fill extra =
-    "<path"
-        <> attr "d" d
-        <> attr "fill" fill
-        <> extra
-        <> "/>\n"
-
-------------------------------------------------------------------------
--- Shared drawing: title, axes, legend
-------------------------------------------------------------------------
-
 drawTitle :: Plot -> Layout -> Text
 drawTitle cfg lay
     | T.null (plotTitle cfg) = ""
@@ -353,54 +174,9 @@ drawAxes cfg lay (xmin, xmax) (ymin, ymax) =
         pw = plotW lay
         ph = plotH lay
 
-        -- Axis lines
         xAxis = svgLine px (py + ph) (px + pw) (py + ph) "#aaa" 1
         yAxis = svgLine px py px (py + ph) "#aaa" 1
 
-        -- Y ticks
-        yN = yNumTicks cfg
-        yTks = ticks1D (round ph) yN (ymin, ymax) True
-        ySlot = max 1 (leftMargin cfg)
-        yEnv i = AxisEnv (ymin, ymax) i yN
-        yElems =
-            T.concat
-                [ let frac = fromIntegral pos / max 1 (ph - 1)
-                      yy = py + frac * ph
-                      lbl = yFormatter cfg (yEnv i) ySlot v
-                   in svgLine px yy (px - 4) yy "#aaa" 1
-                        <> svgText (px - 8) (yy + 4) "end" "#555" labelFontSize lbl
-                        <> svgLine px yy (px + pw) yy "#eee" 0.5 -- grid line
-                | (i, (pos, v)) <- zip [0 ..] yTks
-                ]
-
-        -- X ticks
-        xN = xNumTicks cfg
-        xTks = ticks1D (round pw) xN (xmin, xmax) False
-        xSlot = max 1 (round pw `div` max 1 xN)
-        xEnv i = AxisEnv (xmin, xmax) i xN
-        xElems =
-            T.concat
-                [ let frac = fromIntegral pos / max 1 (pw - 1)
-                      xx = px + frac * pw
-                      lbl = xFormatter cfg (xEnv i) xSlot v
-                   in svgLine xx (py + ph) xx (py + ph + 4) "#aaa" 1
-                        <> svgText xx (py + ph + 16) "middle" "#555" labelFontSize lbl
-                        <> svgLine xx py xx (py + ph) "#eee" 0.5 -- grid line
-                | (i, (pos, v)) <- zip [0 ..] xTks
-                ]
-     in xAxis <> yAxis <> yElems <> xElems
-
-drawCatAxes :: Plot -> Layout -> (Double, Double) -> [Text] -> Text
-drawCatAxes cfg lay (ymin, ymax) catNames =
-    let px = plotX lay
-        py = plotY lay
-        pw = plotW lay
-        ph = plotH lay
-
-        xAxis = svgLine px (py + ph) (px + pw) (py + ph) "#aaa" 1
-        yAxis = svgLine px py px (py + ph) "#aaa" 1
-
-        -- Y ticks (value axis)
         yN = yNumTicks cfg
         yTks = ticks1D (round ph) yN (ymin, ymax) True
         ySlot = max 1 (leftMargin cfg)
@@ -416,7 +192,47 @@ drawCatAxes cfg lay (ymin, ymax) catNames =
                 | (i, (pos, v)) <- zip [0 ..] yTks
                 ]
 
-        -- X category labels
+        xN = xNumTicks cfg
+        xTks = ticks1D (round pw) xN (xmin, xmax) False
+        xSlot = max 1 (round pw `div` max 1 xN)
+        xEnv i = AxisEnv (xmin, xmax) i xN
+        xElems =
+            T.concat
+                [ let frac = fromIntegral pos / max 1 (pw - 1)
+                      xx = px + frac * pw
+                      lbl = xFormatter cfg (xEnv i) xSlot v
+                   in svgLine xx (py + ph) xx (py + ph + 4) "#aaa" 1
+                        <> svgText xx (py + ph + 16) "middle" "#555" labelFontSize lbl
+                        <> svgLine xx py xx (py + ph) "#eee" 0.5
+                | (i, (pos, v)) <- zip [0 ..] xTks
+                ]
+     in xAxis <> yAxis <> yElems <> xElems
+
+drawCatAxes :: Plot -> Layout -> (Double, Double) -> [Text] -> Text
+drawCatAxes cfg lay (ymin, ymax) catNames =
+    let px = plotX lay
+        py = plotY lay
+        pw = plotW lay
+        ph = plotH lay
+
+        xAxis = svgLine px (py + ph) (px + pw) (py + ph) "#aaa" 1
+        yAxis = svgLine px py px (py + ph) "#aaa" 1
+
+        yN = yNumTicks cfg
+        yTks = ticks1D (round ph) yN (ymin, ymax) True
+        ySlot = max 1 (leftMargin cfg)
+        yEnv i = AxisEnv (ymin, ymax) i yN
+        yElems =
+            T.concat
+                [ let frac = fromIntegral pos / max 1 (ph - 1)
+                      yy = py + frac * ph
+                      lbl = yFormatter cfg (yEnv i) ySlot v
+                   in svgLine px yy (px - 4) yy "#aaa" 1
+                        <> svgText (px - 8) (yy + 4) "end" "#555" labelFontSize lbl
+                        <> svgLine px yy (px + pw) yy "#eee" 0.5
+                | (i, (pos, v)) <- zip [0 ..] yTks
+                ]
+
         n = length catNames
         catElems =
             T.concat
@@ -459,23 +275,13 @@ drawLegend cfg lay entries = case legendPos cfg of
                     (startX, "")
                     entries
 
-------------------------------------------------------------------------
--- Coordinate mapping
-------------------------------------------------------------------------
-
--- | Map data X to SVG X.
 mapX :: Layout -> Double -> Double -> Double -> Double
 mapX lay xmin xmax x =
     plotX lay + (x - xmin) / (xmax - xmin + eps) * plotW lay
 
--- | Map data Y to SVG Y (flipped: higher values → lower Y).
 mapY :: Layout -> Double -> Double -> Double -> Double
 mapY lay ymin ymax y =
     plotY lay + plotH lay - (y - ymin) / (ymax - ymin + eps) * plotH lay
-
-------------------------------------------------------------------------
--- SCATTER
-------------------------------------------------------------------------
 
 scatter ::
     [(Text, [(Double, Double)])] ->
@@ -505,10 +311,6 @@ scatter sers cfg =
         legend = drawLegend cfg lay [(n, col) | ((n, _), col) <- withCol]
      in svgDoc (svgW lay) (svgH lay) (title <> axes <> points <> legend)
 
-------------------------------------------------------------------------
--- LINE GRAPH
-------------------------------------------------------------------------
-
 lineGraph ::
     [(Text, [(Double, Double)])] ->
     Plot ->
@@ -535,10 +337,6 @@ lineGraph sers cfg =
         legend = drawLegend cfg lay [(n, col) | ((n, _), col) <- withCol]
      in svgDoc (svgW lay) (svgH lay) (title <> axes <> lines' <> legend)
 
-------------------------------------------------------------------------
--- BARS
-------------------------------------------------------------------------
-
 bars ::
     [(Text, Double)] ->
     Plot ->
@@ -550,7 +348,7 @@ bars kvs cfg =
         cols = cycle (colorPalette cfg)
         n = length kvs
 
-        barGap = 0.15 -- 15% gap on each side
+        barGap = 0.15
         groupW = plotW lay / fromIntegral (max 1 n)
 
         rects =
@@ -567,10 +365,6 @@ bars kvs cfg =
         title = drawTitle cfg lay
         legend = drawLegend cfg lay [(name, col) | ((name, _), col) <- zip kvs cols]
      in svgDoc (svgW lay) (svgH lay) (title <> axes <> rects <> legend)
-
-------------------------------------------------------------------------
--- STACKED BARS
-------------------------------------------------------------------------
 
 stackedBars ::
     [(Text, [(Text, Double)])] ->
@@ -615,10 +409,6 @@ stackedBars categories cfg =
         legend = drawLegend cfg lay [(n, col) | (n, col) <- seriesColors]
      in svgDoc (svgW lay) (svgH lay) (title <> axes <> rects <> legend)
 
-------------------------------------------------------------------------
--- HISTOGRAM
-------------------------------------------------------------------------
-
 histogram ::
     Bins ->
     [Double] ->
@@ -655,10 +445,6 @@ histogram (Bins nB a b) xs cfg =
         title = drawTitle cfg lay
         legend = drawLegend cfg lay [("count", BrightCyan)]
      in svgDoc (svgW lay) (svgH lay) (title <> axes <> rects <> legend)
-
-------------------------------------------------------------------------
--- PIE
-------------------------------------------------------------------------
 
 pie ::
     [(Text, Double)] ->
@@ -715,10 +501,6 @@ pie parts0 cfg =
         legend = drawLegend cfg lay [(n, col) | (n, _, col) <- withP]
      in svgDoc (svgW lay) (svgH lay) (title <> slices <> legend)
 
-------------------------------------------------------------------------
--- HEATMAP
-------------------------------------------------------------------------
-
 heatmap ::
     [[Double]] ->
     Plot ->
@@ -752,7 +534,7 @@ heatmap matrix cfg =
                 [ T.concat
                     [ let cx = plotX lay + fromIntegral c * cellW
                           cy = plotY lay + fromIntegral r * cellH
-                          dataRow = rows - 1 - r -- flip: row 0 at bottom
+                          dataRow = rows - 1 - r
                           v = (matrix !! dataRow) !! c
                        in svgRect cx cy cellW cellH (colorForVal v) ""
                     | c <- [0 .. cols - 1]
@@ -760,7 +542,6 @@ heatmap matrix cfg =
                 | r <- [0 .. rows - 1]
                 ]
 
-        -- Axis labels: column indices on x, row indices on y
         colLabels =
             T.concat
                 [ svgText
@@ -784,7 +565,6 @@ heatmap matrix cfg =
                 | r <- [0 .. rows - 1]
                 ]
 
-        -- Draw border
         border =
             svgRect
                 (plotX lay)
@@ -796,7 +576,6 @@ heatmap matrix cfg =
 
         title = drawTitle cfg lay
 
-        -- Gradient legend
         gradLegend =
             let gw = min 200 (plotW lay * 0.5)
                 gh = 12
@@ -829,10 +608,6 @@ heatmap matrix cfg =
             (svgH lay)
             (title <> cells <> colLabels <> rowLabels <> border <> gradLegend)
 
-------------------------------------------------------------------------
--- BOX PLOT
-------------------------------------------------------------------------
-
 boxPlot ::
     [(Text, [Double])] ->
     Plot ->
@@ -860,11 +635,9 @@ boxPlot datasets cfg =
                       (minV, q1, med, q3, maxV) = qs
                       col = colorHex c
 
-                      -- Whisker: min to Q1
                       whiskerBot = svgLine midX (scY minV) midX (scY q1) col 1.5
                       capBot = svgLine (bx + boxW * 0.25) (scY minV) (bx + boxW * 0.75) (scY minV) col 1.5
 
-                      -- Box: Q1 to Q3
                       boxY = scY q3
                       boxH = scY q1 - scY q3
                       box =
@@ -880,10 +653,8 @@ boxPlot datasets cfg =
                                 <> attr "rx" "2"
                             )
 
-                      -- Median line
                       medLine = svgLine bx (scY med) (bx + boxW) (scY med) col 2.5
 
-                      -- Whisker: Q3 to max
                       whiskerTop = svgLine midX (scY q3) midX (scY maxV) col 1.5
                       capTop = svgLine (bx + boxW * 0.25) (scY maxV) (bx + boxW * 0.75) (scY maxV) col 1.5
                    in whiskerBot <> capBot <> whiskerTop <> capTop <> box <> medLine
@@ -896,14 +667,42 @@ boxPlot datasets cfg =
         legend = drawLegend cfg lay [(name, col) | ((name, _), col) <- zip stats cols]
      in svgDoc (svgW lay) (svgH lay) (title <> axes <> boxes <> legend)
 
-addAt :: [Int] -> Int -> Int -> [Int]
-addAt xs i v = updateAt xs i (+ v)
+area :: [(Text, [(Double, Double)])] -> Plot -> Text
+area sers cfg =
+    renderChartSvg $
+        LC.areaChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
 
-updateAt :: [a] -> Int -> (a -> a) -> [a]
-updateAt xs i f
-    | i < 0 = xs
-    | otherwise = go xs i
-  where
-    go [] _ = []
-    go (x : rest) 0 = f x : rest
-    go (x : rest) n = x : go rest (n - 1)
+ribbon :: [(Text, [(Double, Double, Double)])] -> Plot -> Text
+ribbon sers cfg =
+    renderChartSvg $
+        LC.ribbonChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
+
+density :: [(Text, [Double])] -> Plot -> Text
+density sers cfg =
+    renderChartSvg $
+        LC.densityChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
+
+errorBars :: [(Text, [(Double, Double, Double, Double)])] -> Plot -> Text
+errorBars sers cfg =
+    renderChartSvg $
+        LC.errorBarsChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
+
+funnel :: [(Text, Double)] -> Plot -> Text
+funnel stages cfg =
+    renderChartSvg $
+        LC.funnelChart stages (widthChars cfg) (heightChars cfg) (plotTitle cfg)
+
+polarLine :: [(Text, [(Double, Double)])] -> Plot -> Text
+polarLine sers cfg =
+    renderChartSvg $
+        LC.polarLineChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
+
+waterfall :: [(Text, Double, Double)] -> Plot -> Text
+waterfall rows cfg =
+    renderChartSvg $
+        LC.waterfallChart rows (widthChars cfg) (heightChars cfg) (plotTitle cfg)
+
+distPlot :: [(Text, [Double])] -> Plot -> Text
+distPlot sers cfg =
+    renderChartSvg $
+        LC.distPlotChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)

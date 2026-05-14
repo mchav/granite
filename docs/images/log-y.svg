@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 224" width="500" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="380" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="128.86" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="247.05" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="365.23" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">6.0</text>
+<text x="49" y="165.39" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<text x="49" y="113.57" text-anchor="end" fill="#7f8c8d" font-size="11">100.0</text>
+<text x="49" y="61.74" text-anchor="end" fill="#7f8c8d" font-size="11">1000.0</text>
+<circle cx="69.77" cy="188.83" r="3" fill="#3498db"/>
+<circle cx="128.86" cy="137.00" r="3" fill="#3498db"/>
+<circle cx="187.95" cy="114.92" r="3" fill="#3498db"/>
+<circle cx="247.05" cy="94.30" r="3" fill="#3498db"/>
+<circle cx="306.14" cy="66.10" r="3" fill="#3498db"/>
+<circle cx="365.23" cy="41.37" r="3" fill="#3498db"/>
+<text x="217.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Log Y</text>
+<rect x="395" y="39" width="12" height="12" fill="#3498db"/>
+<text x="411" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+</svg>

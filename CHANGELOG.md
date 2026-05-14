@@ -1,5 +1,60 @@
 # Revision history for granite
 
+## 0.5.0.0 -- 2026-05-13
+
+A major refactor introducing a declarative, Grammar-of-Graphics-style
+IR shared between the terminal and SVG backends. Legacy chart
+functions (`scatter`, `bars`, `pie`, …) remain unchanged and continue
+to work; the new IR is additive.
+
+* New module `Granite.Spec` exposing the chart IR: `Chart`, `Layer`,
+  `Mapping`, `Geom`, `Stat`, `Position`, `Scale`, `Coord`, `Facet`,
+  `Theme`, `Size`, `ColorSpec`, `Formatter`. All types are plain ADTs
+  of basic Haskell types so a downstream user can derive `ToJSON` /
+  `FromJSON` instances with the JSON library of their choice. Granite
+  itself ships no JSON instances; the dependency footprint remains
+  `base + text`.
+* New module `Granite.Data.Frame` providing a column-oriented
+  `DataFrame` (`ColNum`, `ColCat`, `ColTime`, `ColBool`).
+* New module `Granite.Format` with a declarative `Formatter` enum
+  (`FormatPrecision`, `FormatScientific`, `FormatPercent`,
+  `FormatComma`, `FormatSI`, …). Replaces the function-typed
+  `LabelFormatter` for IR users; legacy `Plot { xFormatter, yFormatter }`
+  remains in place.
+* New module `Granite.Scale` with linear, log (base 2/e/10), sqrt,
+  reverse, and identity scales, plus Heckbert-style "nice" tick
+  selection. (Talbot–Lin–Hanrahan "Extended" tick scoring is a future
+  upgrade — see the source for the TODO.)
+* New module `Granite.Render.Scene` with backend-agnostic primitive
+  marks: `MCircle`, `MRect`, `MPolyline`, `MPath`, `MText`, `MArc`,
+  `MGroup`. Both backends consume the same `Scene`.
+* New module `Granite.Render.Terminal` with the unified terminal
+  backend. The Braille canvas and AVL-backed `Array2D` were extracted
+  from `Granite` and now power both the legacy chart functions and
+  the new IR pipeline.
+* New module `Granite.Render.Svg` with the unified SVG backend.
+  `renderSceneResponsive` produces SVG using `viewBox` +
+  `preserveAspectRatio` + `width="100%"` so charts embed responsively.
+* New module `Granite.Render.Chrome` with axes, ticks, gridlines,
+  title, and legend as primitive marks — chrome code is no longer
+  duplicated between backends.
+* New module `Granite.Render.Pipeline` exposing `chartToScene`,
+  `renderChartTerminal`, and `renderChartSvg`. Phase 3 supports the
+  cartesian path with identity stat and identity position. Polar
+  coord, facets, stats, positions, ribbons / errorbars, and multi-
+  chart figures are scheduled for later releases.
+* New module `Granite.Chart` with thin builders (`scatterChart`,
+  `lineChart`) that construct an IR `Chart` from the same input shapes
+  the legacy chart functions accept.
+* New module `Granite.Color` extracted from `Granite`; exports the
+  ANSI palette, ANSI escape helpers, and hex mapping.
+* New module `Granite.Internal.Util` with the shared numeric, list,
+  text, and tick helpers that used to live (duplicated) in both
+  `Granite` and `Granite.Svg`.
+* `ColorSpec` adds `RGB` and `Hex` constructors for cross-renderer
+  color fidelity, with terminal backends quantising to the nearest
+  ANSI color.
+
 ## 0.4.0.0 -- 2026-02-27
 * Add Svg support.
 

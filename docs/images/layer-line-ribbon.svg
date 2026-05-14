@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 224" width="560" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="440" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="72.50" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="189.17" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="305.83" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="422.50" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">6.0</text>
+<text x="49" y="176.60" text-anchor="end" fill="#7f8c8d" font-size="11">-1.0</text>
+<text x="49" y="119.34" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="62.07" text-anchor="end" fill="#7f8c8d" font-size="11">1.0</text>
+<polygon points="72.50,98.49 101.67,71.04 130.83,50.31 160.00,41.37 189.17,46.42 218.33,64.22 247.50,90.41 276.67,118.58 305.83,141.83 335.00,154.47 364.17,153.40 393.33,138.89 422.50,114.49 422.50,148.85 393.33,173.25 364.17,187.76 335.00,188.83 305.83,176.19 276.67,152.94 247.50,124.77 218.33,98.58 189.17,80.78 160.00,75.73 130.83,84.67 101.67,105.40 72.50,132.85" fill="#1abc9c" stroke="#1abc9c" stroke-width="1" fill-opacity="0.40"/>
+<polyline points="72.50,115.67 101.67,88.22 130.83,67.49 160.00,58.55 189.17,63.60 218.33,81.40 247.50,107.59 276.67,135.76 305.83,159.01 335.00,171.65 364.17,170.58 393.33,156.07 422.50,131.67" fill="none" stroke="#3498db" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="247.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">sin(x) +/- 0.3 band</text>
+<rect x="455" y="39" width="12" height="12" fill="#3498db"/>
+<text x="471" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+<rect x="455" y="56" width="12" height="12" fill="#9b59b6"/>
+<text x="471" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
+</svg>
