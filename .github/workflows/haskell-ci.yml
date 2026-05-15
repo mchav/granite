@@ -8,19 +8,20 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.19.20250917
+# version: 0.19.20260331
 #
-# REGENDATA ("0.19.20250917",["github","granite.cabal"])
+# REGENDATA ("0.19.20260331",["github","granite.cabal"])
 #
 name: Haskell-CI
 on:
   - push
   - pull_request
   - merge_group
+  - workflow_dispatch
 jobs:
   linux:
     name: Haskell-CI - Linux - ${{ matrix.compiler }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes:
       60
     container:
@@ -29,9 +30,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - compiler: ghc-9.12.2
+          - compiler: ghc-9.14.1
             compilerKind: ghc
-            compilerVersion: 9.12.2
+            compilerVersion: 9.14.1
+            setup-method: ghcup
+            allow-failure: false
+          - compiler: ghc-9.12.4
+            compilerKind: ghc
+            compilerVersion: 9.12.4
             setup-method: ghcup
             allow-failure: false
           - compiler: ghc-9.10.3
