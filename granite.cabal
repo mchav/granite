@@ -10,7 +10,7 @@ tested-with:        GHC ==9.4.8
                      || ==9.6.7
                      || ==9.8.4
                      || ==9.10.3
-                     || ==9.12.2
+                     || ==9.12.4
 
 maintainer:         mschavinda@gmail.com
 copyright:          (c) 2024-2025 Michael Chavinda
@@ -18,6 +18,8 @@ bug-reports:        https://github.com/mchav/granite/issues
 category:           Graphics
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md README.md
+extra-source-files: test/golden/*.txt
+                    test/golden/*.svg
 
 source-repository head
   type:     git
