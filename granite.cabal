@@ -11,6 +11,7 @@ tested-with:        GHC ==9.4.8
                      || ==9.8.4
                      || ==9.10.3
                      || ==9.12.4
+                     || ==9.14.1
 
 maintainer:         mschavinda@gmail.com
 copyright:          (c) 2024-2025 Michael Chavinda
