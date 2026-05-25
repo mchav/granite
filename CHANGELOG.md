@@ -1,5 +1,11 @@
 # Revision history for granite
 
+## 0.7.0.0 -- 2026-05-24
+
+* `Color` is now a 24-bit RGB value, and categorical colour mappings are honoured for points.
+* Scatter plots now respect point colours.
+
+
 ## 0.5.0.0 -- 2026-05-13
 
 A major refactor introducing a declarative, Grammar-of-Graphics-style

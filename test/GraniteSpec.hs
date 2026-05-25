@@ -339,6 +339,7 @@ ansiCode BrightMagenta = 95
 ansiCode BrightCyan = 96
 ansiCode BrightWhite = 97
 ansiCode Default = 39
+ansiCode _ = 39
 
 ansiOn :: Color -> Text
 ansiOn c = "\ESC[" <> Text.pack (show (ansiCode c)) <> "m"

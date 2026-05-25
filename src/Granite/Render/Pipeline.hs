@@ -23,7 +23,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text qualified as Text
 
-import Granite.Color (Color (..))
+import Granite.Color (Color (..), parseHex)
 import Granite.Data.Frame (
     Column (..),
     DataFrame (..),
@@ -146,12 +146,13 @@ chartToScene chart =
         hasTitle = case chartTitle chart of
             Just t -> not (Text.null t)
             Nothing -> False
-        legendEntries = collectLegend (chartLayers chart) palette
+        colorMaps = map (layerColorMap palette (chartData chart)) (chartLayers chart)
+        legendEntries = collectLegend (chartLayers chart) palette colorMaps
         hasRightLegend = not (null legendEntries)
         box = computePlotBox (chartSize chart) theme hasTitle hasRightLegend False
 
         panels = layoutPanels theme box chart
-        panelMarks = concatMap (renderPanel theme palette coord) panels
+        panelMarks = concatMap (renderPanel theme palette coord colorMaps) panels
 
         legend = legendMarks theme box legendEntries
         title = titleMarks theme box (chartTitle chart)
@@ -168,12 +169,19 @@ data PanelSpec = PanelSpec
     , panelYScale :: TrainedScale
     }
 
-renderPanel :: Theme -> [ColorSpec] -> Coord -> PanelSpec -> [Mark]
-renderPanel theme palette coord ps =
+renderPanel ::
+    Theme ->
+    [ColorSpec] ->
+    Coord ->
+    [Maybe [(Text, ColorSpec)]] ->
+    PanelSpec ->
+    [Mark]
+renderPanel theme palette coord colorMaps ps =
     let proj = buildProjector coord (panelBox ps) (panelXScale ps) (panelYScale ps)
+        cmap i = if i < length colorMaps then colorMaps !! i else Nothing
         layerMarks =
             concat
-                [ runLayer theme (panelBox ps) proj palette i (panelData ps) layer
+                [ runLayer theme (panelBox ps) proj palette (cmap i) i (panelData ps) layer
                 | (i, layer) <- zip [0 :: Int ..] (panelLayers ps)
                 ]
         axes = axesMarks theme (panelBox ps) coord (panelXScale ps) (panelYScale ps)
@@ -405,11 +413,12 @@ runLayer ::
     PlotBox ->
     Projector ->
     [ColorSpec] ->
+    Maybe [(Text, ColorSpec)] ->
     Int ->
     DataFrame ->
     Layer ->
     [Mark]
-runLayer theme box proj palette ix globalFrame layer =
+runLayer theme box proj palette colorMap ix globalFrame layer =
     let frame0 = fromMaybe globalFrame (layerData layer)
         framePostStat = applyStat (layerStat layer) (layerMapping layer) frame0
         frame = applyPosition (layerPosition layer) (layerMapping layer) framePostStat
@@ -418,14 +427,21 @@ runLayer theme box proj palette ix globalFrame layer =
         colorSpec = case defColor defaults of
             Just c -> c
             Nothing -> layerDefaultColor palette ix layer
-        col = specToTerminal colorSpec
+        col = specToColor colorSpec
         radius = case defSize defaults of
             Just r -> r
             Nothing -> pointSize theme layer
         alpha = fromMaybe 1 (defAlpha defaults)
         lineW = fromMaybe 2 (defLineWidth defaults)
+        -- Per-row point colours: a mapped categorical 'aesColor' (when
+        -- 'colorMap' is set for this layer) overrides the constant colour.
+        pointColors = case colorMap of
+            Just levelColors
+                | Just cats <- categoricalColorColumn frame m ->
+                    map (\cat -> specToColor (fromMaybe colorSpec (lookup cat levelColors))) cats
+            _ -> repeat col
      in case layerGeom layer of
-            GeomPoint -> drawPoints proj frame m colorSpec radius alpha
+            GeomPoint -> drawPoints proj frame m pointColors radius alpha
             GeomLine -> drawLine proj frame m colorSpec lineW
             GeomBar -> drawBars proj frame m col
             GeomCol -> drawBars proj frame m col
@@ -442,21 +458,21 @@ drawPoints ::
     Projector ->
     DataFrame ->
     Mapping ->
-    ColorSpec ->
+    [Color] ->
     Double ->
     Double ->
     [Mark]
-drawPoints proj frame m col r alpha =
+drawPoints proj frame m cols r alpha =
     case (resolveNumColumn frame (aesX m), resolveNumColumn frame (aesY m)) of
         (Just xv, Just yv) ->
             [ MCircle
                 (proj x y)
                 r
                 defaultStyle
-                    { styleFill = Just (specToTerminal col)
+                    { styleFill = Just c
                     , styleFillOpacity = alpha
                     }
-            | (x, y) <- zip xv yv
+            | ((x, y), c) <- zip (zip xv yv) cols
             ]
         _ -> []
 
@@ -475,7 +491,7 @@ drawLine proj frame m col lineW =
              in [ MPolyline
                     pts
                     defaultStyle
-                        { styleStroke = Just (specToTerminal col)
+                        { styleStroke = Just (specToColor col)
                         , styleStrokeWidth = lineW
                         }
                 ]
@@ -680,8 +696,8 @@ drawArcs box frame m palette =
                         s
                         e
                         defaultStyle
-                            { styleFill = Just (specToTerminal (colorAt i))
-                            , styleStroke = Just (specToTerminal (NamedColor BrightBlack))
+                            { styleFill = Just (specToColor (colorAt i))
+                            , styleStroke = Just (specToColor (NamedColor BrightBlack))
                             , styleStrokeWidth = 1
                             }
                     | (i, (s, e)) <- zip [0 :: Int ..] (zip starts ends)
@@ -877,21 +893,70 @@ layerDefaultColor palette ix _layer
 pointSize :: Theme -> Layer -> Double
 pointSize _ _ = 3
 
-collectLegend :: [Layer] -> [ColorSpec] -> [(Text, ColorSpec)]
-collectLegend layers palette =
-    [ (legendName ix layer, palette !! (ix `mod` max 1 (length palette)))
-    | (ix, layer) <- zip [0 :: Int ..] layers
-    ]
+{- | Map the distinct values of a categorical column to palette colours, in
+first-seen order; shared by the renderer and 'collectLegend' so points and the
+legend agree.
+-}
+categoricalColorMap :: [ColorSpec] -> [Text] -> [(Text, ColorSpec)]
+categoricalColorMap palette levels =
+    [(lvl, colorAt i) | (i, lvl) <- zip [0 :: Int ..] levels]
   where
+    colorAt i
+        | null palette = NamedColor BrightBlue
+        | otherwise = palette !! (i `mod` length palette)
+
+{- | The per-category colour map for a layer, when its 'aesColor' maps to a
+categorical ('ColCat') column. Computed once from the whole-chart layer frame so
+colours stay consistent across facets and the legend; 'Nothing' otherwise
+(numeric colour columns keep the single per-layer colour).
+-}
+layerColorMap :: [ColorSpec] -> DataFrame -> Layer -> Maybe [(Text, ColorSpec)]
+layerColorMap palette globalFrame layer
+    | GeomPoint <- layerGeom layer
+    , Just cats <-
+        categoricalColorColumn
+            (fromMaybe globalFrame (layerData layer))
+            (layerMapping layer) =
+        Just (categoricalColorMap palette (List.nub cats))
+    | otherwise = Nothing
+
+{- | The categorical ('ColCat') colour column's per-row values, if 'aesColor'
+maps to one.
+-}
+categoricalColorColumn :: DataFrame -> Mapping -> Maybe [Text]
+categoricalColorColumn frame m = case aesColor m of
+    Just (ColumnRef n) -> case lookupColumn n frame of
+        Just (ColCat xs) -> Just xs
+        _ -> Nothing
+    Nothing -> Nothing
+
+{- | Legend entries. A categorical-'aesColor' layer contributes one entry per
+category value (colours matching the points via 'layerColorMap'); 'GeomText'
+layers contribute none; any other layer keeps a single per-layer swatch.
+-}
+collectLegend ::
+    [Layer] -> [ColorSpec] -> [Maybe [(Text, ColorSpec)]] -> [(Text, ColorSpec)]
+collectLegend layers palette colorMaps =
+    concat
+        [ entriesFor ix layer cmap
+        | (ix, layer, cmap) <- zip3 [0 :: Int ..] layers (colorMaps ++ repeat Nothing)
+        ]
+  where
+    entriesFor ix layer cmap
+        | GeomText <- layerGeom layer = []
+        | Just levelColors <- cmap = levelColors
+        | otherwise =
+            [(legendName ix layer, palette !! (ix `mod` max 1 (length palette)))]
     legendName ix layer =
         case aesGroup (layerMapping layer) of
             Just (ColumnRef n) -> n
             Nothing -> "series " <> Text.pack (show ix)
 
-{- | Quantise 'ColorSpec' to the nearest renderable ANSI 'Color' for
-the terminal backend. SVG reads RGB / Hex directly.
+{- | Resolve a 'ColorSpec' to an exact RGB 'Color'. The SVG backend renders
+this exactly (via @colorHex@); the terminal backend quantises it to the nearest
+ANSI slot (via @ansiCode@).
 -}
-specToTerminal :: ColorSpec -> Color
-specToTerminal (NamedColor c) = c
-specToTerminal (RGB{}) = BrightBlue
-specToTerminal (Hex _) = BrightBlue
+specToColor :: ColorSpec -> Color
+specToColor (NamedColor c) = c
+specToColor (RGB r g b) = Color r g b
+specToColor (Hex t) = fromMaybe Black (parseHex t)

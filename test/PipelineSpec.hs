@@ -4,6 +4,7 @@ module PipelineSpec (spec) where
 
 import Data.Text qualified as Text
 
+import Granite.Color qualified as Col
 import Granite.Render.Pipeline
 import Granite.Render.Scene (Scene (..))
 import Granite.Spec
@@ -83,6 +84,72 @@ spec = describe "Granite.Render.Pipeline" $ do
             -- roughly 24 lines (22 plot rows + title + axis labels).
             lineCount `shouldSatisfy` (>= 15)
             lineCount `shouldSatisfy` (<= 40)
+
+    describe "colour" $ do
+        it "colorHex renders exact, zero-padded, lowercase hex" $ do
+            Col.colorHex Col.BrightBlue `shouldBe` "#3498db"
+            Col.colorHex Col.BrightYellow `shouldBe` "#f1c40f"
+            Col.colorHex (Col.Color 0 0 15) `shouldBe` "#00000f"
+
+        it "ansiCode keeps canonical codes for the named slots" $ do
+            Col.ansiCode Col.Black `shouldBe` 30
+            Col.ansiCode Col.BrightBlue `shouldBe` 94
+            Col.ansiCode Col.Default `shouldBe` 39
+
+        it "parseHex accepts valid hex and rejects junk" $ do
+            Col.parseHex "#ff0000" `shouldBe` Just (Col.Color 255 0 0)
+            Col.parseHex "1a2b3c" `shouldBe` Just (Col.Color 26 43 60)
+            Col.parseHex "nope" `shouldBe` Nothing
+
+        it "SVG renders a custom Hex defColor exactly (not quantised to blue)" $ do
+            let chart =
+                    emptyChart
+                        { chartSize = SizeChars 30 16
+                        , chartData =
+                            fromColumns [("x", ColNum [1, 2, 3]), ("y", ColNum [1, 2, 3])]
+                        , chartLayers =
+                            [ (defLayer GeomPoint)
+                                { layerMapping =
+                                    emptyMapping
+                                        { aesX = Just (ColumnRef "x")
+                                        , aesY = Just (ColumnRef "y")
+                                        }
+                                , layerAesDef = emptyAesDefaults{defColor = Just (Hex "#ff0000")}
+                                }
+                            ]
+                        }
+            renderChartSvg chart `shouldSatisfy` Text.isInfixOf "#ff0000"
+
+        it "categorical aesColor colours points per category with a per-category legend" $ do
+            let chart =
+                    emptyChart
+                        { chartSize = SizeChars 40 20
+                        , chartData =
+                            fromColumns
+                                [ ("x", ColNum [1, 2, 3])
+                                , ("y", ColNum [1, 2, 3])
+                                , ("g", ColCat ["a", "b", "c"])
+                                ]
+                        , chartLayers =
+                            [ (defLayer GeomPoint)
+                                { layerMapping =
+                                    emptyMapping
+                                        { aesX = Just (ColumnRef "x")
+                                        , aesY = Just (ColumnRef "y")
+                                        , aesColor = Just (ColumnRef "g")
+                                        }
+                                }
+                            ]
+                        }
+                svg = renderChartSvg chart
+            -- three categories → the first three palette colours all appear
+            svg `shouldSatisfy` Text.isInfixOf "#3498db"
+            svg `shouldSatisfy` Text.isInfixOf "#9b59b6"
+            svg `shouldSatisfy` Text.isInfixOf "#1abc9c"
+            -- the legend is keyed by category value, not a generic "series 0"
+            svg `shouldSatisfy` Text.isInfixOf ">a</text>"
+            svg `shouldSatisfy` Text.isInfixOf ">c</text>"
+            svg `shouldNotSatisfy` Text.isInfixOf "series 0"
 
     describe "Log-scale chart" $ do
         let logChart =
