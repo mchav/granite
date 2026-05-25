@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 224" width="400" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="380" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="100.87" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="178.62" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="256.38" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="334.13" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">3.0</text>
+<text x="49" y="176.97" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="138.17" text-anchor="end" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="49" y="99.36" text-anchor="end" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="49" y="60.56" text-anchor="end" fill="#7f8c8d" font-size="11">3.0</text>
+<rect x="62.00" y="153.90" width="77.75" height="38.80" fill="#2166ac"/>
+<rect x="62.00" y="115.10" width="77.75" height="38.80" fill="#6896c5"/>
+<rect x="62.00" y="76.30" width="77.75" height="38.80" fill="#b0c7de"/>
+<rect x="62.00" y="37.49" width="77.75" height="38.80" fill="#f7f7f7"/>
+<rect x="139.75" y="153.90" width="77.75" height="38.80" fill="#6896c5"/>
+<rect x="139.75" y="115.10" width="77.75" height="38.80" fill="#b0c7de"/>
+<rect x="139.75" y="76.30" width="77.75" height="38.80" fill="#f7f7f7"/>
+<rect x="139.75" y="37.49" width="77.75" height="38.80" fill="#e0adb3"/>
+<rect x="217.50" y="153.90" width="77.75" height="38.80" fill="#b0c7de"/>
+<rect x="217.50" y="115.10" width="77.75" height="38.80" fill="#f7f7f7"/>
+<rect x="217.50" y="76.30" width="77.75" height="38.80" fill="#e0adb3"/>
+<rect x="217.50" y="37.49" width="77.75" height="38.80" fill="#c9626f"/>
+<rect x="295.25" y="153.90" width="77.75" height="38.80" fill="#f7f7f7"/>
+<rect x="295.25" y="115.10" width="77.75" height="38.80" fill="#e0adb3"/>
+<rect x="295.25" y="76.30" width="77.75" height="38.80" fill="#c9626f"/>
+<rect x="295.25" y="37.49" width="77.75" height="38.80" fill="#b2182b"/>
+<text x="217.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Continuous heatmap</text>
+</svg>

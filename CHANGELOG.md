@@ -1,5 +1,8 @@
 # Revision history for granite
 
+## 0.7.1.1 -- 2026-05-25
+* `GeomTile` honours a continuous `scaleFill` (`SColorContinuous`) via smooth RGB interpolation, and no longer emits a stray category legend entry.
+
 ## 0.7.1.0 -- 2026-05-25
 
 * Numeric `aesAlpha` mappings are now honoured for points (per-point opacity); previously only the per-layer `defAlpha` was applied.

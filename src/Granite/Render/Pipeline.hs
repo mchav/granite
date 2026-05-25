@@ -67,6 +67,7 @@ import Granite.Spec (
     Mapping (..),
     PolarAes (..),
     PolarDir (..),
+    Scale (..),
     Scales (..),
     Size (..),
     Theme (..),
@@ -147,12 +148,15 @@ chartToScene chart =
             Just t -> not (Text.null t)
             Nothing -> False
         colorMaps = map (layerColorMap palette (chartData chart)) (chartLayers chart)
+        fillCols = case scaleFill (chartScales chart) of
+            Just (SColorContinuous cs) -> Just cs
+            _ -> Nothing
         legendEntries = collectLegend (chartLayers chart) palette colorMaps
         hasRightLegend = not (null legendEntries)
         box = computePlotBox (chartSize chart) theme hasTitle hasRightLegend False
 
         panels = layoutPanels theme box chart
-        panelMarks = concatMap (renderPanel theme palette coord colorMaps) panels
+        panelMarks = concatMap (renderPanel theme palette coord colorMaps fillCols) panels
 
         legend = legendMarks theme box legendEntries
         title = titleMarks theme box (chartTitle chart)
@@ -174,14 +178,24 @@ renderPanel ::
     [ColorSpec] ->
     Coord ->
     [Maybe [(Text, ColorSpec)]] ->
+    Maybe [ColorSpec] ->
     PanelSpec ->
     [Mark]
-renderPanel theme palette coord colorMaps ps =
+renderPanel theme palette coord colorMaps fillCols ps =
     let proj = buildProjector coord (panelBox ps) (panelXScale ps) (panelYScale ps)
         cmap i = if i < length colorMaps then colorMaps !! i else Nothing
         layerMarks =
             concat
-                [ runLayer theme (panelBox ps) proj palette (cmap i) i (panelData ps) layer
+                [ runLayer
+                    theme
+                    (panelBox ps)
+                    proj
+                    palette
+                    (cmap i)
+                    fillCols
+                    i
+                    (panelData ps)
+                    layer
                 | (i, layer) <- zip [0 :: Int ..] (panelLayers ps)
                 ]
         axes = axesMarks theme (panelBox ps) coord (panelXScale ps) (panelYScale ps)
@@ -414,11 +428,12 @@ runLayer ::
     Projector ->
     [ColorSpec] ->
     Maybe [(Text, ColorSpec)] ->
+    Maybe [ColorSpec] ->
     Int ->
     DataFrame ->
     Layer ->
     [Mark]
-runLayer theme box proj palette colorMap ix globalFrame layer =
+runLayer theme box proj palette colorMap fillCols ix globalFrame layer =
     let frame0 = fromMaybe globalFrame (layerData layer)
         framePostStat = applyStat (layerStat layer) (layerMapping layer) frame0
         frame = applyPosition (layerPosition layer) (layerMapping layer) framePostStat
@@ -456,7 +471,7 @@ runLayer theme box proj palette colorMap ix globalFrame layer =
             GeomHistogram -> drawBars proj frame m col
             GeomRibbon -> drawRibbon proj frame m col
             GeomErrorbar -> drawErrorbar proj frame m col
-            GeomTile -> drawTiles proj frame m col
+            GeomTile -> drawTiles proj frame m col fillCols
             GeomBoxplot -> drawBoxplot proj frame m col
             GeomDensity -> drawDensity proj frame m col
             GeomText -> drawText proj frame m col (themeFontSize theme)
@@ -580,8 +595,9 @@ drawErrorbar proj frame m col =
                     ]
         _ -> []
 
-drawTiles :: Projector -> DataFrame -> Mapping -> Color -> [Mark]
-drawTiles proj frame m col =
+drawTiles ::
+    Projector -> DataFrame -> Mapping -> Color -> Maybe [ColorSpec] -> [Mark]
+drawTiles proj frame m col fillCols =
     case (resolveNumColumn frame (aesX m), resolveNumColumn frame (aesY m)) of
         (Just xs, Just ys) ->
             let wX = barWidth xs / 0.8
@@ -600,7 +616,9 @@ drawTiles proj frame m col =
                                     if hi == lo
                                         then 0.5
                                         else (vs !! i - lo) / (hi - lo)
-                             in gradientColor t
+                             in case fillCols of
+                                    Just cs -> continuousColorFor cs t
+                                    Nothing -> gradientColor t
                     _ -> col
              in [ rectFromCorners
                     (proj (x - halfX) (y - halfY))
@@ -624,6 +642,26 @@ gradientColor t =
         clamped = max 0 (min 0.9999 t)
         ix = floor (clamped * fromIntegral n) :: Int
      in palette !! ix
+
+{- | Map @t@ in [0,1] to a colour by piecewise-linear RGB interpolation across
+the anchor colours (used to honour a continuous 'scaleFill' on tiles).
+-}
+continuousColorFor :: [ColorSpec] -> Double -> Color
+continuousColorFor specs t =
+    case map specToColor specs of
+        [] -> gradientColor t
+        [c] -> c
+        colors ->
+            let n = length colors
+                clamped = max 0 (min 1 t)
+                pos = clamped * fromIntegral (n - 1)
+                i = min (n - 2) (floor pos)
+                frac = pos - fromIntegral i
+                Color r1 g1 b1 = colors !! i
+                Color r2 g2 b2 = colors !! (i + 1)
+                lerp a b =
+                    round (fromIntegral a + frac * (fromIntegral b - fromIntegral a))
+             in Color (lerp r1 r2) (lerp g1 g2) (lerp b1 b2)
 
 drawBoxplot :: Projector -> DataFrame -> Mapping -> Color -> [Mark]
 drawBoxplot proj frame m col =
@@ -952,6 +990,7 @@ collectLegend layers palette colorMaps =
   where
     entriesFor ix layer cmap
         | GeomText <- layerGeom layer = []
+        | GeomTile <- layerGeom layer = []
         | Just levelColors <- cmap = levelColors
         | otherwise =
             [(legendName ix layer, palette !! (ix `mod` max 1 (length palette)))]

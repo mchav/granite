@@ -24,6 +24,7 @@ import Granite.Render.Terminal qualified as Terminal
 import Granite.Spec (
     BinSpec (..),
     Chart (..),
+    ColorSpec (..),
     ColumnRef (..),
     Coord (..),
     Facet (..),
@@ -266,6 +267,44 @@ pieBasic =
             , chartSize = SizeChars 30 16
             }
 
+-- A continuous-fill heatmap: GeomTile coloured by a numeric column through a
+-- 'SColorContinuous' scaleFill (blue -> white -> red). Exercises the continuous
+-- tile colour path + the suppressed tile legend.
+contHeatmap :: Chart
+contHeatmap =
+    let coords =
+            [ (fromIntegral x, fromIntegral y, fromIntegral (x + y) :: Double)
+            | x <- [0 .. 3 :: Int]
+            , y <- [0 .. 3 :: Int]
+            ]
+        df =
+            fromColumns
+                [ ("x", ColNum [x | (x, _, _) <- coords])
+                , ("y", ColNum [y | (_, y, _) <- coords])
+                , ("z", ColNum [z | (_, _, z) <- coords])
+                ]
+        tile =
+            (defLayer GeomTile)
+                { layerMapping =
+                    emptyMapping
+                        { aesX = Just (ColumnRef "x")
+                        , aesY = Just (ColumnRef "y")
+                        , aesFill = Just (ColumnRef "z")
+                        }
+                , layerStat = StatIdentity
+                }
+     in emptyChart
+            { chartData = df
+            , chartLayers = [tile]
+            , chartScales =
+                defScales
+                    { scaleFill =
+                        Just (SColorContinuous [Hex "#2166ac", Hex "#f7f7f7", Hex "#b2182b"])
+                    }
+            , chartTitle = Just "Continuous heatmap"
+            , chartSize = SizeChars 40 14
+            }
+
 -- A four-petal rose in polar coordinates: r = |sin(2θ)| sampled at 33
 -- angular positions. Locks in the polar projector + polar chrome.
 polarRose :: Chart
@@ -377,6 +416,9 @@ spec = describe "Golden charts (run GRANITE_BLESS_GOLDEN=1 to refresh)" $ do
 
         it "pie chart renders to expected SVG output" $
             goldenText "pie-basic.svg" (renderChartSvg pieBasic)
+
+        it "continuous-fill heatmap renders to expected SVG output" $
+            goldenText "heatmap-continuous.svg" (renderChartSvg contHeatmap)
 
     describe "Sizing" $ do
         it "responsive scatter renders to expected SVG output" $
