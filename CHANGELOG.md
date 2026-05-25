@@ -1,5 +1,9 @@
 # Revision history for granite
 
+## 0.7.1.0 -- 2026-05-25
+
+* Numeric `aesAlpha` mappings are now honoured for points (per-point opacity); previously only the per-layer `defAlpha` was applied.
+
 ## 0.7.0.0 -- 2026-05-24
 
 * `Color` is now a 24-bit RGB value, and categorical colour mappings are honoured for points.

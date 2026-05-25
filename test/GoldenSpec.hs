@@ -63,6 +63,32 @@ twoSeriesScatter =
         ]
         (Just "Random points")
 
+-- A scatter whose point opacity is driven by a numeric column via 'aesAlpha':
+-- low weight -> faint, high weight -> opaque. Locks in per-point alpha.
+alphaScatter :: Chart
+alphaScatter =
+    let df =
+            fromColumns
+                [ ("x", ColNum [0, 1, 2, 3, 4])
+                , ("y", ColNum [0, 1, 2, 3, 4])
+                , ("w", ColNum [1, 2, 3, 4, 5])
+                ]
+        layer =
+            (defLayer GeomPoint)
+                { layerMapping =
+                    emptyMapping
+                        { aesX = Just (ColumnRef "x")
+                        , aesY = Just (ColumnRef "y")
+                        , aesAlpha = Just (ColumnRef "w")
+                        }
+                }
+     in emptyChart
+            { chartData = df
+            , chartLayers = [layer]
+            , chartTitle = Just "Alpha by weight"
+            , chartSize = SizeChars 40 14
+            }
+
 singleSeriesLine :: Chart
 singleSeriesLine =
     lineChart
@@ -295,6 +321,9 @@ spec = describe "Golden charts (run GRANITE_BLESS_GOLDEN=1 to refresh)" $ do
 
         it "no-title scatter renders to expected SVG output" $
             goldenText "scatter-no-title.svg" (renderChartSvg noTitleScatter)
+
+        it "alpha-mapped scatter renders to expected SVG output" $
+            goldenText "scatter-alpha.svg" (renderChartSvg alphaScatter)
 
     describe "Line chart" $ do
         it "single-series line renders to expected terminal output" $

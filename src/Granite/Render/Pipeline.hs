@@ -440,8 +440,16 @@ runLayer theme box proj palette colorMap ix globalFrame layer =
                 | Just cats <- categoricalColorColumn frame m ->
                     map (\cat -> specToColor (fromMaybe colorSpec (lookup cat levelColors))) cats
             _ -> repeat col
+        pointAlphas = case resolveNumColumn frame (aesAlpha m) of
+            Just vs@(_ : _) ->
+                let lo = minimum vs
+                    hi = maximum vs
+                 in if hi <= lo
+                        then repeat alpha
+                        else map (\v -> 0.15 + 0.85 * (v - lo) / (hi - lo)) vs
+            _ -> repeat alpha
      in case layerGeom layer of
-            GeomPoint -> drawPoints proj frame m pointColors radius alpha
+            GeomPoint -> drawPoints proj frame m pointColors radius pointAlphas
             GeomLine -> drawLine proj frame m colorSpec lineW
             GeomBar -> drawBars proj frame m col
             GeomCol -> drawBars proj frame m col
@@ -460,9 +468,9 @@ drawPoints ::
     Mapping ->
     [Color] ->
     Double ->
-    Double ->
+    [Double] ->
     [Mark]
-drawPoints proj frame m cols r alpha =
+drawPoints proj frame m cols r alphas =
     case (resolveNumColumn frame (aesX m), resolveNumColumn frame (aesY m)) of
         (Just xv, Just yv) ->
             [ MCircle
@@ -470,9 +478,9 @@ drawPoints proj frame m cols r alpha =
                 r
                 defaultStyle
                     { styleFill = Just c
-                    , styleFillOpacity = alpha
+                    , styleFillOpacity = a
                     }
-            | ((x, y), c) <- zip (zip xv yv) cols
+            | ((x, y), c, a) <- zip3 (zip xv yv) cols alphas
             ]
         _ -> []
 

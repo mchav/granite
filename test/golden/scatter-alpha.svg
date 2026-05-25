@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 224" width="400" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="280" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="65.23" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="116.36" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="167.50" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="218.64" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">3.0</text>
+<text x="269.77" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+<text x="49" y="192.49" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="155.63" text-anchor="end" fill="#7f8c8d" font-size="11">1.0</text>
+<text x="49" y="118.77" text-anchor="end" fill="#7f8c8d" font-size="11">2.0</text>
+<text x="49" y="81.90" text-anchor="end" fill="#7f8c8d" font-size="11">3.0</text>
+<text x="49" y="45.04" text-anchor="end" fill="#7f8c8d" font-size="11">4.0</text>
+<circle cx="65.23" cy="188.83" r="3" fill="#3498db" fill-opacity="0.15"/>
+<circle cx="116.36" cy="151.96" r="3" fill="#3498db" fill-opacity="0.36"/>
+<circle cx="167.50" cy="115.10" r="3" fill="#3498db" fill-opacity="0.58"/>
+<circle cx="218.64" cy="78.24" r="3" fill="#3498db" fill-opacity="0.79"/>
+<circle cx="269.77" cy="41.37" r="3" fill="#3498db"/>
+<text x="167.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Alpha by weight</text>
+<rect x="295" y="39" width="12" height="12" fill="#3498db"/>
+<text x="311" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+</svg>
