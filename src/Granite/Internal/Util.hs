@@ -24,6 +24,9 @@ module Granite.Internal.Util (
     gridWidth,
     wcswidth,
     ellipsisize,
+    estLabelWidthPx,
+    estMaxGlyphs,
+    truncatePx,
     justifyRight,
     showD,
     escXml,
@@ -128,6 +131,34 @@ ellipsisize maxWidth lbl
     | maxWidth <= 0 = ""
     | wcswidth lbl > maxWidth = Text.take (maxWidth - 1) lbl <> "…"
     | otherwise = lbl
+
+-- | Average glyph advance as a fraction of the em, for proportional fonts.
+glyphAspectEm :: Double
+glyphAspectEm = 0.6
+
+{- | Rough rendered pixel width of a label at a given font size: visible
+glyph count times 'glyphAspectEm'. Good enough to decide when axis labels
+would collide.
+-}
+estLabelWidthPx :: Double -> Text -> Double
+estLabelWidthPx fontSize t = fromIntegral (wcswidth t) * fontSize * glyphAspectEm
+
+{- | Inverse of 'estLabelWidthPx': the most glyphs that fit within @limitPx@
+at the given font size. Pair with 'ellipsisize' to truncate to a pixel budget.
+-}
+estMaxGlyphs :: Double -> Double -> Int
+estMaxGlyphs fontSize limitPx = floor (limitPx / (fontSize * glyphAspectEm))
+
+{- | Fit @full@ within @limitPx@ at the given font size: returns the
+(possibly ellipsised) label and, when it was shortened, the full text for a
+tooltip. Used wherever a label must not overrun its slot (axis ticks, facet
+strips).
+-}
+truncatePx :: Double -> Double -> Text -> (Text, Maybe Text)
+truncatePx fontSize limitPx full
+    | estLabelWidthPx fontSize full <= limitPx = (full, Nothing)
+    | otherwise =
+        (ellipsisize (max 1 (estMaxGlyphs fontSize limitPx)) full, Just full)
 
 justifyRight :: Int -> Text -> Text
 justifyRight n s = Text.replicate (max 0 (n - wcswidth s)) " " <> s

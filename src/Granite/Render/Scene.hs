@@ -58,11 +58,15 @@ data TextStyle = TextStyle
     { textFill :: !Color
     , textSize :: !Double
     , textAnchor :: !TextAnchor
+    , textRotate :: !Double
+    -- ^ Rotation in degrees about the anchor point; 0 = upright.
+    , textTitle :: !(Maybe Text)
+    -- ^ A @\<title\>@ tooltip (the untruncated label); 'Nothing' = none.
     }
     deriving (Eq, Show)
 
 defaultTextStyle :: TextStyle
-defaultTextStyle = TextStyle Default 11 AnchorStart
+defaultTextStyle = TextStyle Default 11 AnchorStart 0 Nothing
 
 {- | Primitive drawable marks. 'MArc' takes (center, radius, a0, a1)
 in radians CCW from +x. 'MPolygon' is a closed filled polyline.

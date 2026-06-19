@@ -32,13 +32,20 @@ import Granite.Data.Frame (
     filterByRows,
     lookupColumn,
  )
+import Granite.Internal.Util (truncatePx)
 import Granite.Position (applyPosition)
 import Granite.Render.Chrome (
+    AxisLayout (..),
+    Margins (..),
     PlotBox (..),
+    XLabelMode,
     axesMarks,
+    axisLayout,
     computePlotBox,
+    domainLabels,
     legendMarks,
     titleMarks,
+    xModeNoRotate,
  )
 import Granite.Render.Scene (
     Mark (..),
@@ -153,10 +160,34 @@ chartToScene chart =
             _ -> Nothing
         legendEntries = collectLegend (chartLayers chart) palette colorMaps
         hasRightLegend = not (null legendEntries)
-        box = computePlotBox (chartSize chart) theme hasTitle hasRightLegend False
+        -- Size margins to the actual labels so long words never clip, and decide
+        -- the bottom-axis label policy once (threaded as 'XLabelMode') so margin
+        -- sizing and rendering agree. The on-screen bottom\/left axes swap under
+        -- CoordFlip; polar has no rectangular axes; faceting forbids rotation.
+        (xLbls, yLbls) = globalAxisLabels chart
+        (bottomLbls, leftLbls) = case coord of
+            CoordFlip -> (yLbls, xLbls)
+            _ -> (xLbls, yLbls)
+        faceted = case chartFacet chart of FacetNull -> False; _ -> True
+        layout = case coord of
+            CoordPolar{} -> AxisLayout xModeNoRotate 0 0
+            _ ->
+                axisLayout theme (chartSize chart) hasRightLegend faceted bottomLbls leftLbls
+        box =
+            computePlotBox (chartSize chart) theme $
+                Margins
+                    { marHasTitle = hasTitle
+                    , marHasRightLegend = hasRightLegend
+                    , marHasBottomLegend = False
+                    , marExtraBottom = alExtraBottom layout
+                    , marLeftWanted = alLeftWanted layout
+                    }
 
         panels = layoutPanels theme box chart
-        panelMarks = concatMap (renderPanel theme palette coord colorMaps fillCols) panels
+        panelMarks =
+            concatMap
+                (renderPanel theme palette coord (alMode layout) colorMaps fillCols)
+                panels
 
         legend = legendMarks theme box legendEntries
         title = titleMarks theme box (chartTitle chart)
@@ -177,11 +208,12 @@ renderPanel ::
     Theme ->
     [ColorSpec] ->
     Coord ->
+    XLabelMode ->
     [Maybe [(Text, ColorSpec)]] ->
     Maybe [ColorSpec] ->
     PanelSpec ->
     [Mark]
-renderPanel theme palette coord colorMaps fillCols ps =
+renderPanel theme palette coord xmode colorMaps fillCols ps =
     let proj = buildProjector coord (panelBox ps) (panelXScale ps) (panelYScale ps)
         cmap i = if i < length colorMaps then colorMaps !! i else Nothing
         layerMarks =
@@ -198,7 +230,7 @@ renderPanel theme palette coord colorMaps fillCols ps =
                     layer
                 | (i, layer) <- zip [0 :: Int ..] (panelLayers ps)
                 ]
-        axes = axesMarks theme (panelBox ps) coord (panelXScale ps) (panelYScale ps)
+        axes = axesMarks theme (panelBox ps) coord xmode (panelXScale ps) (panelYScale ps)
         strip = stripMark theme (panelBox ps) (panelLabel ps)
      in axes <> layerMarks <> strip
 
@@ -206,15 +238,17 @@ stripMark :: Theme -> PlotBox -> Text -> [Mark]
 stripMark theme box label
     | Text.null label = []
     | otherwise =
-        [ MText
-            (Point (boxX box + boxW box / 2) (boxY box - 4))
-            label
-            defaultTextStyle
-                { textFill = colorOfSpec (themeTextColor theme)
-                , textSize = themeFontSize theme
-                , textAnchor = AnchorMiddle
-                }
-        ]
+        let (lbl, title) = truncatePx (themeFontSize theme) (boxW box) label
+         in [ MText
+                (Point (boxX box + boxW box / 2) (boxY box - 4))
+                lbl
+                defaultTextStyle
+                    { textFill = colorOfSpec (themeTextColor theme)
+                    , textSize = themeFontSize theme
+                    , textAnchor = AnchorMiddle
+                    , textTitle = title
+                    }
+            ]
   where
     colorOfSpec spec = case spec of
         NamedColor c -> c
@@ -248,14 +282,39 @@ layoutPanels theme box chart = case chartFacet chart of
             , let cellBox = cells !! (rowIx * ncol + colIx)
             ]
 
-singlePanel :: Chart -> PlotBox -> Text -> PanelSpec
-singlePanel chart box label =
+{- | The whole-chart x and y trained scales (no faceting/filtering). Shared by
+'singlePanel' and 'globalAxisLabels' so the labels that size the margins match
+the scales the single panel renders.
+-}
+trainGlobalScales :: Chart -> (TrainedScale, TrainedScale)
+trainGlobalScales chart =
     let xRange = paddedRange (chartLayers chart) (chartData chart) xRangeRefs True
         yRange = paddedRange (chartLayers chart) (chartData chart) yRangeRefs False
-        xs0 = train (scaleX (chartScales chart)) xRange
-        ys0 = train (scaleY (chartScales chart)) yRange
-        xs = applyCategorical aesX (chartLayers chart) (chartData chart) xs0
-        ys = applyCategorical aesY (chartLayers chart) (chartData chart) ys0
+        xs =
+            applyCategorical
+                aesX
+                (chartLayers chart)
+                (chartData chart)
+                (train (scaleX (chartScales chart)) xRange)
+        ys =
+            applyCategorical
+                aesY
+                (chartLayers chart)
+                (chartData chart)
+                (train (scaleY (chartScales chart)) yRange)
+     in (xs, ys)
+
+{- | The on-render x and y tick labels (domain-filtered), independent of the
+plot box, so margins can be sized to fit them before the box is computed.
+-}
+globalAxisLabels :: Chart -> ([Text], [Text])
+globalAxisLabels chart =
+    let (xs, ys) = trainGlobalScales chart
+     in (domainLabels xs, domainLabels ys)
+
+singlePanel :: Chart -> PlotBox -> Text -> PanelSpec
+singlePanel chart box label =
+    let (xs, ys) = trainGlobalScales chart
      in PanelSpec
             { panelBox = box
             , panelLabel = label

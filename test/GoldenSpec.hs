@@ -193,6 +193,68 @@ barBasic =
             , chartSize = SizeChars 40 14
             }
 
+-- Categorical bars whose names are far too wide for their slots: the axis
+-- label policy must auto-rotate them, and truncate the longest with a hover
+-- <title>. Exercises the long-word path of 'xAxisLabels'.
+barLongNames :: Chart
+barLongNames =
+    let names =
+            [ "GHC.Core.Opt.Simplify.Iteration.Inline.Worker"
+            , "mkFastStringBytes"
+            , "GHC.Tc.Solver.Monad"
+            , "GHC.CmmToAsm.X86.Ppr"
+            , "GHC.Stg.Unarise"
+            , "GHC.HsToCore.Match.Constructor"
+            ]
+        ys = [29.0, 18.5, 12.3, 9.1, 6.4, 4.2] :: [Double]
+        df = fromColumns [("fn", ColCat names), ("mb", ColNum ys)]
+        layer =
+            (defLayer GeomBar)
+                { layerMapping =
+                    emptyMapping
+                        { aesX = Just (ColumnRef "fn")
+                        , aesY = Just (ColumnRef "mb")
+                        }
+                , layerStat = StatIdentity
+                }
+     in emptyChart
+            { chartData = df
+            , chartLayers = [layer]
+            , chartTitle = Just "Allocation by function"
+            , chartSize = SizeChars 44 16
+            }
+
+-- The same long names under CoordFlip: now they fall on the (left) y-axis, so
+-- the policy must grow the left margin and truncate names past the ~42% cap
+-- with a hover <title> rather than rotate. Exercises the y-label cap + the
+-- CoordFlip bottom/left label swap.
+barLongNamesFlip :: Chart
+barLongNamesFlip =
+    barLongNames{chartCoord = CoordFlip, chartTitle = Just "Allocation (flipped)"}
+
+-- A numeric x-axis whose wide tick labels (millions) overflow their slots in a
+-- narrow chart: the policy must thin them to an evenly-spaced subset that keeps
+-- the first and last tick, never rotate. Exercises the XThin path + isNumericLabel.
+numericThinX :: Chart
+numericThinX =
+    ( lineChart
+        [("alloc", [(x, x / 1.0e5) | x <- [0, 1.5e6 .. 6.0e6]])]
+        (Just "Bytes allocated")
+    )
+        { chartSize = SizeChars 30 14
+        }
+
+-- Long category names under FacetWrap: rotation reserves no per-cell margin, so
+-- faceted panels must fall back to upright (never rotate/clip). Guards the
+-- facet branch of the x-label policy.
+facetedLongNames :: Chart
+facetedLongNames =
+    barLongNames
+        { chartFacet = FacetWrap (ColumnRef "fn") (Just 2) Nothing ScalesFixed
+        , chartTitle = Just "Faceted long names"
+        , chartSize = SizeChars 60 20
+        }
+
 -- Histogram of 50 numeric values bucketed into 8 bins. Exercises
 -- StatBin + GeomHistogram. aesY points to the @count@ column that
 -- StatBin emits, so the bar heights track the bin counts.
@@ -403,6 +465,18 @@ spec = describe "Golden charts (run GRANITE_BLESS_GOLDEN=1 to refresh)" $ do
             goldenText "bar-basic.txt" (renderChartTerminal barBasic)
         it "bar chart renders to expected SVG output" $
             goldenText "bar-basic.svg" (renderChartSvg barBasic)
+
+        it "long categorical bar labels auto-rotate and truncate (SVG)" $
+            goldenText "bar-long-names.svg" (renderChartSvg barLongNames)
+
+        it "flipped long labels grow the left margin and truncate at the cap (SVG)" $
+            goldenText "bar-long-names-flip.svg" (renderChartSvg barLongNamesFlip)
+
+        it "wide numeric x labels thin to a fitting subset keeping the ends (SVG)" $
+            goldenText "thin-numeric-x.svg" (renderChartSvg numericThinX)
+
+        it "faceted long labels stay upright (no rotation) (SVG)" $
+            goldenText "facet-long-names.svg" (renderChartSvg facetedLongNames)
 
         it "histogram renders to expected terminal output" $
             goldenText "hist-basic.txt" (renderChartTerminal histBasic)

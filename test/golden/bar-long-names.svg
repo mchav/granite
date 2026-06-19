@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 256" width="440" height="256" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="91.92" y1="141.08" x2="320" y2="141.08" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="91.92" y1="34" x2="91.92" y2="141.08" stroke="#ecf0f1" stroke-width="1"/>
+<text x="116.59" y="156.08" text-anchor="end" fill="#7f8c8d" font-size="11" transform="rotate(-45 116.59 156.08)"><title>GHC.Core.Opt.Simplify.Iteration.Inline.Worker</title>GHC.Core.Opt.Simpl…</text>
+<text x="152.34" y="156.08" text-anchor="end" fill="#7f8c8d" font-size="11" transform="rotate(-45 152.34 156.08)">mkFastStringBytes</text>
+<text x="188.09" y="156.08" text-anchor="end" fill="#7f8c8d" font-size="11" transform="rotate(-45 188.09 156.08)">GHC.Tc.Solver.Monad</text>
+<text x="223.84" y="156.08" text-anchor="end" fill="#7f8c8d" font-size="11" transform="rotate(-45 223.84 156.08)"><title>GHC.CmmToAsm.X86.Ppr</title>GHC.CmmToAsm.X86.P…</text>
+<text x="259.58" y="156.08" text-anchor="end" fill="#7f8c8d" font-size="11" transform="rotate(-45 259.58 156.08)">GHC.Stg.Unarise</text>
+<text x="295.33" y="156.08" text-anchor="end" fill="#7f8c8d" font-size="11" transform="rotate(-45 295.33 156.08)"><title>GHC.HsToCore.Match.Constructor</title>GHC.HsToCore.Match…</text>
+<text x="85.92" y="139.88" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="85.92" y="106.31" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<text x="85.92" y="72.74" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
+<text x="85.92" y="39.18" text-anchor="end" fill="#7f8c8d" font-size="11">30.0</text>
+<rect x="102.29" y="38.87" width="28.60" height="97.34" fill="#3498db"/>
+<rect x="138.04" y="74.11" width="28.60" height="62.10" fill="#3498db"/>
+<rect x="173.79" y="94.92" width="28.60" height="41.29" fill="#3498db"/>
+<rect x="209.54" y="105.66" width="28.60" height="30.55" fill="#3498db"/>
+<rect x="245.29" y="114.73" width="28.60" height="21.48" fill="#3498db"/>
+<rect x="281.03" y="122.11" width="28.60" height="14.10" fill="#3498db"/>
+<text x="205.96" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Allocation by function</text>
+<rect x="335" y="39" width="12" height="12" fill="#3498db"/>
+<text x="351" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+</svg>

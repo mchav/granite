@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 224" width="300" height="224" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="55" y1="196.20" x2="180" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="60.68" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="136.44" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0e6</text>
+<text x="174.32" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">6.0e6</text>
+<text x="49" y="192.49" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="49" y="143.34" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
+<text x="49" y="94.19" text-anchor="end" fill="#7f8c8d" font-size="11">40.0</text>
+<text x="49" y="45.04" text-anchor="end" fill="#7f8c8d" font-size="11">60.0</text>
+<polyline points="60.68,188.83 89.09,151.96 117.50,115.10 145.91,78.24 174.32,41.37" fill="none" stroke="#3498db" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="117.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Bytes allocated</text>
+<rect x="195" y="39" width="12" height="12" fill="#3498db"/>
+<text x="211" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">alloc</text>
+</svg>

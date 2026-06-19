@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 256" width="440" height="256" font-family="system-ui, -apple-system, sans-serif">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="184.80" y1="228.20" x2="320" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="184.80" y1="34" x2="184.80" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="190.95" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="233.33" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">10.0</text>
+<text x="275.71" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">20.0</text>
+<text x="318.09" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">30.0</text>
+<text x="178.80" y="58.67" text-anchor="end" fill="#7f8c8d" font-size="11"><title>GHC.Core.Opt.Simplify.Iteration.Inline.Worker</title>GHC.Core.Opt.Simplify.Ite…</text>
+<text x="178.80" y="89.11" text-anchor="end" fill="#7f8c8d" font-size="11">mkFastStringBytes</text>
+<text x="178.80" y="119.55" text-anchor="end" fill="#7f8c8d" font-size="11">GHC.Tc.Solver.Monad</text>
+<text x="178.80" y="149.99" text-anchor="end" fill="#7f8c8d" font-size="11">GHC.CmmToAsm.X86.Ppr</text>
+<text x="178.80" y="180.42" text-anchor="end" fill="#7f8c8d" font-size="11">GHC.Stg.Unarise</text>
+<text x="178.80" y="210.86" text-anchor="end" fill="#7f8c8d" font-size="11"><title>GHC.HsToCore.Match.Constructor</title>GHC.HsToCore.Match.Constr…</text>
+<rect x="190.95" y="42.83" width="122.91" height="24.35" fill="#3498db"/>
+<rect x="190.95" y="73.27" width="78.41" height="24.35" fill="#3498db"/>
+<rect x="190.95" y="103.71" width="52.13" height="24.35" fill="#3498db"/>
+<rect x="190.95" y="134.14" width="38.57" height="24.35" fill="#3498db"/>
+<rect x="190.95" y="164.58" width="27.12" height="24.35" fill="#3498db"/>
+<rect x="190.95" y="195.02" width="17.80" height="24.35" fill="#3498db"/>
+<text x="252.40" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Allocation (flipped)</text>
+<rect x="335" y="39" width="12" height="12" fill="#3498db"/>
+<text x="351" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+</svg>

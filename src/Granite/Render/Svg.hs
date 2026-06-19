@@ -105,17 +105,46 @@ svgPolyline pts stroke strokeW =
         <> attr "stroke-linecap" "round"
         <> "/>\n"
 
+-- | Simple text element (legacy callers); no rotation or tooltip.
 svgText :: Double -> Double -> Text -> Text -> Double -> Text -> Text
-svgText x y anchor fill size content =
+svgText x y anchor fill size = svgTextRT x y anchor fill size 0 Nothing
+
+{- | Text element with optional rotation (degrees about @(x,y)@) and an
+optional @\<title\>@ tooltip (the untruncated label). @rot = 0@ and
+@title = Nothing@ produce byte-identical output to 'svgText'.
+-}
+svgTextRT ::
+    Double ->
+    Double ->
+    Text ->
+    Text ->
+    Double ->
+    Double ->
+    Maybe Text ->
+    Text ->
+    Text
+svgTextRT x y anchor fill size rot mTitle content =
     "<text"
         <> attr "x" (showD x)
         <> attr "y" (showD y)
         <> attr "text-anchor" anchor
         <> attr "fill" fill
         <> attr "font-size" (showD size)
+        <> rotAttr
         <> ">"
+        <> titleEl
         <> escXml content
         <> "</text>\n"
+  where
+    rotAttr
+        | rot == 0 = ""
+        | otherwise =
+            attr
+                "transform"
+                ("rotate(" <> showD rot <> " " <> showD x <> " " <> showD y <> ")")
+    titleEl = case mTitle of
+        Nothing -> ""
+        Just t -> "<title>" <> escXml t <> "</title>"
 
 svgPath :: Text -> Text -> Text -> Text
 svgPath d fill extra =
@@ -154,12 +183,14 @@ renderMark m = case m of
                 <> opacityAttr sty
                 <> "/>\n"
     MText (Point x y) txt ts ->
-        svgText
+        svgTextRT
             x
             y
             (anchorText (textAnchor ts))
             (colorHex (textFill ts))
             (textSize ts)
+            (textRotate ts)
+            (textTitle ts)
             txt
     MPolyline pts sty ->
         let stroke = maybe "#000000" colorHex (styleStroke sty)
