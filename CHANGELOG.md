@@ -1,5 +1,10 @@
 # Revision history for granite
 
+## 0.7.3.0 -- 2026-06-19
+* improved long text/axis display
+* flame graphs
+* fix exact colour in SVG charts
+
 ## 0.7.1.1 -- 2026-05-25
 * `GeomTile` honours a continuous `scaleFill` (`SColorContinuous`) via smooth RGB interpolation, and no longer emits a stray category legend entry.
 

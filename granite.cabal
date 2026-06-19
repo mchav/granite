@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               granite
-version:            0.7.2.0
+version:            0.7.3.0
 synopsis:           Easy terminal plotting.
 description:        A terminal plotting library for quick and easy visualisation.
 license:            MIT
@@ -48,6 +48,7 @@ library
                       Granite.Chart,
                       Granite.Color,
                       Granite.Data.Frame,
+                      Granite.Flame,
                       Granite.Format,
                       Granite.Position,
                       Granite.Render.Chrome,
@@ -84,6 +85,7 @@ test-suite granite-test
     main-is: Spec.hs
 
     other-modules:
+        FlameSpec
         Golden
         GoldenSpec
         GraniteSpec

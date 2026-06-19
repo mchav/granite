@@ -2,6 +2,7 @@
 
 module PipelineSpec (spec) where
 
+import Data.List qualified as List
 import Data.Text qualified as Text
 
 import Granite.Color qualified as Col
@@ -40,6 +41,57 @@ scatterChart =
                         , aesGroup = Just (ColumnRef name)
                         }
                 }
+
+-- A horizontal bar chart whose bars are categorically filled by "status".
+statusBarChart :: Chart
+statusBarChart =
+    emptyChart
+        { chartSize = SizeChars 40 20
+        , chartCoord = CoordFlip
+        , chartData =
+            fromColumns
+                [ ("module", ColNum [0, 1, 2])
+                , ("delta", ColNum [40, 20, 30])
+                , ("status", ColCat ["NEW", "grown", "shrunk"])
+                ]
+        , chartLayers =
+            [ (defLayer GeomCol)
+                { layerMapping =
+                    emptyMapping
+                        { aesX = Just (ColumnRef "module")
+                        , aesY = Just (ColumnRef "delta")
+                        , aesFill = Just (ColumnRef "status")
+                        }
+                }
+            ]
+        }
+
+-- The distinct @fill="#…"@ values on @<rect>@ elements (data bars), ignoring
+-- the white background rect.
+distinctRectFills :: Text.Text -> [Text.Text]
+distinctRectFills svg =
+    let rects = drop 1 (Text.splitOn "<rect" svg)
+        fillOf chunk = case Text.splitOn "fill=\"" chunk of
+            (_ : rest : _) -> Just (Text.takeWhile (/= '"') rest)
+            _ -> Nothing
+        fills = [f | Just f <- map fillOf rects, f /= "white"]
+     in dedup fills
+  where
+    dedup = foldr (\x acc -> if x `elem` acc then acc else x : acc) []
+
+-- The distinct fills on the 12×12 legend swatch rects, so a test can assert the
+-- legend swatches use the same colours as the bars.
+legendSwatchFills :: Text.Text -> [Text.Text]
+legendSwatchFills svg =
+    let rects = drop 1 (Text.splitOn "<rect" svg)
+        swatch chunk = Text.isInfixOf "width=\"12\"" chunk && Text.isInfixOf "height=\"12\"" chunk
+        fillOf chunk = case Text.splitOn "fill=\"" chunk of
+            (_ : rest : _) -> Just (Text.takeWhile (/= '"') rest)
+            _ -> Nothing
+        fills = [f | chunk <- rects, swatch chunk, Just f <- [fillOf chunk]]
+     in dedup fills
+  where
+    dedup = foldr (\x acc -> if x `elem` acc then acc else x : acc) []
 
 spec :: Spec
 spec = describe "Granite.Render.Pipeline" $ do
@@ -150,6 +202,53 @@ spec = describe "Granite.Render.Pipeline" $ do
             svg `shouldSatisfy` Text.isInfixOf ">a</text>"
             svg `shouldSatisfy` Text.isInfixOf ">c</text>"
             svg `shouldNotSatisfy` Text.isInfixOf "series 0"
+
+        it "horizontal bars honour a categorical aesFill (distinct fills)" $ do
+            let svg = renderChartSvg statusBarChart{chartScales = defScales}
+            length (distinctRectFills svg) `shouldSatisfy` (>= 2)
+
+        it "a manual fill scale maps status values to specific colours" $ do
+            let chart =
+                    statusBarChart
+                        { chartScales =
+                            defScales
+                                { scaleFill =
+                                    Just
+                                        ( SColorManual
+                                            [ ("NEW", Hex "#ce5050")
+                                            , ("grown", Hex "#e0a030")
+                                            , ("shrunk", Hex "#50a050")
+                                            ]
+                                        )
+                                }
+                        }
+                svg = renderChartSvg chart
+            svg `shouldSatisfy` Text.isInfixOf "#ce5050"
+            svg `shouldSatisfy` Text.isInfixOf "#e0a030"
+            svg `shouldSatisfy` Text.isInfixOf "#50a050"
+
+        it "the legend swatches use the same colours as the bars" $ do
+            let chart =
+                    statusBarChart
+                        { chartScales =
+                            defScales
+                                { scaleFill =
+                                    Just
+                                        ( SColorManual
+                                            [ ("NEW", Hex "#ce5050")
+                                            , ("grown", Hex "#e0a030")
+                                            , ("shrunk", Hex "#50a050")
+                                            ]
+                                        )
+                                }
+                        }
+                svg = renderChartSvg chart
+            -- Bars and swatches draw from one map, so no palette colour leaks in:
+            -- the only rect fills are the three manual colours.
+            List.sort (distinctRectFills svg)
+                `shouldBe` ["#50a050", "#ce5050", "#e0a030"]
+            List.sort (legendSwatchFills svg)
+                `shouldBe` ["#50a050", "#ce5050", "#e0a030"]
 
     describe "Log-scale chart" $ do
         let logChart =

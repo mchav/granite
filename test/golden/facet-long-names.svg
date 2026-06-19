@@ -1,60 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" width="600" height="320" font-family="system-ui, -apple-system, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 288" width="700" height="288" font-family="system-ui, -apple-system, sans-serif">
 <rect width="100%" height="100%" fill="white"/>
-<line x1="60" y1="106.07" x2="262.50" y2="106.07" stroke="#ecf0f1" stroke-width="1"/>
-<line x1="60" y1="66" x2="60" y2="106.07" stroke="#ecf0f1" stroke-width="1"/>
-<text x="81.90" y="121.07" text-anchor="middle" fill="#7f8c8d" font-size="11"><title>GHC.Core.Opt.Simplify.Iteration.Inline.Worker</title>GHC.Core.Opt.Simplify.Iterati…</text>
-<text x="54" y="107.91" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
-<text x="54" y="95.35" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
-<text x="54" y="82.79" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
-<text x="54" y="70.23" text-anchor="end" fill="#7f8c8d" font-size="11">30.0</text>
-<rect x="69.20" y="67.82" width="25.39" height="36.42" fill="#3498db"/>
-<text x="161.25" y="62" text-anchor="middle" fill="#555555" font-size="11"><title>GHC.Core.Opt.Simplify.Iteration.Inline.Worker</title>GHC.Core.Opt.Simplify.Iterati…</text>
-<line x1="272.50" y1="106.07" x2="475" y2="106.07" stroke="#ecf0f1" stroke-width="1"/>
-<line x1="272.50" y1="66" x2="272.50" y2="106.07" stroke="#ecf0f1" stroke-width="1"/>
-<text x="294.40" y="121.07" text-anchor="middle" fill="#7f8c8d" font-size="11">mkFastStringBytes</text>
-<text x="266.50" y="107.91" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
-<text x="266.50" y="95.35" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
-<text x="266.50" y="82.79" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
-<text x="266.50" y="70.23" text-anchor="end" fill="#7f8c8d" font-size="11">30.0</text>
-<rect x="281.70" y="81.01" width="25.39" height="23.24" fill="#3498db"/>
-<text x="373.75" y="62" text-anchor="middle" fill="#555555" font-size="11">mkFastStringBytes</text>
-<line x1="60" y1="192.13" x2="262.50" y2="192.13" stroke="#ecf0f1" stroke-width="1"/>
-<line x1="60" y1="152.07" x2="60" y2="192.13" stroke="#ecf0f1" stroke-width="1"/>
-<text x="81.90" y="207.13" text-anchor="middle" fill="#7f8c8d" font-size="11">GHC.Tc.Solver.Monad</text>
-<text x="54" y="193.98" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
-<text x="54" y="181.42" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
-<text x="54" y="168.86" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
-<text x="54" y="156.30" text-anchor="end" fill="#7f8c8d" font-size="11">30.0</text>
-<rect x="69.20" y="174.86" width="25.39" height="15.45" fill="#3498db"/>
-<text x="161.25" y="148.07" text-anchor="middle" fill="#555555" font-size="11">GHC.Tc.Solver.Monad</text>
-<line x1="272.50" y1="192.13" x2="475" y2="192.13" stroke="#ecf0f1" stroke-width="1"/>
-<line x1="272.50" y1="152.07" x2="272.50" y2="192.13" stroke="#ecf0f1" stroke-width="1"/>
-<text x="294.40" y="207.13" text-anchor="middle" fill="#7f8c8d" font-size="11">GHC.CmmToAsm.X86.Ppr</text>
-<text x="266.50" y="193.98" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
-<text x="266.50" y="181.42" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
-<text x="266.50" y="168.86" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
-<text x="266.50" y="156.30" text-anchor="end" fill="#7f8c8d" font-size="11">30.0</text>
-<rect x="281.70" y="178.88" width="25.39" height="11.43" fill="#3498db"/>
-<text x="373.75" y="148.07" text-anchor="middle" fill="#555555" font-size="11">GHC.CmmToAsm.X86.Ppr</text>
-<line x1="60" y1="278.20" x2="262.50" y2="278.20" stroke="#ecf0f1" stroke-width="1"/>
-<line x1="60" y1="238.13" x2="60" y2="278.20" stroke="#ecf0f1" stroke-width="1"/>
-<text x="81.90" y="293.20" text-anchor="middle" fill="#7f8c8d" font-size="11">GHC.Stg.Unarise</text>
-<text x="54" y="280.05" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
-<text x="54" y="267.49" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
-<text x="54" y="254.93" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
-<text x="54" y="242.37" text-anchor="end" fill="#7f8c8d" font-size="11">30.0</text>
-<rect x="69.20" y="268.34" width="25.39" height="8.04" fill="#3498db"/>
-<text x="161.25" y="234.13" text-anchor="middle" fill="#555555" font-size="11">GHC.Stg.Unarise</text>
-<line x1="272.50" y1="278.20" x2="475" y2="278.20" stroke="#ecf0f1" stroke-width="1"/>
-<line x1="272.50" y1="238.13" x2="272.50" y2="278.20" stroke="#ecf0f1" stroke-width="1"/>
-<text x="294.40" y="293.20" text-anchor="middle" fill="#7f8c8d" font-size="11">GHC.HsToCore.Match.Constructor</text>
-<text x="266.50" y="280.05" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
-<text x="266.50" y="267.49" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
-<text x="266.50" y="254.93" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
-<text x="266.50" y="242.37" text-anchor="end" fill="#7f8c8d" font-size="11">30.0</text>
-<rect x="281.70" y="271.10" width="25.39" height="5.28" fill="#3498db"/>
-<text x="373.75" y="234.13" text-anchor="middle" fill="#555555" font-size="11">GHC.HsToCore.Match.Constructor</text>
-<text x="267.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Faceted long names</text>
-<rect x="495" y="39" width="12" height="12" fill="#3498db"/>
-<text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+<line x1="60" y1="246.20" x2="312.50" y2="246.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="60" y1="66" x2="60" y2="246.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="122.49" y="261.20" text-anchor="middle" fill="#7f8c8d" font-size="11"><title>GHC.Core.Opt.Simplify.Iteration.Inline.Worker</title>GHC.Core.Opt.Simpl…</text>
+<text x="250.01" y="261.20" text-anchor="middle" fill="#7f8c8d" font-size="11">mkFastStringBytes</text>
+<text x="54" y="241.68" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="54" y="185.19" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<text x="54" y="128.70" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
+<text x="54" y="72.21" text-anchor="end" fill="#7f8c8d" font-size="11">30.0</text>
+<rect x="71.48" y="74.19" width="102.02" height="163.82" fill="#3498db"/>
+<rect x="199.00" y="133.50" width="102.02" height="104.50" fill="#3498db"/>
+<text x="186.25" y="62" text-anchor="middle" fill="#555555" font-size="11">before</text>
+<line x1="322.50" y1="246.20" x2="575" y2="246.20" stroke="#ecf0f1" stroke-width="1"/>
+<line x1="322.50" y1="66" x2="322.50" y2="246.20" stroke="#ecf0f1" stroke-width="1"/>
+<text x="384.99" y="261.20" text-anchor="middle" fill="#7f8c8d" font-size="11">GHC.Tc.Solver.Monad</text>
+<text x="512.51" y="261.20" text-anchor="middle" fill="#7f8c8d" font-size="11"><title>GHC.CmmToAsm.X86.Ppr</title>GHC.CmmToAsm.X86.P…</text>
+<text x="316.50" y="241.68" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
+<text x="316.50" y="175.08" text-anchor="end" fill="#7f8c8d" font-size="11">5.0</text>
+<text x="316.50" y="108.49" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
+<rect x="333.98" y="74.19" width="102.02" height="163.82" fill="#3498db"/>
+<rect x="461.50" y="116.81" width="102.02" height="121.20" fill="#3498db"/>
+<text x="448.75" y="62" text-anchor="middle" fill="#555555" font-size="11">after</text>
+<text x="317.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Faceted long names</text>
+<rect x="595" y="39" width="12" height="12" fill="#3498db"/>
+<text x="611" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 </svg>

@@ -237,6 +237,11 @@ data Scale
     | SDiscrete
     | SColorContinuous [ColorSpec]
     | SColorDiscrete [ColorSpec]
+    | {- | Map specific category values to specific colours (e.g.
+      @[("NEW", Hex "#ce5050"), ("grown", Hex "#e0a030")]@); values
+      not listed fall back to the layer\/constant colour.
+      -}
+      SColorManual [(Text, ColorSpec)]
     deriving (Eq, Show, Read)
 
 data Scales = Scales

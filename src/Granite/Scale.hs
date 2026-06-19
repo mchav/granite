@@ -46,6 +46,7 @@ train scale dataRange = case scale of
     SDiscrete -> trainLinear (defaultOpts BreaksNice) dataRange
     SColorContinuous _ -> trainLinear (defaultOpts BreaksNice) dataRange
     SColorDiscrete _ -> trainLinear (defaultOpts BreaksNice) dataRange
+    SColorManual _ -> trainLinear (defaultOpts BreaksNice) dataRange
 
 defaultOpts :: BreaksSpec -> ScaleOpts
 defaultOpts brk =

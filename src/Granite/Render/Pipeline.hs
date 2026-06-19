@@ -18,6 +18,7 @@ module Granite.Render.Pipeline (
     chartToScene,
 ) where
 
+import Control.Applicative ((<|>))
 import Data.List qualified as List
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -154,10 +155,17 @@ chartToScene chart =
         hasTitle = case chartTitle chart of
             Just t -> not (Text.null t)
             Nothing -> False
-        colorMaps = map (layerColorMap palette (chartData chart)) (chartLayers chart)
         fillCols = case scaleFill (chartScales chart) of
             Just (SColorContinuous cs) -> Just cs
             _ -> Nothing
+        fillManual = case scaleFill (chartScales chart) of
+            Just (SColorManual pairs) -> Just pairs
+            Just (SColorDiscrete cs) -> Just (discreteFillMap chart cs)
+            _ -> Nothing
+        -- The fill scale is folded into 'colorMaps' here so a single
+        -- category→colour map drives both the bars and the legend swatches.
+        colorMaps =
+            map (layerColorMap palette fillManual (chartData chart)) (chartLayers chart)
         legendEntries = collectLegend (chartLayers chart) palette colorMaps
         hasRightLegend = not (null legendEntries)
         -- Size margins to the actual labels so long words never clip, and decide
@@ -186,7 +194,14 @@ chartToScene chart =
         panels = layoutPanels theme box chart
         panelMarks =
             concatMap
-                (renderPanel theme palette coord (alMode layout) colorMaps fillCols)
+                ( renderPanel
+                    theme
+                    palette
+                    coord
+                    (alMode layout)
+                    colorMaps
+                    fillCols
+                )
                 panels
 
         legend = legendMarks theme box legendEntries
@@ -514,6 +529,13 @@ runLayer theme box proj palette colorMap fillCols ix globalFrame layer =
                 | Just cats <- categoricalColorColumn frame m ->
                     map (\cat -> specToColor (fromMaybe colorSpec (lookup cat levelColors))) cats
             _ -> repeat col
+        -- Per-bar fill colours: a categorical 'aesFill' (falling back to
+        -- 'aesColor') maps each bar to its colour from 'colorMap', which already
+        -- folds in any manual\/discrete fill scale (see 'layerColorMap'), so the
+        -- bars and the legend swatches agree. Unmapped categories keep 'col'.
+        barColors = case categoricalFillColumn frame m of
+            Just cats -> map (\cat -> maybe col specToColor (colorMap >>= lookup cat)) cats
+            Nothing -> repeat col
         pointAlphas = case resolveNumColumn frame (aesAlpha m) of
             Just vs@(_ : _) ->
                 let lo = minimum vs
@@ -525,9 +547,9 @@ runLayer theme box proj palette colorMap fillCols ix globalFrame layer =
      in case layerGeom layer of
             GeomPoint -> drawPoints proj frame m pointColors radius pointAlphas
             GeomLine -> drawLine proj frame m colorSpec lineW
-            GeomBar -> drawBars proj frame m col
-            GeomCol -> drawBars proj frame m col
-            GeomHistogram -> drawBars proj frame m col
+            GeomBar -> drawBars proj frame m barColors
+            GeomCol -> drawBars proj frame m barColors
+            GeomHistogram -> drawBars proj frame m barColors
             GeomRibbon -> drawRibbon proj frame m col
             GeomErrorbar -> drawErrorbar proj frame m col
             GeomTile -> drawTiles proj frame m col fillCols
@@ -579,21 +601,26 @@ drawLine proj frame m col lineW =
                 ]
         _ -> []
 
-drawBars :: Projector -> DataFrame -> Mapping -> Color -> [Mark]
-drawBars proj frame m col =
+{- | One rect per row; each painted its own colour from 'cols', cycled when
+shorter than the rows, so a categorical @aesFill@\/@aesColor@ gives each bar a
+distinct fill rather than a single constant colour. Empty 'cols' draws nothing.
+-}
+drawBars :: Projector -> DataFrame -> Mapping -> [Color] -> [Mark]
+drawBars proj frame m cols =
     case (resolveNumColumn frame (aesX m), resolveNumColumn frame (aesY m)) of
-        (Just xs, Just ys) ->
-            let bases = case lookupColumn "__ybase" frame >>= columnAsNum of
-                    Just bs | length bs == length xs -> bs
-                    _ -> replicate (length xs) 0
-                w = barWidth xs
-                halfW = w / 2
-             in [ rectFromCorners
-                    (proj (x - halfW) y0)
-                    (proj (x + halfW) y1)
-                    col
-                | (x, y1, y0) <- zip3 xs ys bases
-                ]
+        (Just xs, Just ys)
+            | not (null cols) ->
+                let bases = case lookupColumn "__ybase" frame >>= columnAsNum of
+                        Just bs | length bs == length xs -> bs
+                        _ -> replicate (length xs) 0
+                    w = barWidth xs
+                    halfW = w / 2
+                 in [ rectFromCorners
+                        (proj (x - halfW) y0)
+                        (proj (x + halfW) y1)
+                        c
+                    | ((x, y1, y0), c) <- zip (zip3 xs ys bases) (cycle cols)
+                    ]
         _ -> []
 
 barWidth :: [Double] -> Double
@@ -1010,20 +1037,40 @@ categoricalColorMap palette levels =
         | null palette = NamedColor BrightBlue
         | otherwise = palette !! (i `mod` length palette)
 
-{- | The per-category colour map for a layer, when its 'aesColor' maps to a
-categorical ('ColCat') column. Computed once from the whole-chart layer frame so
-colours stay consistent across facets and the legend; 'Nothing' otherwise
-(numeric colour columns keep the single per-layer colour).
+{- | The per-category colour map for a layer, when its 'aesColor' (points) or
+'aesFill' (bars) maps to a categorical ('ColCat') column. Computed once from the
+whole-chart layer frame so colours stay consistent across facets, bars, and the
+legend; 'Nothing' otherwise (numeric colour columns keep the single per-layer
+colour). For bars, any manual\/discrete fill scale ('fillOverride') is layered
+on top of the palette so the legend swatches match the bars.
 -}
-layerColorMap :: [ColorSpec] -> DataFrame -> Layer -> Maybe [(Text, ColorSpec)]
-layerColorMap palette globalFrame layer
+layerColorMap ::
+    [ColorSpec] ->
+    Maybe [(Text, ColorSpec)] ->
+    DataFrame ->
+    Layer ->
+    Maybe [(Text, ColorSpec)]
+layerColorMap palette fillOverride globalFrame layer
     | GeomPoint <- layerGeom layer
-    , Just cats <-
-        categoricalColorColumn
-            (fromMaybe globalFrame (layerData layer))
-            (layerMapping layer) =
+    , Just cats <- categoricalColorColumn frame (layerMapping layer) =
         Just (categoricalColorMap palette (List.nub cats))
+    | isBarGeom (layerGeom layer)
+    , Just cats <- categoricalFillColumn frame (layerMapping layer) =
+        Just (overrideColors fillOverride (categoricalColorMap palette (List.nub cats)))
     | otherwise = Nothing
+  where
+    frame = fromMaybe globalFrame (layerData layer)
+
+{- | Replace the colour of each category that appears in 'override', leaving the
+rest at their base (palette) colour.
+-}
+overrideColors ::
+    Maybe [(Text, ColorSpec)] -> [(Text, ColorSpec)] -> [(Text, ColorSpec)]
+overrideColors override base =
+    [(cat, fromMaybe spec (override >>= lookup cat)) | (cat, spec) <- base]
+
+isBarGeom :: Geom -> Bool
+isBarGeom g = g `elem` [GeomBar, GeomCol, GeomHistogram]
 
 {- | The categorical ('ColCat') colour column's per-row values, if 'aesColor'
 maps to one.
@@ -1034,6 +1081,36 @@ categoricalColorColumn frame m = case aesColor m of
         Just (ColCat xs) -> Just xs
         _ -> Nothing
     Nothing -> Nothing
+
+{- | The categorical ('ColCat') fill column's per-row values: 'aesFill' if it
+maps to one, else 'aesColor'. Drives per-bar colours for bar\/col\/histogram.
+-}
+categoricalFillColumn :: DataFrame -> Mapping -> Maybe [Text]
+categoricalFillColumn frame m =
+    catColumn (aesFill m) <|> categoricalColorColumn frame m
+  where
+    catColumn ref = case ref of
+        Just (ColumnRef n) -> case lookupColumn n frame of
+            Just (ColCat xs) -> Just xs
+            _ -> Nothing
+        Nothing -> Nothing
+
+{- | Resolve a discrete fill scale ('SColorDiscrete') into an explicit
+category→colour map by zipping the chart's fill categories against the supplied
+colours (cycled), so it reduces to the same manual-map path bars consume.
+-}
+discreteFillMap :: Chart -> [ColorSpec] -> [(Text, ColorSpec)]
+discreteFillMap chart specs
+    | null specs = []
+    | otherwise = zip cats (cycle specs)
+  where
+    cats =
+        List.nub $
+            concat
+                [ fromMaybe [] (categoricalFillColumn (layerFrame l) (layerMapping l))
+                | l <- chartLayers chart
+                ]
+    layerFrame l = fromMaybe (chartData chart) (layerData l)
 
 {- | Legend entries. A categorical-'aesColor' layer contributes one entry per
 category value (colours matching the points via 'layerColorMap'); 'GeomText'

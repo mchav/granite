@@ -85,6 +85,12 @@ module Granite (
     polarLine,
     waterfall,
     distPlot,
+
+    -- * Differential flame graphs
+    FlameNode (..),
+    FlameOpts (..),
+    defFlameOpts,
+    flameDiff,
 ) where
 
 import Data.Bits (xor, (.&.))
@@ -96,6 +102,12 @@ import Numeric (showEFloat, showFFloat)
 import Text.Printf
 
 import Granite.Color (Color (..), paint, paletteColors, pieColors)
+import Granite.Flame (
+    FlameNode (..),
+    FlameOpts (..),
+    defFlameOpts,
+    flameDiff,
+ )
 import Granite.Internal.LegacyChart qualified as LC
 import Granite.Internal.Util (
     addAt,

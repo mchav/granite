@@ -244,16 +244,39 @@ numericThinX =
         { chartSize = SizeChars 30 14
         }
 
--- Long category names under FacetWrap: rotation reserves no per-cell margin, so
--- faceted panels must fall back to upright (never rotate/clip). Guards the
--- facet branch of the x-label policy.
+-- Long category names under FacetWrap (faceted by a separate column, so each
+-- panel still shows all the long x categories): rotation reserves no per-cell
+-- margin, so faceted panels fall back to upright and truncate each label to its
+-- per-tick slot rather than rotate/clip. Guards the facet branch of the policy.
 facetedLongNames :: Chart
 facetedLongNames =
-    barLongNames
-        { chartFacet = FacetWrap (ColumnRef "fn") (Just 2) Nothing ScalesFixed
-        , chartTitle = Just "Faceted long names"
-        , chartSize = SizeChars 60 20
-        }
+    let names =
+            [ "GHC.Core.Opt.Simplify.Iteration.Inline.Worker"
+            , "mkFastStringBytes"
+            , "GHC.Tc.Solver.Monad"
+            , "GHC.CmmToAsm.X86.Ppr"
+            ]
+        grp = ["before", "before", "after", "after"]
+        ys = [29.0, 18.5, 12.3, 9.1] :: [Double]
+        df =
+            fromColumns
+                [("fn", ColCat names), ("phase", ColCat grp), ("mb", ColNum ys)]
+        layer =
+            (defLayer GeomBar)
+                { layerMapping =
+                    emptyMapping
+                        { aesX = Just (ColumnRef "fn")
+                        , aesY = Just (ColumnRef "mb")
+                        }
+                , layerStat = StatIdentity
+                }
+     in emptyChart
+            { chartData = df
+            , chartLayers = [layer]
+            , chartFacet = FacetWrap (ColumnRef "phase") (Just 2) Nothing ScalesFree
+            , chartTitle = Just "Faceted long names"
+            , chartSize = SizeChars 70 18
+            }
 
 -- Histogram of 50 numeric values bucketed into 8 bins. Exercises
 -- StatBin + GeomHistogram. aesY points to the @count@ column that

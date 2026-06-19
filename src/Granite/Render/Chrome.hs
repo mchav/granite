@@ -272,9 +272,6 @@ xAxisLabels theme px py pw ph textColor xmode xs = case resolvedPolicy of
             , textRotate = rot
             , textTitle = title
             }
-    -- Upright labels are truncated to their per-tick slot so they never overrun
-    -- it — the only path that bites is the faceted fallback, where rotation is
-    -- forbidden and a long category would otherwise overflow its cell.
     upright slot (xp, full) =
         let (lbl, title) = truncatePx fontSize slot full
          in MText (Point xp baseY) lbl (sty AnchorMiddle 0 title)
@@ -459,7 +456,7 @@ legendMarks theme box entries =
                   swatch =
                     MRect
                         (Rect lx yy 12 12)
-                        defaultStyle{styleFill = Just (colorOfSpec col)}
+                        defaultStyle{styleFill = Just (exactColor col)}
                   label =
                     MText
                         (Point (lx + 16) (yy + themeFontSize theme - 1))
@@ -472,6 +469,17 @@ legendMarks theme box entries =
                in [swatch, label]
             | (i, (name, col)) <- zip [0 :: Int ..] entries
             ]
+
+{- | The exact RGB 'Color' for a spec, so a legend swatch matches the data it
+labels (the SVG backend renders it exactly; the terminal backend quantises
+'Color' to ANSI at draw time). Contrast 'colorOfSpec', which quantises eagerly.
+-}
+exactColor :: ColorSpec -> Color
+exactColor (NamedColor c) = c
+exactColor (RGB r g b) = Color r g b
+exactColor (Hex h) = case parseHex h of
+    Just (r, g, b) -> Color (round r) (round g) (round b)
+    Nothing -> Default
 
 {- | Quantise a 'ColorSpec' to the nearest ANSI 'Color' for the
 terminal backend; SVG reads RGB / Hex directly.
