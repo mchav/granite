@@ -45,6 +45,7 @@ import Granite.Spec (
     Stat (..),
     SummaryFun (..),
  )
+import Data.Maybe (listToMaybe, fromMaybe)
 
 applyStat :: Stat -> Mapping -> DataFrame -> DataFrame
 applyStat stat m df = case stat of
@@ -107,7 +108,7 @@ binData spec xs =
     which :: [Double] -> Double -> Int
     which es v
         | length es < 2 = -1
-        | v + eps < head es = -1
+        | maybe False (v + eps <) (listToMaybe es) = -1
         | v > last es + eps = -1
         | otherwise = go 0
       where
@@ -150,7 +151,7 @@ kdeData _ [] = ([], [])
 kdeData n xs =
     let nn = length xs
         mu = sum xs / fromIntegral nn
-        var = sum [(x - mu) ** 2 | x <- xs] / fromIntegral (max 1 (nn - 1))
+        var = sum [(x - mu) ^ (2 :: Int) | x <- xs] / fromIntegral (max 1 (nn - 1))
         sigma = sqrt (max var 1e-12)
         h = 1.06 * sigma * fromIntegral nn ** (-0.2)
         lo = minimum xs - 3 * h
@@ -311,11 +312,11 @@ boxplotSummary xs =
                             then xs' !! (k `div` 2)
                             else (xs' !! (k `div` 2 - 1) + xs' !! (k `div` 2)) / 2
      in BoxStats
-            { yMin = head sorted
+            { yMin = fromMaybe 0 (listToMaybe sorted)
             , q1 = qq lower
             , med = m
             , q3 = qq upper
-            , yMax = last sorted
+            , yMax = fromMaybe 0 (listToMaybe (reverse sorted))
             }
 
 runCount :: Mapping -> DataFrame -> DataFrame
