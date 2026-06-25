@@ -197,6 +197,43 @@ main = do
             ]
             defPlot{widthChars = 60, heightChars = 18, plotTitle = "Distribution"}
 
+    section "Gauss — where the stars sit on the curve (g + a per 90)"
+    -- A synthetic right-skewed "every attacker" population: most players cluster
+    -- low, a long thin tail of elite finishers. Each value is goals+assists per 90.
+    let population =
+            concat
+                [ replicate count value
+                | (count, value) <-
+                    [ (40, 0.05)
+                    , (90, 0.12)
+                    , (120, 0.20)
+                    , (110, 0.28)
+                    , (80, 0.36)
+                    , (55, 0.45)
+                    , (35, 0.55)
+                    , (20, 0.66)
+                    , (10, 0.78)
+                    , (6, 0.90)
+                    , (3, 1.02)
+                    ]
+                ]
+        stars =
+            [ ("Lewandowski", 0.95)
+            , ("Mbappé", 0.92)
+            , ("Haaland", 1.05)
+            , ("Ronaldo", 1.10)
+            , ("Messi", 1.45)
+            ]
+    Text.IO.putStrLn $
+        gauss
+            population
+            stars
+            defPlot
+                { widthChars = 72
+                , heightChars = 22
+                , plotTitle = "every attacker, top-5 leagues · goals + assists per 90"
+                }
+
 section :: Text -> IO ()
 section name = do
     Text.IO.putStrLn ""

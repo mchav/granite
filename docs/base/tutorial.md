@@ -33,6 +33,7 @@ Each cell prints its chart as SVG; the rendered output is shown beneath it.
 - [Error bars](#error-bars)
 - [Density (KDE)](#density-kde)
 - [Distplot (histogram + density)](#distplot-histogram--density)
+- [Gauss (z-score distribution)](#gauss-z-score-distribution)
 - [Heatmap](#heatmap)
 - [Annotated heatmap](#annotated-heatmap)
 - [Funnel](#funnel)
@@ -661,6 +662,53 @@ chart =
         }
 
 Text.IO.putStrLn (renderChartSvg chart)
+```
+
+---
+
+## Gauss (z-score distribution)
+
+`gauss` is a higher-level helper (it returns SVG directly rather than a
+`Chart`). Give it a **population** to fix the mean (μ) and standard
+deviation (σ), plus a list of named **markers**. It draws the kernel
+density estimate as a stippled bell curve, labels the x-axis in σ units,
+and drops a lollipop annotation onto each marker at its z-score — the
+largest one highlighted as the outlier. Think "where does this player
+sit on the curve?".
+
+```haskell
+-- cabal: build-depends: granite, text
+-- cabal: default-extensions: OverloadedStrings
+import qualified Data.Text.IO as Text.IO
+import qualified Granite.Svg as G
+
+-- A synthetic, right-skewed "every attacker" population: goals + assists
+-- per 90. Most players cluster low; a thin tail of elite finishers.
+population =
+    concat
+        [ replicate count value
+        | (count, value) <-
+            [ (40, 0.05), (90, 0.12), (120, 0.20), (110, 0.28)
+            , (80, 0.36), (55, 0.45), (35, 0.55), (20, 0.66)
+            , (10, 0.78), (6, 0.90), (3, 1.02)
+            ]
+        ]
+stars =
+    [ ("Lewandowski", 0.95)
+    , ("Mbappe",      0.92)
+    , ("Haaland",     1.05)
+    , ("Ronaldo",     1.10)
+    , ("Messi",       1.45)
+    ]
+chart =
+    G.gauss population stars
+        G.defPlot
+            { G.widthChars = 72
+            , G.heightChars = 22
+            , G.plotTitle = "every attacker, top-5 leagues - goals + assists per 90"
+            }
+
+Text.IO.putStrLn chart
 ```
 
 ---

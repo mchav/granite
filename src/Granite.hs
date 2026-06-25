@@ -85,6 +85,7 @@ module Granite (
     polarLine,
     waterfall,
     distPlot,
+    gauss,
 
     -- * Differential flame graphs
     FlameNode (..),
@@ -1204,3 +1205,219 @@ distPlot :: [(Text, [Double])] -> Plot -> Text
 distPlot sers cfg =
     renderChartTerminal $
         LC.distPlotChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
+
+{- | Gaussian / normal-distribution chart in standard-deviation (z-score) units.
+
+Given a population sample, 'gauss' computes the mean (μ) and standard deviation
+(σ), draws the kernel-density estimate of the distribution as a stippled bell
+curve, and annotates named markers at their z-score positions. The marker with
+the largest z-score is highlighted as the outlier.
+
+This reproduces the "where does X sit on the curve?" style of chart: a smooth
+density curve filled with scattered dots, an x-axis labelled in σ units, and
+lollipop annotations dropping from each named value down to the axis.
+
+==== __Example__
+
+@
+let -- goals + assists per 90 for every attacker in the league
+    population = ...
+    stars =
+        [ ("Lewandowski", 1.05)
+        , ("Mbappé",      1.02)
+        , ("Haaland",     1.10)
+        , ("Ronaldo",     1.12)
+        , ("Messi",       1.45)
+        ]
+chart = gauss population stars defPlot{plotTitle = "g + a per 90"}
+@
+-}
+gauss ::
+    -- | Population sample (used to compute μ and σ)
+    [Double] ->
+    -- | Named markers as @(label, raw value)@; the largest z is highlighted
+    [(Text, Double)] ->
+    -- | Plot configuration
+    Plot ->
+    -- | Rendered chart as Text
+    Text
+gauss population markers cfg =
+    let n = length population
+        mu = if n == 0 then 0 else sum population / fromIntegral n
+        var =
+            if n < 2
+                then 0
+                else sum [(x - mu) ^ (2 :: Int) | x <- population] / fromIntegral (n - 1)
+        sigma = sqrt (max var eps)
+        z v = (v - mu) / sigma
+
+        zsData = map z population
+        zsMark = [(name, z v) | (name, v) <- markers]
+        maxMarkerZ = maximum' (0 : [zz | (_, zz) <- zsMark])
+
+        -- z-space domain, with a little padding.
+        allZ = zsData <> [zz | (_, zz) <- zsMark]
+        zlo0 = minimum' (0 : allZ)
+        zhi0 = maximum' (1 : allZ)
+        padz = (zhi0 - zlo0) * 0.06 + 1e-9
+        zmin = zlo0 - padz
+        zmax = zhi0 + padz
+        zspan = zmax - zmin + eps
+
+        wC = widthChars cfg
+        hC = heightChars cfg
+        wDots = wC * 2
+        hDots = hC * 4
+        left = leftMargin cfg
+
+        -- Gaussian KDE in z-space (Silverman bandwidth).
+        sdz =
+            let m = sum zsData / fromIntegral (max 1 n)
+             in sqrt (max eps (sum [(zz - m) ^ (2 :: Int) | zz <- zsData] / fromIntegral (max 1 (n - 1))))
+        hbw = max 1e-6 (1.06 * sdz * fromIntegral (max 1 n) ** (-0.2))
+        dens x =
+            sum [exp (negate ((x - zz) ^ (2 :: Int)) / (2 * hbw * hbw)) | zz <- zsData]
+                / (fromIntegral (max 1 n) * hbw * sqrt (2 * pi))
+
+        xAtDot xd = zmin + (fromIntegral xd / fromIntegral (max 1 (wDots - 1))) * zspan
+        colDens = [dens (xAtDot xd) | xd <- [0 .. wDots - 1]]
+        dmax = maximum' colDens + eps
+
+        -- Curve fills up to ~90% of the canvas height at its peak.
+        topFrac = 0.9
+        yTopOf d =
+            clamp 0 (hDots - 1) $
+                round (fromIntegral (hDots - 1) * (1 - (d / dmax) * topFrac))
+
+        -- Deterministic stipple so the fill looks scattered but is reproducible.
+        inkStip xd yd =
+            let a = xd * 374761393 + (yd + 1) * 668265263
+                b = (a `xor` (a `div` 13)) * 1274126177
+             in (abs b `mod` 100) < 46
+
+        -- Map a z value to a dot column / character column.
+        sxz zz = clamp 0 (wDots - 1) (round ((zz - zmin) / zspan * fromIntegral (wDots - 1)))
+        sxChar zz = left + 1 + sxz zz `div` 2
+
+        curveCol = BrightWhite
+        fillCol = BrightBlack
+        meanCol = BrightBlack
+
+        -- Stipple under the curve + draw the curve outline.
+        canvas0 = newCanvas wC hC
+        drawCol c (xd, d) =
+            let yt = yTopOf d
+                c1 = setDotC c xd yt (Just curveCol)
+             in List.foldl'
+                    (\cc yd -> if inkStip xd yd then setDotC cc xd yd (Just fillCol) else cc)
+                    c1
+                    [yt + 1 .. hDots - 1]
+        cFilled = List.foldl' drawCol canvas0 (zip [0 ..] colDens)
+
+        -- Faint dashed guide at the mean (z = 0), if it is inside the domain.
+        cMean =
+            if zmin <= 0 && zmax >= 0
+                then
+                    let xd0 = sxz 0
+                     in List.foldl'
+                            (\cc yd -> if yd `mod` 4 < 2 then setDotC cc xd0 yd (Just meanCol) else cc)
+                            cFilled
+                            [0 .. hDots - 1]
+                else cFilled
+
+        -- Lollipop leader lines for each marker (highlighted one is brighter).
+        markerColor zz = if zz >= maxMarkerZ - eps then BrightMagenta else BrightCyan
+        drawMarker c (_name, zz) =
+            let xd = sxz zz
+                col = markerColor zz
+                c1 = lineDotsC (xd, hDots - 1) (xd, 0) (Just col) c
+             in if zz >= maxMarkerZ - eps
+                    then
+                        List.foldl'
+                            (\cc (ax, ay) -> setDotC cc ax ay (Just col))
+                            c1
+                            [ (xd + dx, hDots - 1 + dy)
+                            | dx <- [-1, 0, 1]
+                            , dy <- [-1, 0]
+                            ]
+                    else c1
+        cMarked = List.foldl' drawMarker cMean zsMark
+
+        -- Plot body: blank y-axis gutter + axis bar + canvas.
+        plotLines =
+            [ Text.replicate left " " <> "│" <> ln
+            | ln <- Text.lines (renderCanvas cMarked)
+            ]
+
+        -- Annotation band above the plot: marker labels stacked to avoid overlap.
+        -- Enough rows that tightly clustered tail markers each get their own line.
+        annRows = max 1 (min 6 (length zsMark))
+        chartW = left + 1 + wC
+        sigmaTxt zz = Text.pack (showFFloat (Just 1) zz "") <> "σ"
+        sortedM = List.sortOn (\(_, zz) -> sxz zz) zsMark
+        assign occ acc [] = (occ, acc)
+        assign occ acc ((name, zz) : rest) =
+            let lbl = name <> " " <> sigmaTxt zz
+                w = wcswidth lbl
+                center = sxChar zz
+                start = clamp 0 (max 0 (chartW - w)) (center - w `div` 2)
+                end = start + w
+                fits r = all (\(s, e) -> end + 1 <= s || start >= e + 1) (occ !! r)
+                row = case filter fits [0 .. annRows - 1] of
+                    (r : _) -> r
+                    [] -> annRows - 1
+                occ' = updateAt occ row ((start, end) :)
+             in assign occ' ((row, start, lbl, markerColor zz) : acc) rest
+        (_, placements) = assign (replicate annRows []) [] sortedM
+        baseCells = replicate chartW (' ', Nothing)
+        putLabel grid (row, start, lbl, col) =
+            updateAt grid row $ \cells ->
+                List.foldl'
+                    (\cs (i, ch) -> setAt cs (start + i) (ch, Just col))
+                    cells
+                    (zip [0 ..] (Text.unpack lbl))
+        annGrid = List.foldl' putLabel (replicate annRows baseCells) placements
+        renderCells =
+            Text.concat
+                . map (\(ch, mc) -> maybe (Text.singleton ch) (`paint` ch) mc)
+        annLines = if null zsMark then [] else map renderCells annGrid
+
+        -- σ x-axis: an integer tick for each standard deviation in range.
+        xBar = Text.replicate left " " <> "└" <> Text.replicate wC "─"
+        sigInts = [k | k <- [ceiling zmin .. floor zmax :: Int], k /= 0]
+        xTickPlacements =
+            [ (max 0 (sxChar (fromIntegral k) - wcswidth lbl `div` 2), lbl)
+            | k <- sigInts
+            , let lbl = Text.pack (show k) <> "σ"
+            ]
+        xLine = placeLabels (Text.replicate chartW " ") 0 xTickPlacements
+        avgLine =
+            if zmin <= 0 && zmax >= 0
+                then
+                    let lbl = "average" :: Text
+                        start = clamp 0 (max 0 (chartW - wcswidth lbl)) (sxChar 0 - wcswidth lbl `div` 2)
+                     in [placeLabels (Text.replicate chartW " ") 0 [(start, lbl)]]
+                else []
+
+        showD2 v = Text.pack (showFFloat (Just 2) v "")
+        footer =
+            Text.replicate left " "
+                <> "μ="
+                <> showD2 mu
+                <> "   σ="
+                <> showD2 sigma
+                <> ( case List.sortOn (negate . snd) zsMark of
+                        ((hiName, hiZ) : _) ->
+                            "   "
+                                <> Text.concat (map (paint BrightMagenta) (Text.unpack ("◆ " <> hiName <> " " <> sigmaTxt hiZ)))
+                        [] -> ""
+                   )
+
+        allLines =
+            filter (not . Text.null) [plotTitle cfg]
+                <> annLines
+                <> plotLines
+                <> [xBar, xLine]
+                <> avgLine
+                <> [footer]
+     in Text.unlines allLines
