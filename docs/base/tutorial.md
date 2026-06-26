@@ -669,12 +669,12 @@ Text.IO.putStrLn (renderChartSvg chart)
 ## Gauss (z-score distribution)
 
 `gauss` is a higher-level helper (it returns SVG directly rather than a
-`Chart`). Give it a **population** to fix the mean (μ) and standard
-deviation (σ), plus a list of named **markers**. It draws the kernel
+`Chart`). Given a population to fix the mean (μ) and standard
+deviation (σ), plus a list of named markers, it draws the kernel
 density estimate as a stippled bell curve, labels the x-axis in σ units,
-and drops a lollipop annotation onto each marker at its z-score — the
-largest one highlighted as the outlier. Think "where does this player
-sit on the curve?".
+and drops a lollipop annotation onto each marker at its z-score.  The
+largest of these is highlighted as the outlier. This chart is useful for
+answering questions like "where does this sample sit on a curve?".
 
 ```haskell
 -- cabal: build-depends: granite, text
