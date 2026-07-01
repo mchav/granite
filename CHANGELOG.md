@@ -1,5 +1,12 @@
 # Revision history for granite
 
+## 0.7.4.0 -- 2026-07-01
+* Fix exponentiation to work with MicroHs
+* Add gauss bell plus standard deviation charts
+
+## 0.7.3.1 -- 2026-06-22
+* Fix kde computation of average
+
 ## 0.7.3.0 -- 2026-06-19
 * improved long text/axis display
 * flame graphs
