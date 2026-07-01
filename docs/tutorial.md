@@ -1,3 +1,5 @@
+<!-- scripths: 0.5.3.0 -->
+
 # Granite Tutorial
 
 A walk through every chart granite can produce, as runnable code cells.
@@ -33,6 +35,7 @@ Each cell prints its chart as SVG; the rendered output is shown beneath it.
 - [Error bars](#error-bars)
 - [Density (KDE)](#density-kde)
 - [Distplot (histogram + density)](#distplot-histogram--density)
+- [Gauss (z-score distribution)](#gauss-z-score-distribution)
 - [Heatmap](#heatmap)
 - [Annotated heatmap](#annotated-heatmap)
 - [Funnel](#funnel)
@@ -52,11 +55,9 @@ Each cell prints its chart as SVG; the rendered output is shown beneath it.
 
 A `Chart` is a Grammar-of-Graphics-style description:
 
-
 ```
 Chart = data + layers + scales + coord + facet + theme + size
 ```
-
 
 - **data** — a `DataFrame` with named columns
 - **layers** — one or more `Layer`s, each pairing a `Geom` with an
@@ -76,7 +77,6 @@ primitive marks, then either backend (`renderChartTerminal` or
 ## Scatter
 
 A scatter plot: one circle per row at `(aesX, aesY)`.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -108,7 +108,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 224" width="400" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="280" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -132,7 +132,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="311" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Coloured scatter
@@ -140,7 +139,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 Map a categorical column to `aesColor`: each category is drawn in its own
 palette colour, with a matching legend entry. (Categorical colour is honoured
 for `GeomPoint`; a numeric colour column keeps a single colour.)
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -184,7 +182,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 256" width="440" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="228.20" x2="320" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -216,13 +214,11 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="351" y="83" text-anchor="start" fill="#7f8c8d" font-size="11">boosted</text>
 > </svg>
 
-
 ---
 
 ## Line
 
 A line chart: points are sorted by X, then connected with a polyline.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -254,7 +250,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 224" width="500" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="380" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -272,7 +268,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="411" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Bar (vertical)
@@ -280,7 +275,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > **Gotcha**: `defLayer GeomBar` defaults `layerStat = StatCount`, which
 > overwrites Y with per-X counts. For pre-aggregated bars, override to
 > `StatIdentity` (the ggplot `stat="identity"` convention).
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -313,7 +307,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 224" width="400" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="280" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -335,14 +329,12 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="311" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Horizontal bar
 
 The same chart, rendered with `CoordFlip` so X data lands on the
 vertical axis.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -376,31 +368,30 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 256" width="600" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
-> <line x1="55" y1="228.20" x2="480" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
-> <line x1="55" y1="34" x2="55" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
-> <text x="74.32" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
-> <text x="168.55" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">20.0</text>
-> <text x="262.79" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">40.0</text>
-> <text x="357.02" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">60.0</text>
-> <text x="451.26" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">80.0</text>
-> <text x="49" y="61.21" text-anchor="end" fill="#7f8c8d" font-size="11">Alpha</text>
-> <text x="49" y="97.99" text-anchor="end" fill="#7f8c8d" font-size="11">Bravo</text>
-> <text x="49" y="134.77" text-anchor="end" fill="#7f8c8d" font-size="11">Charlie</text>
-> <text x="49" y="171.55" text-anchor="end" fill="#7f8c8d" font-size="11">Delta</text>
-> <text x="49" y="208.33" text-anchor="end" fill="#7f8c8d" font-size="11">Echo</text>
-> <rect x="74.32" y="42.83" width="386.36" height="29.42" fill="#3498db"/>
-> <rect x="74.32" y="79.61" width="315.69" height="29.42" fill="#3498db"/>
-> <rect x="74.32" y="116.39" width="212.03" height="29.42" fill="#3498db"/>
-> <rect x="74.32" y="153.17" width="155.49" height="29.42" fill="#3498db"/>
-> <rect x="74.32" y="189.95" width="98.95" height="29.42" fill="#3498db"/>
-> <text x="267.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Top 5 (horizontal)</text>
-> <rect x="495" y="39" width="12" height="12" fill="#3498db"/>
-> <text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+> <line x1="58.20" y1="228.20" x2="480.00" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+> <line x1="58.20" y1="34" x2="58.20" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+> <text x="77.37" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+> <text x="170.90" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">20.0</text>
+> <text x="264.42" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">40.0</text>
+> <text x="357.95" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">60.0</text>
+> <text x="451.47" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">80.0</text>
+> <text x="52.20" y="61.21" text-anchor="end" fill="#7f8c8d" font-size="11">Alpha</text>
+> <text x="52.20" y="97.99" text-anchor="end" fill="#7f8c8d" font-size="11">Bravo</text>
+> <text x="52.20" y="134.77" text-anchor="end" fill="#7f8c8d" font-size="11">Charlie</text>
+> <text x="52.20" y="171.55" text-anchor="end" fill="#7f8c8d" font-size="11">Delta</text>
+> <text x="52.20" y="208.33" text-anchor="end" fill="#7f8c8d" font-size="11">Echo</text>
+> <rect x="77.37" y="42.83" width="383.45" height="29.42" fill="#3498db"/>
+> <rect x="77.37" y="79.61" width="313.31" height="29.42" fill="#3498db"/>
+> <rect x="77.37" y="116.39" width="210.43" height="29.42" fill="#3498db"/>
+> <rect x="77.37" y="153.17" width="154.32" height="29.42" fill="#3498db"/>
+> <rect x="77.37" y="189.95" width="98.20" height="29.42" fill="#3498db"/>
+> <text x="269.10" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Top 5 (horizontal)</text>
+> <rect x="495.00" y="39" width="12" height="12" fill="#3498db"/>
+> <text x="511.00" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
-
 
 ---
 
@@ -412,7 +403,6 @@ edge of each rect.
 
 > **Limitation**: all stack segments currently render in the layer's
 > single color; per-segment coloring needs Phase 9 work.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -454,7 +444,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 256" width="600" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="228.20" x2="480" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -467,29 +457,31 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="49" y="146.28" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
 > <text x="49" y="69.52" text-anchor="end" fill="#7f8c8d" font-size="11">40.0</text>
 > <rect x="74.32" y="173.32" width="81.34" height="46.06" fill="#3498db"/>
-> <rect x="74.32" y="142.61" width="81.34" height="30.70" fill="#3498db"/>
-> <rect x="74.32" y="127.26" width="81.34" height="15.35" fill="#3498db"/>
+> <rect x="74.32" y="142.61" width="81.34" height="30.70" fill="#9b59b6"/>
+> <rect x="74.32" y="127.26" width="81.34" height="15.35" fill="#1abc9c"/>
 > <rect x="175.99" y="161.80" width="81.34" height="57.57" fill="#3498db"/>
-> <rect x="175.99" y="123.42" width="81.34" height="38.38" fill="#3498db"/>
-> <rect x="175.99" y="100.40" width="81.34" height="23.03" fill="#3498db"/>
+> <rect x="175.99" y="123.42" width="81.34" height="38.38" fill="#9b59b6"/>
+> <rect x="175.99" y="100.40" width="81.34" height="23.03" fill="#1abc9c"/>
 > <rect x="277.67" y="150.29" width="81.34" height="69.08" fill="#3498db"/>
-> <rect x="277.67" y="104.23" width="81.34" height="46.06" fill="#3498db"/>
-> <rect x="277.67" y="73.53" width="81.34" height="30.70" fill="#3498db"/>
+> <rect x="277.67" y="104.23" width="81.34" height="46.06" fill="#9b59b6"/>
+> <rect x="277.67" y="73.53" width="81.34" height="30.70" fill="#1abc9c"/>
 > <rect x="379.34" y="134.94" width="81.34" height="84.43" fill="#3498db"/>
-> <rect x="379.34" y="81.21" width="81.34" height="53.73" fill="#3498db"/>
-> <rect x="379.34" y="42.83" width="81.34" height="38.38" fill="#3498db"/>
+> <rect x="379.34" y="81.21" width="81.34" height="53.73" fill="#9b59b6"/>
+> <rect x="379.34" y="42.83" width="81.34" height="38.38" fill="#1abc9c"/>
 > <text x="267.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Sales by quarter (stacked)</text>
 > <rect x="495" y="39" width="12" height="12" fill="#3498db"/>
-> <text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">product</text>
+> <text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">Widgets</text>
+> <rect x="495" y="56" width="12" height="12" fill="#9b59b6"/>
+> <text x="511" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">Gadgets</text>
+> <rect x="495" y="73" width="12" height="12" fill="#1abc9c"/>
+> <text x="511" y="83" text-anchor="start" fill="#7f8c8d" font-size="11">Gizmos</text>
 > </svg>
-
 
 ---
 
 ## Grouped (dodged) bar
 
 Same data, swap `PosStack` for `PosDodge` to place groups side-by-side.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -531,7 +523,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 256" width="600" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="228.20" x2="480" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -544,22 +536,25 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="49" y="142.79" text-anchor="end" fill="#7f8c8d" font-size="11">10.0</text>
 > <text x="49" y="62.54" text-anchor="end" fill="#7f8c8d" font-size="11">20.0</text>
 > <rect x="74.32" y="123.08" width="20.88" height="96.30" fill="#3498db"/>
-> <rect x="100.42" y="155.17" width="20.88" height="64.20" fill="#3498db"/>
-> <rect x="126.53" y="187.27" width="20.88" height="32.10" fill="#3498db"/>
+> <rect x="100.42" y="155.17" width="20.88" height="64.20" fill="#9b59b6"/>
+> <rect x="126.53" y="187.27" width="20.88" height="32.10" fill="#1abc9c"/>
 > <rect x="178.74" y="99.00" width="20.88" height="120.37" fill="#3498db"/>
-> <rect x="204.85" y="139.12" width="20.88" height="80.25" fill="#3498db"/>
-> <rect x="230.95" y="171.22" width="20.88" height="48.15" fill="#3498db"/>
+> <rect x="204.85" y="139.12" width="20.88" height="80.25" fill="#9b59b6"/>
+> <rect x="230.95" y="171.22" width="20.88" height="48.15" fill="#1abc9c"/>
 > <rect x="283.16" y="74.93" width="20.88" height="144.45" fill="#3498db"/>
-> <rect x="309.27" y="123.08" width="20.88" height="96.30" fill="#3498db"/>
-> <rect x="335.37" y="155.17" width="20.88" height="64.20" fill="#3498db"/>
+> <rect x="309.27" y="123.08" width="20.88" height="96.30" fill="#9b59b6"/>
+> <rect x="335.37" y="155.17" width="20.88" height="64.20" fill="#1abc9c"/>
 > <rect x="387.59" y="42.83" width="20.88" height="176.55" fill="#3498db"/>
-> <rect x="413.69" y="107.03" width="20.88" height="112.35" fill="#3498db"/>
-> <rect x="439.80" y="139.12" width="20.88" height="80.25" fill="#3498db"/>
+> <rect x="413.69" y="107.03" width="20.88" height="112.35" fill="#9b59b6"/>
+> <rect x="439.80" y="139.12" width="20.88" height="80.25" fill="#1abc9c"/>
 > <text x="267.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Sales by quarter (grouped)</text>
 > <rect x="495" y="39" width="12" height="12" fill="#3498db"/>
-> <text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">product</text>
+> <text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">Widgets</text>
+> <rect x="495" y="56" width="12" height="12" fill="#9b59b6"/>
+> <text x="511" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">Gadgets</text>
+> <rect x="495" y="73" width="12" height="12" fill="#1abc9c"/>
+> <text x="511" y="83" text-anchor="start" fill="#7f8c8d" font-size="11">Gizmos</text>
 > </svg>
-
 
 ---
 
@@ -567,7 +562,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 
 `GeomArc` reads `aesY` as slice values, normalises them, and emits
 one wedge per row.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -597,7 +591,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 256" width="300" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="228.20" x2="180" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -617,14 +611,12 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="211" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Filled area / ribbon
 
 `GeomRibbon` fills between `aesYmin` and `aesYmax`. For an "area under
 the curve" feel, set `ymin = 0`.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -663,7 +655,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 224" width="560" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="440" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -681,7 +673,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="471" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Histogram
@@ -689,7 +680,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 `GeomHistogram` + `StatBin` buckets numeric X and writes counts into
 a `count` column. Set `aesY = Just (ColumnRef "count")` to surface
 that column to the bar geom.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -721,7 +711,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 224" width="440" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="320" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -746,7 +736,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="351" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Box plot
@@ -754,7 +743,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 `StatBoxplot` computes a five-number summary (Tukey hinges) per
 group. The geom reads `__ymin` / `__q1` / `__median` / `__q3` / `__ymax`
 and draws the box, median line, and whiskers.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -793,7 +781,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 256" width="400" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="228.20" x2="280" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -820,14 +808,12 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="311" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Error bars
 
 `GeomErrorbar` reads `aesYmin` / `aesYmax` and draws capped vertical
 lines. Layer it under a `GeomPoint` to show the central estimate.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -868,7 +854,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 224" width="560" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="440" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -905,14 +891,12 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="471" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
 > </svg>
 
-
 ---
 
 ## Density (KDE)
 
 `StatDensity` runs a Gaussian kernel density estimate (Silverman
 bandwidth) and writes the curve into a `density` column.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -947,7 +931,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 224" width="560" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="440" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -966,14 +950,12 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="471" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Distplot (histogram + density)
 
 Two layers on shared axes — counts and density share a Y range, so
 expect one to look small relative to the other.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1017,7 +999,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 256" width="560" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="228.20" x2="440" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -1046,6 +1028,395 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="471" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
 > </svg>
 
+---
+
+## Gauss (z-score distribution)
+
+`gauss` is a higher-level helper (it returns SVG directly rather than a
+`Chart`). Give it a **population** to fix the mean (μ) and standard
+deviation (σ), plus a list of named **markers**. It draws the kernel
+density estimate as a stippled bell curve, labels the x-axis in σ units,
+and drops a lollipop annotation onto each marker at its z-score — the
+largest one highlighted as the outlier. Think "where does this player
+sit on the curve?".
+
+```haskell
+-- cabal: build-depends: granite, text
+-- cabal: default-extensions: OverloadedStrings
+import qualified Data.Text.IO as Text.IO
+import qualified Granite.Svg as G
+
+-- A synthetic, right-skewed "every attacker" population: goals + assists
+-- per 90. Most players cluster low; a thin tail of elite finishers.
+population =
+    concat
+        [ replicate count value
+        | (count, value) <-
+            [ (40, 0.05), (90, 0.12), (120, 0.20), (110, 0.28)
+            , (80, 0.36), (55, 0.45), (35, 0.55), (20, 0.66)
+            , (10, 0.78), (6, 0.90), (3, 1.02)
+            ]
+        ]
+stars =
+    [ ("Lewandowski", 0.95)
+    , ("Mbappe",      0.92)
+    , ("Haaland",     1.05)
+    , ("Ronaldo",     1.10)
+    , ("Messi",       1.45)
+    ]
+chart =
+    G.gauss population stars
+        G.defPlot
+            { G.widthChars = 72
+            , G.heightChars = 22
+            , G.plotTitle = "every attacker, top-5 leagues - goals + assists per 90"
+            }
+
+Text.IO.putStrLn chart
+```
+
+> <!-- scripths:mime text/plain -->
+> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 910 428" width="910" height="428" font-family="system-ui, -apple-system, sans-serif">
+> <rect width="100%" height="100%" fill="white"/>
+> <text x="430" y="26" text-anchor="middle" fill="#222" font-size="14">every attacker, top-5 leagues - goals + assists per 90</text>
+> <path d="M 70 386 L 70 363.15 L 73.33 357.56 L 76.67 351.09 L 80.00 343.73 L 83.33 335.48 L 86.67 326.38 L 90.00 316.47 L 93.33 305.82 L 96.67 294.52 L 100.00 282.68 L 103.33 270.40 L 106.67 257.82 L 110.00 245.05 L 113.33 232.23 L 116.67 219.48 L 120.00 206.92 L 123.33 194.68 L 126.67 182.85 L 130.00 171.51 L 133.33 160.73 L 136.67 150.52 L 140.00 140.92 L 143.33 131.90 L 146.67 123.46 L 150.00 115.56 L 153.33 108.20 L 156.67 101.36 L 160.00 95.07 L 163.33 89.35 L 166.67 84.26 L 170.00 79.84 L 173.33 76.15 L 176.67 73.23 L 180.00 71.10 L 183.33 69.76 L 186.67 69.20 L 190.00 69.38 L 193.33 70.27 L 196.67 71.81 L 200.00 73.98 L 203.33 76.75 L 206.67 80.09 L 210.00 84.01 L 213.33 88.48 L 216.67 93.50 L 220.00 99.03 L 223.33 105.04 L 226.67 111.49 L 230.00 118.32 L 233.33 125.48 L 236.67 132.91 L 240.00 140.55 L 243.33 148.35 L 246.67 156.25 L 250.00 164.21 L 253.33 172.15 L 256.67 180.03 L 260.00 187.77 L 263.33 195.32 L 266.67 202.62 L 270.00 209.62 L 273.33 216.32 L 276.67 222.71 L 280.00 228.81 L 283.33 234.67 L 286.67 240.32 L 290.00 245.83 L 293.33 251.22 L 296.67 256.52 L 300.00 261.71 L 303.33 266.79 L 306.67 271.70 L 310.00 276.41 L 313.33 280.86 L 316.67 285.05 L 320.00 288.95 L 323.33 292.58 L 326.67 295.99 L 330.00 299.23 L 333.33 302.37 L 336.67 305.47 L 340.00 308.57 L 343.33 311.70 L 346.67 314.87 L 350.00 318.03 L 353.33 321.16 L 356.67 324.20 L 360.00 327.08 L 363.33 329.76 L 366.67 332.21 L 370.00 334.42 L 373.33 336.40 L 376.67 338.19 L 380.00 339.86 L 383.33 341.45 L 386.67 343.02 L 390.00 344.64 L 393.33 346.33 L 396.67 348.10 L 400.00 349.93 L 403.33 351.81 L 406.67 353.68 L 410.00 355.49 L 413.33 357.18 L 416.67 358.73 L 420.00 360.10 L 423.33 361.28 L 426.67 362.27 L 430.00 363.11 L 433.33 363.82 L 436.67 364.45 L 440.00 365.04 L 443.33 365.63 L 446.67 366.25 L 450.00 366.91 L 453.33 367.61 L 456.67 368.35 L 460.00 369.11 L 463.33 369.86 L 466.67 370.56 L 470.00 371.21 L 473.33 371.79 L 476.67 372.27 L 480.00 372.67 L 483.33 373.00 L 486.67 373.28 L 490.00 373.52 L 493.33 373.76 L 496.67 374.02 L 500.00 374.31 L 503.33 374.65 L 506.67 375.05 L 510.00 375.49 L 513.33 375.96 L 516.67 376.45 L 520.00 376.95 L 523.33 377.42 L 526.67 377.87 L 530.00 378.27 L 533.33 378.62 L 536.67 378.93 L 540.00 379.20 L 543.33 379.44 L 546.67 379.66 L 550.00 379.89 L 553.33 380.13 L 556.67 380.39 L 560.00 380.69 L 563.33 381.03 L 566.67 381.40 L 570.00 381.80 L 573.33 382.21 L 576.67 382.64 L 580.00 383.07 L 583.33 383.48 L 586.67 383.87 L 590.00 384.23 L 593.33 384.56 L 596.67 384.84 L 600.00 385.09 L 603.33 385.29 L 606.67 385.46 L 610.00 385.60 L 613.33 385.70 L 616.67 385.79 L 620.00 385.85 L 623.33 385.89 L 626.67 385.93 L 630.00 385.95 L 633.33 385.97 L 636.67 385.98 L 640.00 385.99 L 643.33 385.99 L 646.67 385.99 L 650.00 386.00 L 653.33 386.00 L 656.67 386.00 L 660.00 386.00 L 663.33 386.00 L 666.67 386.00 L 670.00 386.00 L 673.33 386.00 L 676.67 386.00 L 680.00 386.00 L 683.33 386.00 L 686.67 386.00 L 690.00 386.00 L 693.33 386.00 L 696.67 386.00 L 700.00 386.00 L 703.33 386.00 L 706.67 386.00 L 710.00 386.00 L 713.33 386.00 L 716.67 386.00 L 720.00 386.00 L 723.33 386.00 L 726.67 386.00 L 730.00 386.00 L 733.33 386.00 L 736.67 386.00 L 740.00 386.00 L 743.33 386.00 L 746.67 386.00 L 750.00 386.00 L 753.33 386.00 L 756.67 386 L 760.00 386 L 763.33 386 L 766.67 386 L 770.00 386 L 773.33 386 L 776.67 386 L 780.00 386 L 783.33 386 L 786.67 386 L 790.00 386 L 790.00 386 Z" fill="#dfe4e8" fill-opacity="0.6"/>
+> <line x1="222.69" y1="34" x2="222.69" y2="386" stroke="#cfd6dc" stroke-width="1" stroke-dasharray="3 4"/>
+> <circle cx="78.95" cy="368.20" r="1.30" fill="#aeb4bb"/>
+> <circle cx="79.70" cy="371.74" r="1.30" fill="#aeb4bb"/>
+> <circle cx="89.27" cy="342.16" r="1.30" fill="#aeb4bb"/>
+> <circle cx="80.02" cy="363.43" r="1.30" fill="#aeb4bb"/>
+> <circle cx="85.39" cy="380.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="99.59" cy="305.43" r="1.30" fill="#aeb4bb"/>
+> <circle cx="90.34" cy="316.52" r="1.30" fill="#aeb4bb"/>
+> <circle cx="95.07" cy="329.06" r="1.30" fill="#aeb4bb"/>
+> <circle cx="97.18" cy="375.31" r="1.30" fill="#aeb4bb"/>
+> <circle cx="100.66" cy="285.74" r="1.30" fill="#aeb4bb"/>
+> <circle cx="104.75" cy="305.22" r="1.30" fill="#aeb4bb"/>
+> <circle cx="104.00" cy="322.20" r="1.30" fill="#aeb4bb"/>
+> <circle cx="103.25" cy="334.82" r="1.30" fill="#aeb4bb"/>
+> <circle cx="107.50" cy="348.30" r="1.30" fill="#aeb4bb"/>
+> <circle cx="108.25" cy="364.52" r="1.30" fill="#aeb4bb"/>
+> <circle cx="107.16" cy="383.89" r="1.30" fill="#aeb4bb"/>
+> <circle cx="110.23" cy="237.31" r="1.30" fill="#aeb4bb"/>
+> <circle cx="110.98" cy="250.35" r="1.30" fill="#aeb4bb"/>
+> <circle cx="114.43" cy="261.31" r="1.30" fill="#aeb4bb"/>
+> <circle cx="117.07" cy="297.40" r="1.30" fill="#aeb4bb"/>
+> <circle cx="118.57" cy="317.93" r="1.30" fill="#aeb4bb"/>
+> <circle cx="116.84" cy="330.46" r="1.30" fill="#aeb4bb"/>
+> <circle cx="116.09" cy="355.93" r="1.30" fill="#aeb4bb"/>
+> <circle cx="114.66" cy="358.24" r="1.30" fill="#aeb4bb"/>
+> <circle cx="115.41" cy="377.52" r="1.30" fill="#aeb4bb"/>
+> <circle cx="121.30" cy="216.44" r="1.30" fill="#aeb4bb"/>
+> <circle cx="123.36" cy="234.94" r="1.30" fill="#aeb4bb"/>
+> <circle cx="127.39" cy="248.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="128.14" cy="272.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="128.89" cy="273.84" r="1.30" fill="#aeb4bb"/>
+> <circle cx="125.77" cy="310.90" r="1.30" fill="#aeb4bb"/>
+> <circle cx="124.98" cy="326.74" r="1.30" fill="#aeb4bb"/>
+> <circle cx="125.73" cy="339.39" r="1.30" fill="#aeb4bb"/>
+> <circle cx="128.93" cy="365.65" r="1.30" fill="#aeb4bb"/>
+> <circle cx="128.18" cy="385.04" r="1.30" fill="#aeb4bb"/>
+> <circle cx="134.54" cy="173.67" r="1.30" fill="#aeb4bb"/>
+> <circle cx="133.79" cy="196.80" r="1.30" fill="#aeb4bb"/>
+> <circle cx="133.04" cy="207.60" r="1.30" fill="#aeb4bb"/>
+> <circle cx="137.71" cy="220.25" r="1.30" fill="#aeb4bb"/>
+> <circle cx="136.95" cy="254.18" r="1.30" fill="#aeb4bb"/>
+> <circle cx="135.45" cy="276.47" r="1.30" fill="#aeb4bb"/>
+> <circle cx="135.30" cy="286.77" r="1.30" fill="#aeb4bb"/>
+> <circle cx="136.05" cy="313.42" r="1.30" fill="#aeb4bb"/>
+> <circle cx="136.80" cy="316.30" r="1.30" fill="#aeb4bb"/>
+> <circle cx="138.61" cy="333.35" r="1.30" fill="#aeb4bb"/>
+> <circle cx="137.86" cy="346.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="132.89" cy="370.14" r="1.30" fill="#aeb4bb"/>
+> <circle cx="141.19" cy="136.97" r="1.30" fill="#aeb4bb"/>
+> <circle cx="144.22" cy="149.58" r="1.30" fill="#aeb4bb"/>
+> <circle cx="142.72" cy="183.41" r="1.30" fill="#aeb4bb"/>
+> <circle cx="148.78" cy="204.50" r="1.30" fill="#aeb4bb"/>
+> <circle cx="146.63" cy="215.85" r="1.30" fill="#aeb4bb"/>
+> <circle cx="145.88" cy="228.45" r="1.30" fill="#aeb4bb"/>
+> <circle cx="145.13" cy="244.20" r="1.30" fill="#aeb4bb"/>
+> <circle cx="146.37" cy="274.89" r="1.30" fill="#aeb4bb"/>
+> <circle cx="149.04" cy="297.89" r="1.30" fill="#aeb4bb"/>
+> <circle cx="148.29" cy="308.73" r="1.30" fill="#aeb4bb"/>
+> <circle cx="143.21" cy="337.58" r="1.30" fill="#aeb4bb"/>
+> <circle cx="143.96" cy="355.17" r="1.30" fill="#aeb4bb"/>
+> <circle cx="141.45" cy="367.77" r="1.30" fill="#aeb4bb"/>
+> <circle cx="140.70" cy="377.27" r="1.30" fill="#aeb4bb"/>
+> <circle cx="151.51" cy="117.85" r="1.30" fill="#aeb4bb"/>
+> <circle cx="153.90" cy="121.45" r="1.30" fill="#aeb4bb"/>
+> <circle cx="152.40" cy="149.42" r="1.30" fill="#aeb4bb"/>
+> <circle cx="158.35" cy="174.27" r="1.30" fill="#aeb4bb"/>
+> <circle cx="159.10" cy="176.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="156.31" cy="194.98" r="1.30" fill="#aeb4bb"/>
+> <circle cx="154.81" cy="228.91" r="1.30" fill="#aeb4bb"/>
+> <circle cx="156.69" cy="252.86" r="1.30" fill="#aeb4bb"/>
+> <circle cx="158.72" cy="267.73" r="1.30" fill="#aeb4bb"/>
+> <circle cx="157.97" cy="286.12" r="1.30" fill="#aeb4bb"/>
+> <circle cx="157.22" cy="298.43" r="1.30" fill="#aeb4bb"/>
+> <circle cx="153.53" cy="306.55" r="1.30" fill="#aeb4bb"/>
+> <circle cx="151.13" cy="330.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="159.63" cy="363.25" r="1.30" fill="#aeb4bb"/>
+> <circle cx="151.12" cy="375.57" r="1.30" fill="#aeb4bb"/>
+> <circle cx="161.83" cy="89.87" r="1.30" fill="#aeb4bb"/>
+> <circle cx="163.58" cy="113.83" r="1.30" fill="#aeb4bb"/>
+> <circle cx="162.83" cy="115.83" r="1.30" fill="#aeb4bb"/>
+> <circle cx="167.92" cy="136.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="169.42" cy="169.21" r="1.30" fill="#aeb4bb"/>
+> <circle cx="165.99" cy="182.13" r="1.30" fill="#aeb4bb"/>
+> <circle cx="165.24" cy="192.59" r="1.30" fill="#aeb4bb"/>
+> <circle cx="165.51" cy="208.59" r="1.30" fill="#aeb4bb"/>
+> <circle cx="166.26" cy="228.26" r="1.30" fill="#aeb4bb"/>
+> <circle cx="167.01" cy="231.97" r="1.30" fill="#aeb4bb"/>
+> <circle cx="167.65" cy="260.38" r="1.30" fill="#aeb4bb"/>
+> <circle cx="163.10" cy="285.35" r="1.30" fill="#aeb4bb"/>
+> <circle cx="163.85" cy="287.35" r="1.30" fill="#aeb4bb"/>
+> <circle cx="160.81" cy="324.73" r="1.30" fill="#aeb4bb"/>
+> <circle cx="160.06" cy="340.73" r="1.30" fill="#aeb4bb"/>
+> <circle cx="160.69" cy="352.64" r="1.30" fill="#aeb4bb"/>
+> <circle cx="161.44" cy="364.11" r="1.30" fill="#aeb4bb"/>
+> <circle cx="162.19" cy="380.11" r="1.30" fill="#aeb4bb"/>
+> <circle cx="173.26" cy="97.63" r="1.30" fill="#aeb4bb"/>
+> <circle cx="172.51" cy="113.54" r="1.30" fill="#aeb4bb"/>
+> <circle cx="178.24" cy="127.45" r="1.30" fill="#aeb4bb"/>
+> <circle cx="178.99" cy="136.72" r="1.30" fill="#aeb4bb"/>
+> <circle cx="179.74" cy="152.63" r="1.30" fill="#aeb4bb"/>
+> <circle cx="175.67" cy="173.29" r="1.30" fill="#aeb4bb"/>
+> <circle cx="174.92" cy="175.81" r="1.30" fill="#aeb4bb"/>
+> <circle cx="175.83" cy="191.72" r="1.30" fill="#aeb4bb"/>
+> <circle cx="177.33" cy="228.90" r="1.30" fill="#aeb4bb"/>
+> <circle cx="177.33" cy="250.97" r="1.30" fill="#aeb4bb"/>
+> <circle cx="173.42" cy="267.99" r="1.30" fill="#aeb4bb"/>
+> <circle cx="174.17" cy="283.90" r="1.30" fill="#aeb4bb"/>
+> <circle cx="174.92" cy="296.81" r="1.30" fill="#aeb4bb"/>
+> <circle cx="170.49" cy="307.08" r="1.30" fill="#aeb4bb"/>
+> <circle cx="171.01" cy="342.65" r="1.30" fill="#aeb4bb"/>
+> <circle cx="172.51" cy="362.08" r="1.30" fill="#aeb4bb"/>
+> <circle cx="172.90" cy="374.48" r="1.30" fill="#aeb4bb"/>
+> <circle cx="183.69" cy="80.45" r="1.30" fill="#aeb4bb"/>
+> <circle cx="182.94" cy="88.86" r="1.30" fill="#aeb4bb"/>
+> <circle cx="182.19" cy="100.35" r="1.30" fill="#aeb4bb"/>
+> <circle cx="189.31" cy="128.66" r="1.30" fill="#aeb4bb"/>
+> <circle cx="186.10" cy="146.90" r="1.30" fill="#aeb4bb"/>
+> <circle cx="184.60" cy="182.46" r="1.30" fill="#aeb4bb"/>
+> <circle cx="186.15" cy="193.45" r="1.30" fill="#aeb4bb"/>
+> <circle cx="186.90" cy="206.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="188.51" cy="222.26" r="1.30" fill="#aeb4bb"/>
+> <circle cx="187.76" cy="240.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="187.01" cy="252.64" r="1.30" fill="#aeb4bb"/>
+> <circle cx="184.49" cy="272.55" r="1.30" fill="#aeb4bb"/>
+> <circle cx="180.92" cy="299.19" r="1.30" fill="#aeb4bb"/>
+> <circle cx="180.17" cy="301.86" r="1.30" fill="#aeb4bb"/>
+> <circle cx="181.33" cy="331.74" r="1.30" fill="#aeb4bb"/>
+> <circle cx="182.08" cy="355.66" r="1.30" fill="#aeb4bb"/>
+> <circle cx="182.83" cy="365.64" r="1.30" fill="#aeb4bb"/>
+> <circle cx="182.58" cy="378.29" r="1.30" fill="#aeb4bb"/>
+> <circle cx="192.62" cy="86.40" r="1.30" fill="#aeb4bb"/>
+> <circle cx="198.88" cy="118.24" r="1.30" fill="#aeb4bb"/>
+> <circle cx="199.63" cy="139.99" r="1.30" fill="#aeb4bb"/>
+> <circle cx="195.78" cy="152.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="195.03" cy="164.57" r="1.30" fill="#aeb4bb"/>
+> <circle cx="194.28" cy="179.58" r="1.30" fill="#aeb4bb"/>
+> <circle cx="196.47" cy="198.33" r="1.30" fill="#aeb4bb"/>
+> <circle cx="197.22" cy="210.90" r="1.30" fill="#aeb4bb"/>
+> <circle cx="198.19" cy="219.16" r="1.30" fill="#aeb4bb"/>
+> <circle cx="196.69" cy="243.24" r="1.30" fill="#aeb4bb"/>
+> <circle cx="194.06" cy="258.75" r="1.30" fill="#aeb4bb"/>
+> <circle cx="194.81" cy="277.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="190.60" cy="289.57" r="1.30" fill="#aeb4bb"/>
+> <circle cx="199.85" cy="312.34" r="1.30" fill="#aeb4bb"/>
+> <circle cx="199.10" cy="323.34" r="1.30" fill="#aeb4bb"/>
+> <circle cx="191.65" cy="335.91" r="1.30" fill="#aeb4bb"/>
+> <circle cx="193.01" cy="369.67" r="1.30" fill="#aeb4bb"/>
+> <circle cx="202.30" cy="104.37" r="1.30" fill="#aeb4bb"/>
+> <circle cx="208.45" cy="117.80" r="1.30" fill="#aeb4bb"/>
+> <circle cx="209.20" cy="128.55" r="1.30" fill="#aeb4bb"/>
+> <circle cx="209.95" cy="144.95" r="1.30" fill="#aeb4bb"/>
+> <circle cx="204.71" cy="169.12" r="1.30" fill="#aeb4bb"/>
+> <circle cx="207.54" cy="223.70" r="1.30" fill="#aeb4bb"/>
+> <circle cx="207.87" cy="226.10" r="1.30" fill="#aeb4bb"/>
+> <circle cx="207.12" cy="245.77" r="1.30" fill="#aeb4bb"/>
+> <circle cx="206.37" cy="264.27" r="1.30" fill="#aeb4bb"/>
+> <circle cx="204.38" cy="280.67" r="1.30" fill="#aeb4bb"/>
+> <circle cx="205.13" cy="293.10" r="1.30" fill="#aeb4bb"/>
+> <circle cx="209.53" cy="321.25" r="1.30" fill="#aeb4bb"/>
+> <circle cx="208.78" cy="340.42" r="1.30" fill="#aeb4bb"/>
+> <circle cx="201.97" cy="353.32" r="1.30" fill="#aeb4bb"/>
+> <circle cx="202.69" cy="373.75" r="1.30" fill="#aeb4bb"/>
+> <circle cx="212.73" cy="96.33" r="1.30" fill="#aeb4bb"/>
+> <circle cx="211.98" cy="112.13" r="1.30" fill="#aeb4bb"/>
+> <circle cx="219.52" cy="135.11" r="1.30" fill="#aeb4bb"/>
+> <circle cx="215.14" cy="164.33" r="1.30" fill="#aeb4bb"/>
+> <circle cx="214.39" cy="187.88" r="1.30" fill="#aeb4bb"/>
+> <circle cx="216.36" cy="189.69" r="1.30" fill="#aeb4bb"/>
+> <circle cx="217.11" cy="209.86" r="1.30" fill="#aeb4bb"/>
+> <circle cx="217.86" cy="226.66" r="1.30" fill="#aeb4bb"/>
+> <circle cx="217.55" cy="242.47" r="1.30" fill="#aeb4bb"/>
+> <circle cx="216.80" cy="255.38" r="1.30" fill="#aeb4bb"/>
+> <circle cx="213.95" cy="265.44" r="1.30" fill="#aeb4bb"/>
+> <circle cx="215.45" cy="300.91" r="1.30" fill="#aeb4bb"/>
+> <circle cx="219.96" cy="304.22" r="1.30" fill="#aeb4bb"/>
+> <circle cx="219.21" cy="320.03" r="1.30" fill="#aeb4bb"/>
+> <circle cx="211.54" cy="332.44" r="1.30" fill="#aeb4bb"/>
+> <circle cx="212.29" cy="357.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="213.04" cy="358.81" r="1.30" fill="#aeb4bb"/>
+> <circle cx="212.37" cy="377.97" r="1.30" fill="#aeb4bb"/>
+> <circle cx="221.66" cy="128.56" r="1.30" fill="#aeb4bb"/>
+> <circle cx="229.84" cy="164.47" r="1.30" fill="#aeb4bb"/>
+> <circle cx="220.59" cy="175.80" r="1.30" fill="#aeb4bb"/>
+> <circle cx="224.82" cy="188.67" r="1.30" fill="#aeb4bb"/>
+> <circle cx="224.07" cy="204.95" r="1.30" fill="#aeb4bb"/>
+> <circle cx="227.43" cy="235.90" r="1.30" fill="#aeb4bb"/>
+> <circle cx="226.48" cy="283.14" r="1.30" fill="#aeb4bb"/>
+> <circle cx="224.27" cy="285.93" r="1.30" fill="#aeb4bb"/>
+> <circle cx="225.02" cy="302.30" r="1.30" fill="#aeb4bb"/>
+> <circle cx="225.77" cy="316.37" r="1.30" fill="#aeb4bb"/>
+> <circle cx="228.89" cy="342.79" r="1.30" fill="#aeb4bb"/>
+> <circle cx="222.61" cy="380.90" r="1.30" fill="#aeb4bb"/>
+> <circle cx="232.09" cy="140.84" r="1.30" fill="#aeb4bb"/>
+> <circle cx="231.34" cy="152.91" r="1.30" fill="#aeb4bb"/>
+> <circle cx="239.41" cy="165.43" r="1.30" fill="#aeb4bb"/>
+> <circle cx="230.16" cy="180.27" r="1.30" fill="#aeb4bb"/>
+> <circle cx="234.50" cy="211.61" r="1.30" fill="#aeb4bb"/>
+> <circle cx="233.75" cy="219.70" r="1.30" fill="#aeb4bb"/>
+> <circle cx="237.00" cy="231.27" r="1.30" fill="#aeb4bb"/>
+> <circle cx="237.75" cy="243.79" r="1.30" fill="#aeb4bb"/>
+> <circle cx="237.66" cy="259.13" r="1.30" fill="#aeb4bb"/>
+> <circle cx="236.91" cy="277.45" r="1.30" fill="#aeb4bb"/>
+> <circle cx="234.59" cy="312.56" r="1.30" fill="#aeb4bb"/>
+> <circle cx="235.34" cy="323.63" r="1.30" fill="#aeb4bb"/>
+> <circle cx="230.07" cy="336.14" r="1.30" fill="#aeb4bb"/>
+> <circle cx="238.57" cy="369.81" r="1.30" fill="#aeb4bb"/>
+> <circle cx="232.18" cy="382.32" r="1.30" fill="#aeb4bb"/>
+> <circle cx="241.02" cy="180.46" r="1.30" fill="#aeb4bb"/>
+> <circle cx="240.48" cy="200.66" r="1.30" fill="#aeb4bb"/>
+> <circle cx="244.93" cy="213.65" r="1.30" fill="#aeb4bb"/>
+> <circle cx="244.18" cy="226.51" r="1.30" fill="#aeb4bb"/>
+> <circle cx="243.43" cy="241.10" r="1.30" fill="#aeb4bb"/>
+> <circle cx="247.32" cy="260.85" r="1.30" fill="#aeb4bb"/>
+> <circle cx="248.07" cy="273.71" r="1.30" fill="#aeb4bb"/>
+> <circle cx="246.59" cy="308.04" r="1.30" fill="#aeb4bb"/>
+> <circle cx="244.91" cy="336.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="245.66" cy="355.24" r="1.30" fill="#aeb4bb"/>
+> <circle cx="249.75" cy="368.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="249.00" cy="376.44" r="1.30" fill="#aeb4bb"/>
+> <circle cx="251.45" cy="180.30" r="1.30" fill="#aeb4bb"/>
+> <circle cx="259.30" cy="194.77" r="1.30" fill="#aeb4bb"/>
+> <circle cx="250.05" cy="219.16" r="1.30" fill="#aeb4bb"/>
+> <circle cx="254.61" cy="243.12" r="1.30" fill="#aeb4bb"/>
+> <circle cx="253.86" cy="260.76" r="1.30" fill="#aeb4bb"/>
+> <circle cx="257.64" cy="291.47" r="1.30" fill="#aeb4bb"/>
+> <circle cx="258.39" cy="302.37" r="1.30" fill="#aeb4bb"/>
+> <circle cx="257.02" cy="319.11" r="1.30" fill="#aeb4bb"/>
+> <circle cx="256.27" cy="339.83" r="1.30" fill="#aeb4bb"/>
+> <circle cx="254.48" cy="343.97" r="1.30" fill="#aeb4bb"/>
+> <circle cx="255.23" cy="360.71" r="1.30" fill="#aeb4bb"/>
+> <circle cx="269.62" cy="220.68" r="1.30" fill="#aeb4bb"/>
+> <circle cx="261.12" cy="252.75" r="1.30" fill="#aeb4bb"/>
+> <circle cx="264.29" cy="267.20" r="1.30" fill="#aeb4bb"/>
+> <circle cx="263.54" cy="276.39" r="1.30" fill="#aeb4bb"/>
+> <circle cx="267.21" cy="292.53" r="1.30" fill="#aeb4bb"/>
+> <circle cx="267.96" cy="313.73" r="1.30" fill="#aeb4bb"/>
+> <circle cx="268.71" cy="316.17" r="1.30" fill="#aeb4bb"/>
+> <circle cx="266.70" cy="332.31" r="1.30" fill="#aeb4bb"/>
+> <circle cx="265.95" cy="346.26" r="1.30" fill="#aeb4bb"/>
+> <circle cx="265.55" cy="372.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="279.94" cy="246.27" r="1.30" fill="#aeb4bb"/>
+> <circle cx="270.69" cy="255.11" r="1.30" fill="#aeb4bb"/>
+> <circle cx="274.72" cy="267.66" r="1.30" fill="#aeb4bb"/>
+> <circle cx="273.97" cy="281.04" r="1.30" fill="#aeb4bb"/>
+> <circle cx="277.53" cy="316.42" r="1.30" fill="#aeb4bb"/>
+> <circle cx="278.28" cy="329.81" r="1.30" fill="#aeb4bb"/>
+> <circle cx="276.38" cy="365.19" r="1.30" fill="#aeb4bb"/>
+> <circle cx="275.63" cy="378.57" r="1.30" fill="#aeb4bb"/>
+> <circle cx="280.49" cy="240.63" r="1.30" fill="#aeb4bb"/>
+> <circle cx="280.26" cy="253.73" r="1.30" fill="#aeb4bb"/>
+> <circle cx="284.40" cy="288.55" r="1.30" fill="#aeb4bb"/>
+> <circle cx="282.90" cy="323.62" r="1.30" fill="#aeb4bb"/>
+> <circle cx="287.85" cy="336.47" r="1.30" fill="#aeb4bb"/>
+> <circle cx="288.60" cy="349.57" r="1.30" fill="#aeb4bb"/>
+> <circle cx="286.81" cy="364.79" r="1.30" fill="#aeb4bb"/>
+> <circle cx="286.06" cy="384.39" r="1.30" fill="#aeb4bb"/>
+> <circle cx="290.58" cy="278.04" r="1.30" fill="#aeb4bb"/>
+> <circle cx="294.08" cy="308.24" r="1.30" fill="#aeb4bb"/>
+> <circle cx="293.33" cy="318.71" r="1.30" fill="#aeb4bb"/>
+> <circle cx="292.58" cy="335.14" r="1.30" fill="#aeb4bb"/>
+> <circle cx="298.17" cy="355.66" r="1.30" fill="#aeb4bb"/>
+> <circle cx="296.49" cy="375.80" r="1.30" fill="#aeb4bb"/>
+> <circle cx="300.15" cy="280.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="300.90" cy="289.38" r="1.30" fill="#aeb4bb"/>
+> <circle cx="301.65" cy="305.72" r="1.30" fill="#aeb4bb"/>
+> <circle cx="303.76" cy="327.24" r="1.30" fill="#aeb4bb"/>
+> <circle cx="307.74" cy="346.12" r="1.30" fill="#aeb4bb"/>
+> <circle cx="308.49" cy="360.39" r="1.30" fill="#aeb4bb"/>
+> <circle cx="309.24" cy="384.18" r="1.30" fill="#aeb4bb"/>
+> <circle cx="311.22" cy="299.37" r="1.30" fill="#aeb4bb"/>
+> <circle cx="313.44" cy="331.32" r="1.30" fill="#aeb4bb"/>
+> <circle cx="312.69" cy="354.14" r="1.30" fill="#aeb4bb"/>
+> <circle cx="318.06" cy="370.60" r="1.30" fill="#aeb4bb"/>
+> <circle cx="318.81" cy="378.84" r="1.30" fill="#aeb4bb"/>
+> <circle cx="320.79" cy="299.32" r="1.30" fill="#aeb4bb"/>
+> <circle cx="321.54" cy="321.62" r="1.30" fill="#aeb4bb"/>
+> <circle cx="323.87" cy="335.01" r="1.30" fill="#aeb4bb"/>
+> <circle cx="323.12" cy="348.54" r="1.30" fill="#aeb4bb"/>
+> <circle cx="322.37" cy="364.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="328.38" cy="384.23" r="1.30" fill="#aeb4bb"/>
+> <circle cx="331.86" cy="329.01" r="1.30" fill="#aeb4bb"/>
+> <circle cx="332.80" cy="366.04" r="1.30" fill="#aeb4bb"/>
+> <circle cx="342.18" cy="331.64" r="1.30" fill="#aeb4bb"/>
+> <circle cx="343.23" cy="345.97" r="1.30" fill="#aeb4bb"/>
+> <circle cx="342.48" cy="369.60" r="1.30" fill="#aeb4bb"/>
+> <circle cx="348.27" cy="371.90" r="1.30" fill="#aeb4bb"/>
+> <circle cx="351.75" cy="335.48" r="1.30" fill="#aeb4bb"/>
+> <circle cx="352.50" cy="353.06" r="1.30" fill="#aeb4bb"/>
+> <circle cx="352.16" cy="379.59" r="1.30" fill="#aeb4bb"/>
+> <circle cx="362.82" cy="364.43" r="1.30" fill="#aeb4bb"/>
+> <circle cx="372.39" cy="342.46" r="1.30" fill="#aeb4bb"/>
+> <circle cx="373.02" cy="357.50" r="1.30" fill="#aeb4bb"/>
+> <circle cx="372.27" cy="371.98" r="1.30" fill="#aeb4bb"/>
+> <circle cx="382.71" cy="342.64" r="1.30" fill="#aeb4bb"/>
+> <circle cx="382.70" cy="363.88" r="1.30" fill="#aeb4bb"/>
+> <circle cx="393.03" cy="360.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="392.38" cy="379.98" r="1.30" fill="#aeb4bb"/>
+> <circle cx="402.06" cy="371.29" r="1.30" fill="#aeb4bb"/>
+> <circle cx="411.74" cy="376.52" r="1.30" fill="#aeb4bb"/>
+> <circle cx="422.17" cy="377.09" r="1.30" fill="#aeb4bb"/>
+> <circle cx="441.53" cy="373.00" r="1.30" fill="#aeb4bb"/>
+> <circle cx="451.21" cy="377.94" r="1.30" fill="#aeb4bb"/>
+> <circle cx="460.89" cy="382.98" r="1.30" fill="#aeb4bb"/>
+> <polyline points="70,363.15 73.33,357.56 76.67,351.09 80.00,343.73 83.33,335.48 86.67,326.38 90.00,316.47 93.33,305.82 96.67,294.52 100.00,282.68 103.33,270.40 106.67,257.82 110.00,245.05 113.33,232.23 116.67,219.48 120.00,206.92 123.33,194.68 126.67,182.85 130.00,171.51 133.33,160.73 136.67,150.52 140.00,140.92 143.33,131.90 146.67,123.46 150.00,115.56 153.33,108.20 156.67,101.36 160.00,95.07 163.33,89.35 166.67,84.26 170.00,79.84 173.33,76.15 176.67,73.23 180.00,71.10 183.33,69.76 186.67,69.20 190.00,69.38 193.33,70.27 196.67,71.81 200.00,73.98 203.33,76.75 206.67,80.09 210.00,84.01 213.33,88.48 216.67,93.50 220.00,99.03 223.33,105.04 226.67,111.49 230.00,118.32 233.33,125.48 236.67,132.91 240.00,140.55 243.33,148.35 246.67,156.25 250.00,164.21 253.33,172.15 256.67,180.03 260.00,187.77 263.33,195.32 266.67,202.62 270.00,209.62 273.33,216.32 276.67,222.71 280.00,228.81 283.33,234.67 286.67,240.32 290.00,245.83 293.33,251.22 296.67,256.52 300.00,261.71 303.33,266.79 306.67,271.70 310.00,276.41 313.33,280.86 316.67,285.05 320.00,288.95 323.33,292.58 326.67,295.99 330.00,299.23 333.33,302.37 336.67,305.47 340.00,308.57 343.33,311.70 346.67,314.87 350.00,318.03 353.33,321.16 356.67,324.20 360.00,327.08 363.33,329.76 366.67,332.21 370.00,334.42 373.33,336.40 376.67,338.19 380.00,339.86 383.33,341.45 386.67,343.02 390.00,344.64 393.33,346.33 396.67,348.10 400.00,349.93 403.33,351.81 406.67,353.68 410.00,355.49 413.33,357.18 416.67,358.73 420.00,360.10 423.33,361.28 426.67,362.27 430.00,363.11 433.33,363.82 436.67,364.45 440.00,365.04 443.33,365.63 446.67,366.25 450.00,366.91 453.33,367.61 456.67,368.35 460.00,369.11 463.33,369.86 466.67,370.56 470.00,371.21 473.33,371.79 476.67,372.27 480.00,372.67 483.33,373.00 486.67,373.28 490.00,373.52 493.33,373.76 496.67,374.02 500.00,374.31 503.33,374.65 506.67,375.05 510.00,375.49 513.33,375.96 516.67,376.45 520.00,376.95 523.33,377.42 526.67,377.87 530.00,378.27 533.33,378.62 536.67,378.93 540.00,379.20 543.33,379.44 546.67,379.66 550.00,379.89 553.33,380.13 556.67,380.39 560.00,380.69 563.33,381.03 566.67,381.40 570.00,381.80 573.33,382.21 576.67,382.64 580.00,383.07 583.33,383.48 586.67,383.87 590.00,384.23 593.33,384.56 596.67,384.84 600.00,385.09 603.33,385.29 606.67,385.46 610.00,385.60 613.33,385.70 616.67,385.79 620.00,385.85 623.33,385.89 626.67,385.93 630.00,385.95 633.33,385.97 636.67,385.98 640.00,385.99 643.33,385.99 646.67,385.99 650.00,386.00 653.33,386.00 656.67,386.00 660.00,386.00 663.33,386.00 666.67,386.00 670.00,386.00 673.33,386.00 676.67,386.00 680.00,386.00 683.33,386.00 686.67,386.00 690.00,386.00 693.33,386.00 696.67,386.00 700.00,386.00 703.33,386.00 706.67,386.00 710.00,386.00 713.33,386.00 716.67,386.00 720.00,386.00 723.33,386.00 726.67,386.00 730.00,386.00 733.33,386.00 736.67,386.00 740.00,386.00 743.33,386.00 746.67,386.00 750.00,386.00 753.33,386.00 756.67,386 760.00,386 763.33,386 766.67,386 770.00,386 773.33,386 776.67,386 780.00,386 783.33,386 786.67,386 790.00,386" fill="none" stroke="#5b6770" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+> <line x1="70" y1="386" x2="790" y2="386" stroke="#aaa" stroke-width="1"/>
+> <line x1="138.74" y1="386" x2="138.74" y2="391" stroke="#aaa" stroke-width="1"/>
+> <text x="138.74" y="404" text-anchor="middle" fill="#777" font-size="11">-1σ</text>
+> <line x1="306.63" y1="386" x2="306.63" y2="391" stroke="#aaa" stroke-width="1"/>
+> <text x="306.63" y="404" text-anchor="middle" fill="#777" font-size="11">1σ</text>
+> <line x1="390.58" y1="386" x2="390.58" y2="391" stroke="#aaa" stroke-width="1"/>
+> <text x="390.58" y="404" text-anchor="middle" fill="#777" font-size="11">2σ</text>
+> <line x1="474.52" y1="386" x2="474.52" y2="391" stroke="#aaa" stroke-width="1"/>
+> <text x="474.52" y="404" text-anchor="middle" fill="#777" font-size="11">3σ</text>
+> <line x1="558.47" y1="386" x2="558.47" y2="391" stroke="#aaa" stroke-width="1"/>
+> <text x="558.47" y="404" text-anchor="middle" fill="#777" font-size="11">4σ</text>
+> <line x1="642.41" y1="386" x2="642.41" y2="391" stroke="#aaa" stroke-width="1"/>
+> <text x="642.41" y="404" text-anchor="middle" fill="#777" font-size="11">5σ</text>
+> <line x1="726.36" y1="386" x2="726.36" y2="391" stroke="#aaa" stroke-width="1"/>
+> <text x="726.36" y="404" text-anchor="middle" fill="#777" font-size="11">6σ</text>
+> <text x="222.69" y="404" text-anchor="middle" fill="#999" font-size="11">average</text>
+> <text x="222.69" y="418" text-anchor="middle" fill="#bbb" font-size="10">0.30</text>
+> <line x1="508.06" y1="386" x2="508.06" y2="50" stroke="#3a86c8" stroke-width="1"/>
+> <circle cx="508.06" cy="386" r="3" fill="#3a86c8"/>
+> <text x="508.06" y="46" text-anchor="middle" fill="#3a86c8" font-size="11">Mbappe 3.4σ</text>
+> <line x1="521.84" y1="386" x2="521.84" y2="65" stroke="#3a86c8" stroke-width="1"/>
+> <circle cx="521.84" cy="386" r="3" fill="#3a86c8"/>
+> <text x="521.84" y="61" text-anchor="middle" fill="#3a86c8" font-size="11">Lewandowski 3.6σ</text>
+> <line x1="567.76" y1="386" x2="567.76" y2="80" stroke="#3a86c8" stroke-width="1"/>
+> <circle cx="567.76" cy="386" r="3" fill="#3a86c8"/>
+> <text x="567.76" y="76" text-anchor="middle" fill="#3a86c8" font-size="11">Haaland 4.1σ</text>
+> <line x1="590.71" y1="386" x2="590.71" y2="50" stroke="#3a86c8" stroke-width="1"/>
+> <circle cx="590.71" cy="386" r="3" fill="#3a86c8"/>
+> <text x="590.71" y="46" text-anchor="middle" fill="#3a86c8" font-size="11">Ronaldo 4.4σ</text>
+> <line x1="751.43" y1="386" x2="751.43" y2="50" stroke="#ff2e88" stroke-width="1.80"/>
+> <circle cx="751.43" cy="386" r="6" fill="#ff2e88"/>
+> <text x="751.43" y="46" text-anchor="end" fill="#ff2e88" font-size="13">Messi 6.3σ</text>
+> </svg>
 
 ---
 
@@ -1056,7 +1427,6 @@ spacing along each axis. When `aesFill` maps to a numeric column the
 cells are shaded along a 6-stop cold→hot gradient (blue / bright blue
 / bright cyan / bright green / bright yellow / bright red); without
 `aesFill` every cell takes the layer's default color.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1098,47 +1468,44 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 256" width="480" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
-> <line x1="55" y1="228.20" x2="360" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+> <line x1="55" y1="228.20" x2="460" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
 > <line x1="55" y1="34" x2="55" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
-> <text x="91.97" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
-> <text x="207.50" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
-> <text x="323.03" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+> <text x="104.09" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+> <text x="257.50" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+> <text x="410.91" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
 > <text x="49" y="208.33" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
 > <text x="49" y="134.77" text-anchor="end" fill="#7f8c8d" font-size="11">2.0</text>
 > <text x="49" y="61.21" text-anchor="end" fill="#7f8c8d" font-size="11">4.0</text>
-> <rect x="63.09" y="186.27" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="63.09" y="149.49" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="63.09" y="112.71" width="57.77" height="36.78" fill="#1abc9c"/>
-> <rect x="63.09" y="75.93" width="57.77" height="36.78" fill="#3498db"/>
-> <rect x="63.09" y="39.15" width="57.77" height="36.78" fill="#2980b9"/>
-> <rect x="120.85" y="186.27" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="120.85" y="149.49" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="120.85" y="112.71" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="120.85" y="75.93" width="57.77" height="36.78" fill="#1abc9c"/>
-> <rect x="120.85" y="39.15" width="57.77" height="36.78" fill="#3498db"/>
-> <rect x="178.62" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="178.62" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="178.62" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="178.62" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="178.62" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
-> <rect x="236.38" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="236.38" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="236.38" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="236.38" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="236.38" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
-> <rect x="294.15" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="294.15" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="294.15" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="294.15" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="294.15" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
-> <text x="207.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Heatmap</text>
-> <rect x="375" y="39" width="12" height="12" fill="#3498db"/>
-> <text x="391" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+> <rect x="65.74" y="186.27" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="65.74" y="149.49" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="65.74" y="112.71" width="76.70" height="36.78" fill="#1abc9c"/>
+> <rect x="65.74" y="75.93" width="76.70" height="36.78" fill="#3498db"/>
+> <rect x="65.74" y="39.15" width="76.70" height="36.78" fill="#2980b9"/>
+> <rect x="142.44" y="186.27" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="142.44" y="149.49" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="142.44" y="112.71" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="142.44" y="75.93" width="76.70" height="36.78" fill="#1abc9c"/>
+> <rect x="142.44" y="39.15" width="76.70" height="36.78" fill="#3498db"/>
+> <rect x="219.15" y="186.27" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="219.15" y="149.49" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="219.15" y="112.71" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="219.15" y="75.93" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="219.15" y="39.15" width="76.70" height="36.78" fill="#1abc9c"/>
+> <rect x="295.85" y="186.27" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="295.85" y="149.49" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="295.85" y="112.71" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="295.85" y="75.93" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="295.85" y="39.15" width="76.70" height="36.78" fill="#1abc9c"/>
+> <rect x="372.56" y="186.27" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="372.56" y="149.49" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="372.56" y="112.71" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="372.56" y="75.93" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="372.56" y="39.15" width="76.70" height="36.78" fill="#1abc9c"/>
+> <text x="257.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Heatmap</text>
 > </svg>
-
 
 ---
 
@@ -1146,7 +1513,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 
 Two layers: `GeomTile` underneath, `GeomText` on top reading
 `aesLabel` for the cell label.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1201,72 +1567,69 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 256" width="480" height="256" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
-> <line x1="55" y1="228.20" x2="360" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
+> <line x1="55" y1="228.20" x2="460" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
 > <line x1="55" y1="34" x2="55" y2="228.20" stroke="#ecf0f1" stroke-width="1"/>
-> <text x="91.97" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
-> <text x="207.50" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
-> <text x="323.03" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
+> <text x="104.09" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+> <text x="257.50" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">2.0</text>
+> <text x="410.91" y="243.20" text-anchor="middle" fill="#7f8c8d" font-size="11">4.0</text>
 > <text x="49" y="208.33" text-anchor="end" fill="#7f8c8d" font-size="11">0.0</text>
 > <text x="49" y="134.77" text-anchor="end" fill="#7f8c8d" font-size="11">2.0</text>
 > <text x="49" y="61.21" text-anchor="end" fill="#7f8c8d" font-size="11">4.0</text>
-> <rect x="63.09" y="186.27" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="63.09" y="149.49" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="63.09" y="112.71" width="57.77" height="36.78" fill="#1abc9c"/>
-> <rect x="63.09" y="75.93" width="57.77" height="36.78" fill="#3498db"/>
-> <rect x="63.09" y="39.15" width="57.77" height="36.78" fill="#2980b9"/>
-> <rect x="120.85" y="186.27" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="120.85" y="149.49" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="120.85" y="112.71" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="120.85" y="75.93" width="57.77" height="36.78" fill="#1abc9c"/>
-> <rect x="120.85" y="39.15" width="57.77" height="36.78" fill="#3498db"/>
-> <rect x="178.62" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="178.62" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="178.62" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="178.62" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="178.62" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
-> <rect x="236.38" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="236.38" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="236.38" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="236.38" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="236.38" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
-> <rect x="294.15" y="186.27" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="294.15" y="149.49" width="57.77" height="36.78" fill="#e74c3c"/>
-> <rect x="294.15" y="112.71" width="57.77" height="36.78" fill="#f1c40f"/>
-> <rect x="294.15" y="75.93" width="57.77" height="36.78" fill="#2ecc71"/>
-> <rect x="294.15" y="39.15" width="57.77" height="36.78" fill="#1abc9c"/>
-> <text x="91.97" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">10</text>
-> <text x="91.97" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">9</text>
-> <text x="91.97" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">5</text>
-> <text x="91.97" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">1</text>
-> <text x="91.97" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">-4</text>
-> <text x="149.73" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">15</text>
-> <text x="149.73" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">14</text>
-> <text x="149.73" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">10</text>
-> <text x="149.73" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">6</text>
-> <text x="149.73" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">1</text>
-> <text x="207.50" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">18</text>
-> <text x="207.50" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">17</text>
-> <text x="207.50" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">14</text>
-> <text x="207.50" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">9</text>
-> <text x="207.50" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">4</text>
-> <text x="265.27" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">20</text>
-> <text x="265.27" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">19</text>
-> <text x="265.27" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">15</text>
-> <text x="265.27" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">11</text>
-> <text x="265.27" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">6</text>
-> <text x="323.03" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">19</text>
-> <text x="323.03" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">18</text>
-> <text x="323.03" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">14</text>
-> <text x="323.03" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">10</text>
-> <text x="323.03" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">5</text>
-> <text x="207.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Annotated heatmap</text>
-> <rect x="375" y="39" width="12" height="12" fill="#3498db"/>
-> <text x="391" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
+> <rect x="65.74" y="186.27" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="65.74" y="149.49" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="65.74" y="112.71" width="76.70" height="36.78" fill="#1abc9c"/>
+> <rect x="65.74" y="75.93" width="76.70" height="36.78" fill="#3498db"/>
+> <rect x="65.74" y="39.15" width="76.70" height="36.78" fill="#2980b9"/>
+> <rect x="142.44" y="186.27" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="142.44" y="149.49" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="142.44" y="112.71" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="142.44" y="75.93" width="76.70" height="36.78" fill="#1abc9c"/>
+> <rect x="142.44" y="39.15" width="76.70" height="36.78" fill="#3498db"/>
+> <rect x="219.15" y="186.27" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="219.15" y="149.49" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="219.15" y="112.71" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="219.15" y="75.93" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="219.15" y="39.15" width="76.70" height="36.78" fill="#1abc9c"/>
+> <rect x="295.85" y="186.27" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="295.85" y="149.49" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="295.85" y="112.71" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="295.85" y="75.93" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="295.85" y="39.15" width="76.70" height="36.78" fill="#1abc9c"/>
+> <rect x="372.56" y="186.27" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="372.56" y="149.49" width="76.70" height="36.78" fill="#e74c3c"/>
+> <rect x="372.56" y="112.71" width="76.70" height="36.78" fill="#f1c40f"/>
+> <rect x="372.56" y="75.93" width="76.70" height="36.78" fill="#2ecc71"/>
+> <rect x="372.56" y="39.15" width="76.70" height="36.78" fill="#1abc9c"/>
+> <text x="104.09" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">10</text>
+> <text x="104.09" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">9</text>
+> <text x="104.09" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">5</text>
+> <text x="104.09" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">1</text>
+> <text x="104.09" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">-4</text>
+> <text x="180.80" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">15</text>
+> <text x="180.80" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">14</text>
+> <text x="180.80" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">10</text>
+> <text x="180.80" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">6</text>
+> <text x="180.80" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">1</text>
+> <text x="257.50" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">18</text>
+> <text x="257.50" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">17</text>
+> <text x="257.50" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">14</text>
+> <text x="257.50" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">9</text>
+> <text x="257.50" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">4</text>
+> <text x="334.20" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">20</text>
+> <text x="334.20" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">19</text>
+> <text x="334.20" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">15</text>
+> <text x="334.20" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">11</text>
+> <text x="334.20" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">6</text>
+> <text x="410.91" y="204.66" text-anchor="middle" fill="#9b59b6" font-size="11">19</text>
+> <text x="410.91" y="167.88" text-anchor="middle" fill="#9b59b6" font-size="11">18</text>
+> <text x="410.91" y="131.10" text-anchor="middle" fill="#9b59b6" font-size="11">14</text>
+> <text x="410.91" y="94.32" text-anchor="middle" fill="#9b59b6" font-size="11">10</text>
+> <text x="410.91" y="57.54" text-anchor="middle" fill="#9b59b6" font-size="11">5</text>
+> <text x="257.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Annotated heatmap</text>
 > </svg>
-
 
 ---
 
@@ -1274,7 +1637,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 
 A funnel is a horizontal bar chart with monotonically decreasing
 values.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1308,29 +1670,28 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 224" width="600" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
-> <line x1="55" y1="196.20" x2="480" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
-> <line x1="55" y1="34" x2="55" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
-> <text x="74.32" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
-> <text x="267.50" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">500.0</text>
-> <text x="460.68" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1000.0</text>
-> <text x="49" y="57.33" text-anchor="end" fill="#7f8c8d" font-size="11">Visited</text>
-> <text x="49" y="88.05" text-anchor="end" fill="#7f8c8d" font-size="11">Signed up</text>
-> <text x="49" y="118.77" text-anchor="end" fill="#7f8c8d" font-size="11">Confirmed</text>
-> <text x="49" y="149.49" text-anchor="end" fill="#7f8c8d" font-size="11">Active</text>
-> <text x="49" y="180.21" text-anchor="end" fill="#7f8c8d" font-size="11">Paid</text>
-> <rect x="74.32" y="41.37" width="386.36" height="24.58" fill="#3498db"/>
-> <rect x="74.32" y="72.09" width="278.18" height="24.58" fill="#3498db"/>
-> <rect x="74.32" y="102.81" width="185.45" height="24.58" fill="#3498db"/>
-> <rect x="74.32" y="133.53" width="85.00" height="24.58" fill="#3498db"/>
-> <rect x="74.32" y="164.25" width="46.36" height="24.58" fill="#3498db"/>
-> <text x="267.50" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Sales funnel</text>
+> <line x1="71.40" y1="196.20" x2="480" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+> <line x1="71.40" y1="34" x2="71.40" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
+> <text x="89.97" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">0.0</text>
+> <text x="275.70" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">500.0</text>
+> <text x="461.43" y="211.20" text-anchor="middle" fill="#7f8c8d" font-size="11">1000.0</text>
+> <text x="65.40" y="57.33" text-anchor="end" fill="#7f8c8d" font-size="11">Visited</text>
+> <text x="65.40" y="88.05" text-anchor="end" fill="#7f8c8d" font-size="11">Signed up</text>
+> <text x="65.40" y="118.77" text-anchor="end" fill="#7f8c8d" font-size="11">Confirmed</text>
+> <text x="65.40" y="149.49" text-anchor="end" fill="#7f8c8d" font-size="11">Active</text>
+> <text x="65.40" y="180.21" text-anchor="end" fill="#7f8c8d" font-size="11">Paid</text>
+> <rect x="89.97" y="41.37" width="371.45" height="24.58" fill="#3498db"/>
+> <rect x="89.97" y="72.09" width="267.45" height="24.58" fill="#3498db"/>
+> <rect x="89.97" y="102.81" width="178.30" height="24.58" fill="#3498db"/>
+> <rect x="89.97" y="133.53" width="81.72" height="24.58" fill="#3498db"/>
+> <rect x="89.97" y="164.25" width="44.57" height="24.58" fill="#3498db"/>
+> <text x="275.70" y="26" text-anchor="middle" fill="#7f8c8d" font-size="14">Sales funnel</text>
 > <rect x="495" y="39" width="12" height="12" fill="#3498db"/>
 > <text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
-
 
 ---
 
@@ -1338,7 +1699,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 
 Each bar sits on a manually-supplied `__ybase`. Negative deltas
 (yend < ystart) render correctly — the rect uses the absolute span.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1377,7 +1737,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 224" width="600" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="480" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -1402,7 +1762,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="511" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Polar charts
@@ -1410,7 +1769,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 `CoordPolar aes startAngle dir` projects the chosen aesthetic onto an
 angle (0..2π) and the other onto a radius. Useful for cyclic data and
 rose plots.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1451,7 +1809,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" width="400" height="320" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <polyline points="172.61,163.10 172.59,163.60 172.52,164.10 172.39,164.58 172.22,165.06 172.01,165.51 171.75,165.94 171.45,166.34 171.12,166.72 170.74,167.05 170.34,167.35 169.91,167.61 169.46,167.82 168.98,167.99 168.50,168.12 168.00,168.19 167.50,168.21 167.00,168.19 166.50,168.12 166.02,167.99 165.54,167.82 165.09,167.61 164.66,167.35 164.26,167.05 163.88,166.72 163.55,166.34 163.25,165.94 162.99,165.51 162.78,165.06 162.61,164.58 162.48,164.10 162.41,163.60 162.39,163.10 162.41,162.60 162.48,162.10 162.61,161.62 162.78,161.14 162.99,160.69 163.25,160.26 163.55,159.86 163.88,159.48 164.26,159.15 164.66,158.85 165.09,158.59 165.54,158.38 166.02,158.21 166.50,158.08 167.00,158.01 167.50,157.99 168.00,158.01 168.50,158.08 168.98,158.21 169.46,158.38 169.91,158.59 170.34,158.85 170.74,159.15 171.12,159.48 171.45,159.86 171.75,160.26 172.01,160.69 172.22,161.14 172.39,161.62 172.52,162.10 172.59,162.60 172.61,163.10" fill="none" stroke="#bdc3c7" stroke-width="0.50" stroke-linejoin="round" stroke-linecap="round"/>
@@ -1475,13 +1833,11 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="311" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Faceted charts
 
 Split a chart into a grid of panels by a categorical column.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1517,7 +1873,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 288" width="700" height="288" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="60" y1="246.20" x2="225" y2="246.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -1570,14 +1926,12 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="611" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Log-Y scatter
 
 `SLog Base10` on `scaleY` for a log-scale Y axis. The `defScaleOpts`
 default produces "nice" integer-power breaks (1, 10, 100, …).
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1610,7 +1964,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 224" width="500" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="380" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -1632,7 +1986,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="411" y="49" text-anchor="start" fill="#7f8c8d" font-size="11">series 0</text>
 > </svg>
 
-
 ---
 
 ## Layered charts
@@ -1648,7 +2001,6 @@ and fill opacity without needing a custom theme.
 The classic "report" chart: vertical bars for the raw values plus a
 line tracking a smoothed estimate (moving average, target, etc.).
 Both layers read from the same data frame.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1701,7 +2053,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 224" width="600" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="480" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -1729,7 +2081,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="511" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
 > </svg>
 
-
 ### Scatter + radius circle
 
 A scatter of geographic points (longitude / latitude) with a single
@@ -1738,7 +2089,6 @@ The two layers use **different** data frames — the radius layer
 supplies its own one-row frame via `layerData`, and `defSize` /
 `defAlpha` on `layerAesDef` make the POI render as a fat translucent
 puck instead of the default 3-pixel dot.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1798,7 +2148,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 288" width="500" height="288" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="260.20" x2="380" y2="260.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -1831,7 +2181,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="411" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
 > </svg>
 
-
 > The radius is in screen pixels, not data units — granite doesn't
 > yet have a "data-unit circle" primitive. For most overlays that's
 > fine; if you need a circle whose radius scales with the axes you'd
@@ -1842,7 +2191,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 Scatter shows the raw points; a `GeomLine` layer with
 `layerStat = StatSmooth SmoothLm` runs an ordinary-least-squares
 regression and draws the fitted line on top.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1884,7 +2232,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 224" width="500" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="380" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -1914,7 +2262,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <text x="411" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
 > </svg>
 
-
 `SmoothLoess` and `SmoothMovingAvg` work the same way — just swap
 the `SmoothMethod` argument.
 
@@ -1922,7 +2269,6 @@ the `SmoothMethod` argument.
 
 A central estimate with a translucent ±band around it. The ribbon
 layer reads `aesYmin` / `aesYmax`; the line reads `aesY`.
-
 
 ```haskell
 -- cabal: build-depends: granite, text
@@ -1982,7 +2328,7 @@ chart =
 Text.IO.putStrLn (renderChartSvg chart)
 ```
 
-> <!-- sabela:mime text/plain -->
+> <!-- scripths:mime text/plain -->
 > <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 224" width="560" height="224" font-family="system-ui, -apple-system, sans-serif">
 > <rect width="100%" height="100%" fill="white"/>
 > <line x1="55" y1="196.20" x2="440" y2="196.20" stroke="#ecf0f1" stroke-width="1"/>
@@ -2002,7 +2348,6 @@ Text.IO.putStrLn (renderChartSvg chart)
 > <rect x="455" y="56" width="12" height="12" fill="#9b59b6"/>
 > <text x="471" y="66" text-anchor="start" fill="#7f8c8d" font-size="11">series 1</text>
 > </svg>
-
 
 ---
 

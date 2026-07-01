@@ -36,6 +36,7 @@ module Granite.Svg (
     polarLine,
     waterfall,
     distPlot,
+    gauss,
 ) where
 
 import Data.List qualified as List
@@ -706,3 +707,178 @@ distPlot :: [(Text, [Double])] -> Plot -> Text
 distPlot sers cfg =
     renderChartSvg $
         LC.distPlotChart sers (widthChars cfg) (heightChars cfg) (plotTitle cfg)
+
+-- | Gaussian / normal-distribution chart in standard-deviation (z-score) units.
+-- Mirrors 'Granite.gauss': a KDE bell curve with a stippled scatter fill, an
+-- x-axis labelled in σ units, and lollipop annotations for named markers
+-- (the largest z highlighted as the outlier).
+gauss ::
+    -- | Population sample (used to compute μ and σ)
+    [Double] ->
+    -- | Named markers as @(label, raw value)@; the largest z is highlighted
+    [(Text, Double)] ->
+    Plot ->
+    Text
+gauss population markers cfg =
+    let n = length population
+        mu = if n == 0 then 0 else sum population / fromIntegral n
+        var =
+            if n < 2
+                then 0
+                else sum [(x - mu) ^ (2 :: Int) | x <- population] / fromIntegral (n - 1)
+        sigma = sqrt (max var eps)
+        z v = (v - mu) / sigma
+
+        zsData = map z population
+        zsMark = [(name, z v) | (name, v) <- markers]
+        maxMarkerZ = maximum' (0 : [zz | (_, zz) <- zsMark])
+
+        allZ = zsData <> [zz | (_, zz) <- zsMark]
+        zlo0 = minimum' (0 : allZ)
+        zhi0 = maximum' (1 : allZ)
+        padz = (zhi0 - zlo0) * 0.06 + 1e-9
+        zmin = zlo0 - padz
+        zmax = zhi0 + padz
+
+        -- Gaussian KDE in z-space (Silverman bandwidth).
+        sdz =
+            let m = sum zsData / fromIntegral (max 1 n)
+             in sqrt (max eps (sum [(zz - m) ^ (2 :: Int) | zz <- zsData] / fromIntegral (max 1 (n - 1))))
+        hbw = max 1e-6 (1.06 * sdz * fromIntegral (max 1 n) ** (-0.2))
+        dens x =
+            sum [exp (negate ((x - zz) ^ (2 :: Int)) / (2 * hbw * hbw)) | zz <- zsData]
+                / (fromIntegral (max 1 n) * hbw * sqrt (2 * pi))
+
+        lay = mkLayout cfg
+        baseY = plotY lay + plotH lay
+        mx = mapX lay zmin zmax
+
+        nGrid = max 8 (widthChars cfg * 3)
+        zAt i = zmin + fromIntegral i / fromIntegral nGrid * (zmax - zmin)
+        densVals = [dens (zAt i) | i <- [0 .. nGrid]]
+        dmax = maximum' densVals + eps
+        topFrac = 0.9
+        densToY d = baseY - (d / dmax) * topFrac * plotH lay
+
+        curvePts = [(mx (zAt i), densToY d) | (i, d) <- zip [0 :: Int ..] densVals]
+
+        -- Light fill under the curve.
+        fillPath =
+            svgPath
+                ( "M "
+                    <> showD (fst (head curvePts))
+                    <> " "
+                    <> showD baseY
+                    <> " "
+                    <> T.concat ["L " <> showD x <> " " <> showD y <> " " | (x, y) <- curvePts]
+                    <> "L "
+                    <> showD (fst (last curvePts))
+                    <> " "
+                    <> showD baseY
+                    <> " Z"
+                )
+                "#dfe4e8"
+                (attr "fill-opacity" "0.6")
+        curveStroke = svgPolyline curvePts "#5b6770" 2
+
+        -- Faint dashed guide at the mean (z = 0).
+        meanLine
+            | zmin <= 0 && zmax >= 0 =
+                "<line"
+                    <> attr "x1" (showD (mx 0))
+                    <> attr "y1" (showD (plotY lay))
+                    <> attr "x2" (showD (mx 0))
+                    <> attr "y2" (showD baseY)
+                    <> attr "stroke" "#cfd6dc"
+                    <> attr "stroke-width" "1"
+                    <> attr "stroke-dasharray" "3 4"
+                    <> "/>\n"
+            | otherwise = ""
+
+        -- Deterministic scatter fill, dot count per column ∝ curve height.
+        nx = max 4 (widthChars cfg)
+        cellPx = 14 :: Double
+        hashI a = let b = a * 1103515245 + 12345 in b * 1103515245 + 12345
+        frac k = fromIntegral (abs (hashI k) `mod` 1000) / 1000
+        dots =
+            T.concat
+                [ let zc = zmin + (fromIntegral gx + 0.5) / fromIntegral nx * (zmax - zmin)
+                      cxc = mx zc
+                      yTop = densToY (dens zc)
+                      colHpx = baseY - yTop
+                      rowsHere = max 0 (floor (colHpx / cellPx)) :: Int
+                   in T.concat
+                        [ let kk = gx * 1000 + gy
+                           in if abs (hashI (kk * 31 + 7)) `mod` 100 >= 78
+                                then ""
+                                else
+                                    let jx = (frac (kk * 3 + 1) - 0.5) * (plotW lay / fromIntegral nx)
+                                        jy = (frac (kk * 5 + 2) - 0.5) * cellPx
+                                        dx = cxc + jx
+                                        dy = yTop + (fromIntegral gy + 0.5) / fromIntegral (max 1 rowsHere) * colHpx + jy
+                                     in svgCircle dx dy 1.3 "#aeb4bb"
+                        | gy <- [0 .. rowsHere - 1]
+                        ]
+                | gx <- [0 .. nx - 1]
+                ]
+
+        -- σ x-axis: a tick for each integer standard deviation in range.
+        xBaseline = svgLine (plotX lay) baseY (plotX lay + plotW lay) baseY "#aaa" 1
+        sigInts = [k | k <- [ceiling zmin .. floor zmax :: Int], k /= 0]
+        xticks =
+            T.concat
+                [ let xx = mx (fromIntegral k)
+                   in svgLine xx baseY xx (baseY + 5) "#aaa" 1
+                        <> svgText xx (baseY + 18) "middle" "#777" labelFontSize (T.pack (show k) <> "σ")
+                | k <- sigInts
+                ]
+        avgLbl
+            | zmin <= 0 && zmax >= 0 =
+                svgText (mx 0) (baseY + 18) "middle" "#999" labelFontSize "average"
+                    <> svgText (mx 0) (baseY + 32) "middle" "#bbb" (labelFontSize - 1) (T.pack (showFFloat (Just 2) mu ""))
+            | otherwise = ""
+
+        -- Lollipop annotations, stacked into lanes so labels never overlap.
+        sigmaTxt zz = T.pack (showFFloat (Just 1) zz "") <> "σ"
+        lblOf (name, zz) = name <> " " <> sigmaTxt zz
+        wpx s = fromIntegral (T.length s) * 6.2
+        sortedM = List.sortOn (\(_, zz) -> mx zz) zsMark
+        updLane occ i v =
+            let need = i + 1 - length occ
+                occ' = if need > 0 then occ <> replicate need (-1 / 0) else occ
+             in [if j == i then v else e | (j, e) <- zip [0 ..] occ']
+        place _ [] = []
+        place occ ((name, zz) : rest) =
+            let s = lblOf (name, zz)
+                cx = mx zz
+                start = cx - wpx s / 2
+                pick es i = case es of
+                    [] -> i
+                    (e : es') -> if start > e + 6 then i else pick es' (i + 1)
+                row = pick occ 0
+             in (row, name, zz, s) : place (updLane occ row (cx + wpx s / 2)) rest
+        placed = place [] sortedM
+
+        anchorFor cx
+            | cx > plotX lay + plotW lay * 0.82 = "end"
+            | cx < plotX lay + plotW lay * 0.18 = "start"
+            | otherwise = "middle"
+
+        markerEls =
+            T.concat
+                [ let cx = mx zz
+                      isHi = zz >= maxMarkerZ - eps
+                      col = if isHi then "#ff2e88" else "#3a86c8"
+                      labelY = plotY lay + 12 + fromIntegral row * 15
+                      fontSz = if isHi then labelFontSize + 2 else labelFontSize
+                   in svgLine cx baseY cx (labelY + 4) col (if isHi then 1.8 else 1)
+                        <> svgCircle cx baseY (if isHi then 6 else 3) col
+                        <> svgText cx labelY (anchorFor cx) col fontSz s
+                | (row, _name, zz, s) <- placed
+                ]
+
+        title = drawTitle cfg lay
+     in svgDoc
+            (svgW lay)
+            (svgH lay)
+            (title <> fillPath <> meanLine <> dots <> curveStroke <> xBaseline <> xticks <> avgLbl <> markerEls)
